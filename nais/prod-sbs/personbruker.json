@@ -1,0 +1,8 @@
+{
+  "namespace": "personbruker",
+  "ingresses": [
+    "https://dittnav-ktor-template.prod-sbs.nais.io/person/dittnav-ktor-template",
+    "https://dittnav-ktor-template.nais.oera.no/person/dittnav-ktor-template",
+    "https://www.nav.no/person/dittnav-ktor-template"
+  ]
+}
