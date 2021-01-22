@@ -1,10 +1,12 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.config
 
-data class Environment(
-    val corsAllowedOrigins: String = getEnvVar("CORS_ALLOWED_ORIGINS")
-)
+import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
 
-fun getEnvVar(varName: String): String {
-    return System.getenv(varName)
-        ?: throw IllegalArgumentException("Appen kan ikke starte uten av miljøvariabelen $varName er satt.")
-}
+data class Environment(
+        val bootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS"),
+        val schemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS"),
+        val username: String = getEnvVar("SERVICEUSER_USERNAME"),
+        val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
+        val groupId: String = getEnvVar("GROUP_ID"),
+        val applicationName: String = "dittnav-brukernotifikasjonbestiller"
+)
