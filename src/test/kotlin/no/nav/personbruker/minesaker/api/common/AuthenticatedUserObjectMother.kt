@@ -3,7 +3,7 @@ package no.nav.personbruker.template.api.common
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
-import no.nav.personbruker.template.api.common.AuthenticatedUser
+import no.nav.personbruker.brukernotifikasjonbestiller.common.AuthenticatedUser
 import no.nav.security.token.support.core.jwt.JwtToken
 import java.security.Key
 import java.time.ZoneId

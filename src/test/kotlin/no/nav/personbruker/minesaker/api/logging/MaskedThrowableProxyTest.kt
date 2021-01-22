@@ -2,7 +2,7 @@ package no.nav.personbruker.template.api.logging
 
 import ch.qos.logback.classic.spi.ThrowableProxy
 import ch.qos.logback.classic.spi.ThrowableProxyUtil
-import no.nav.personbruker.template.api.logging.MaskedThrowableProxy.Companion.mask
+import no.nav.personbruker.brukernotifikasjonbestiller.logging.MaskedThrowableProxy.Companion.mask
 import org.amshove.kluent.`should contain`
 import org.amshove.kluent.`should not contain`
 import org.junit.jupiter.api.Test

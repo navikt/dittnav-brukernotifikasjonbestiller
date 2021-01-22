@@ -1,10 +1,10 @@
-package no.nav.personbruker.template.api.logging
+package no.nav.personbruker.brukernotifikasjonbestiller.logging
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
 import ch.qos.logback.classic.spi.LoggerContextVO
-import no.nav.personbruker.template.api.logging.MaskedThrowableProxy.Companion.mask
+import no.nav.personbruker.brukernotifikasjonbestiller.logging.MaskedThrowableProxy.Companion.mask
 import org.slf4j.Marker
 
 class MaskedLoggingEvent internal constructor(private val iLoggingEvent: ILoggingEvent) : ILoggingEvent {

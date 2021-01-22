@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.health
+package no.nav.personbruker.brukernotifikasjonbestiller.health
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get

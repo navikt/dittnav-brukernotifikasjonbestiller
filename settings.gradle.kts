@@ -1,1 +1,1 @@
-rootProject.name = "dittnav-ktor-template"
+rootProject.name = "dittnav-brukernotifikasjonbestiller"

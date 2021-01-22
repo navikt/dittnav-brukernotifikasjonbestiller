@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.common
+package no.nav.personbruker.brukernotifikasjonbestiller.common
 
 enum class IdentityClaim(val claimName: String) {
 

@@ -1,5 +1,6 @@
 package no.nav.personbruker.template.api.common
 
+import no.nav.personbruker.brukernotifikasjonbestiller.common.IdentityClaim
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking

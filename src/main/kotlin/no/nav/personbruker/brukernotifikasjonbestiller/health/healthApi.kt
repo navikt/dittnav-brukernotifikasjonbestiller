@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.health
+package no.nav.personbruker.brukernotifikasjonbestiller.health
 
 import io.ktor.application.call
 import io.ktor.http.ContentType
@@ -9,7 +9,7 @@ import io.ktor.routing.Routing
 import io.ktor.routing.get
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
-import no.nav.personbruker.template.api.config.Environment
+import no.nav.personbruker.brukernotifikasjonbestiller.config.Environment
 
 fun Routing.healthApi(environment: Environment, collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry) {
 

@@ -1,7 +1,7 @@
 {
   "namespace": "personbruker",
   "ingresses": [
-    "https://www.dev.nav.no/person/dittnav-ktor-template",
-    "https://personbruker.nais.oera-q.local/person/dittnav-ktor-template"
+    "https://www.dev.nav.no/person/dittnav-brukernotifikasjonbestiller",
+    "https://personbruker.nais.oera-q.local/person/dittnav-brukernotifikasjonbestiller"
   ]
 }

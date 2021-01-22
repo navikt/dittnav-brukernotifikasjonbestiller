@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.common
+package no.nav.personbruker.brukernotifikasjonbestiller.common
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit

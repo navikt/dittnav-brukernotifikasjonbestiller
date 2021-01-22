@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.config
+package no.nav.personbruker.brukernotifikasjonbestiller.config
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache

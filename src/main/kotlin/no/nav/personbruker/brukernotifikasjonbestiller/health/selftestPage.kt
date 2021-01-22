@@ -1,12 +1,12 @@
-package no.nav.personbruker.template.api.health
+package no.nav.personbruker.brukernotifikasjonbestiller.health
 
 import io.ktor.application.*
 import io.ktor.html.*
 import io.ktor.http.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.html.*
-import no.nav.personbruker.template.api.config.Environment
-import no.nav.personbruker.template.api.config.HttpClientBuilder
+import no.nav.personbruker.brukernotifikasjonbestiller.config.Environment
+import no.nav.personbruker.brukernotifikasjonbestiller.config.HttpClientBuilder
 
 suspend fun ApplicationCall.pingDependencies(environment: Environment) = coroutineScope {
     val client = HttpClientBuilder.build()
@@ -25,7 +25,7 @@ suspend fun ApplicationCall.pingDependencies(environment: Environment) = corouti
     })
     {
         head {
-            title { +"Selftest dittnav-ktor-template" }
+            title { +"Selftest dittnav-brukernotifikasjonbestiller" }
         }
         body {
             h1 {
@@ -34,7 +34,7 @@ suspend fun ApplicationCall.pingDependencies(environment: Environment) = corouti
             }
             table {
                 thead {
-                    tr { th { +"SELFTEST dittnav-ktor-template" } }
+                    tr { th { +"SELFTEST dittnav-brukernotifikasjonbestiller" } }
                 }
                 tbody {
                     services.map {

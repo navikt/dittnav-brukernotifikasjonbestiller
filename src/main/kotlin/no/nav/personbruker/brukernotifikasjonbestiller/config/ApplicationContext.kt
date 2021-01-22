@@ -1,4 +1,4 @@
-package no.nav.personbruker.template.api.config
+package no.nav.personbruker.brukernotifikasjonbestiller.config
 
 class ApplicationContext {
 

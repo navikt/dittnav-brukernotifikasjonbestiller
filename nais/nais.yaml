@@ -1,7 +1,7 @@
 apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
-  name: dittnav-ktor-template
+  name: dittnav-brukernotifikasjonbestiller
   namespace: {{namespace}}
   labels:
     team: personbruker
@@ -11,14 +11,14 @@ spec:
   image: {{version}}
   port: 8080
   liveness:
-    path: /person/dittnav-ktor-template/internal/isAlive
+    path: /person/dittnav-brukernotifikasjonbestiller/internal/isAlive
     initialDelay: 10
   readiness:
-    path: /person/dittnav-ktor-template/internal/isReady
+    path: /person/dittnav-brukernotifikasjonbestiller/internal/isReady
     initialDelay: 10
   prometheus:
     enabled: true
-    path: /person/dittnav-ktor-template/metrics
+    path: /person/dittnav-brukernotifikasjonbestiller/metrics
   replicas:
     min: 2
     max: 4

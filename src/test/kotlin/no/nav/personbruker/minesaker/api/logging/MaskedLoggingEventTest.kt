@@ -1,5 +1,6 @@
 package no.nav.personbruker.template.api.logging
 
+import no.nav.personbruker.brukernotifikasjonbestiller.logging.MaskedLoggingEvent
 import org.amshove.kluent.`should contain`
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
