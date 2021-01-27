@@ -5,13 +5,11 @@ import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
-import io.ktor.util.*
 import io.prometheus.client.hotspot.DefaultExports
+import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.brukernotifikasjonbestiller.health.healthApi
 
-@KtorExperimentalAPI
 fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()) {
-    val environment = Environment()
     DefaultExports.initialize()
     install(DefaultHeaders)
     routing {
@@ -20,11 +18,21 @@ fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()
         get("/usikret") {
             call.respondText(text = "Usikret API.", contentType = ContentType.Text.Plain)
         }
-
+        configureStartupHook(appContext)
         configureShutdownHook(appContext)
     }
 }
 
-private fun Application.configureShutdownHook(appContext: ApplicationContext) {
+private fun Application.configureStartupHook(appContext: ApplicationContext) {
+    environment.monitor.subscribe(ApplicationStarted) {
+        KafkaConsumerSetup.startAllKafkaPollers(appContext)
+    }
+}
 
+private fun Application.configureShutdownHook(appContext: ApplicationContext) {
+    environment.monitor.subscribe(ApplicationStopPreparing) {
+        runBlocking {
+            KafkaConsumerSetup.stopAllKafkaConsumers(appContext)
+        }
+    }
 }

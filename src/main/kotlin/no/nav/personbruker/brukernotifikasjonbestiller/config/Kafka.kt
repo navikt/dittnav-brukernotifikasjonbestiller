@@ -19,6 +19,7 @@ object Kafka {
 
     const val beskjedTopicName = "aapen-brukernotifikasjon-nyBeskjed-v1"
     const val oppgaveTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
+    const val statusoppdateringTopicName = "aapen-brukernotifikasjon-nyStatusoppdatering-v1"
     const val doneTopicName = "aapen-brukernotifikasjon-done-v1"
 
     fun consumerProps(env: Environment, eventtypeToConsume: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {

@@ -4,6 +4,7 @@ import no.nav.personbruker.brukernotifikasjonbestiller.beskjed.BeskjedEventServi
 import no.nav.personbruker.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.brukernotifikasjonbestiller.oppgave.OppgaveEventService
+import no.nav.personbruker.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
 
 class ApplicationContext {
 
@@ -18,11 +19,16 @@ class ApplicationContext {
     private val oppgaveEventProcessor = OppgaveEventService()
     val oppgaveConsumer = initializeOppgaveConsumer()
 
+    private val statusoppdateringKafkaConsumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
+    private val statusoppdateringEventProcessor = StatusoppdateringEventService()
+    val statusoppdateringConsumer = initializeStatusoppdateringConsumer()
+
     private val doneKafkaConsumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
     private val doneEventProcessor = DoneEventService()
     val doneConsumer = initializeDoneConsumer()
 
     private fun initializeBeskjedConsumer() = KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(beskjedKafkaConsumerProps, beskjedEventProcessor)
     private fun initializeOppgaveConsumer() = KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(oppgaveKafkaConsumerProps, oppgaveEventProcessor)
+    private fun initializeStatusoppdateringConsumer() = KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(statusoppdateringKafkaConsumerProps, statusoppdateringEventProcessor)
     private fun initializeDoneConsumer() = KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(doneKafkaConsumerProps, doneEventProcessor)
 }
