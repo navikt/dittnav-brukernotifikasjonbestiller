@@ -1,7 +1,6 @@
 {
   "namespace": "personbruker",
   "ingresses": [
-    "https://www.dev.nav.no/person/dittnav-brukernotifikasjonbestiller",
-    "https://personbruker.nais.oera-q.local/person/dittnav-brukernotifikasjonbestiller"
+    "https://dittnav-brukernotifikasjonbestiller.dev.nav.no"
   ]
 }
