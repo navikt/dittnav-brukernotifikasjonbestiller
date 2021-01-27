@@ -10,3 +10,7 @@ data class Environment(
         val groupId: String = getEnvVar("GROUP_ID"),
         val applicationName: String = "dittnav-brukernotifikasjonbestiller"
 )
+
+fun isCurrentlyRunningOnNais(): Boolean {
+    return System.getenv("NAIS_APP_NAME") != null
+}

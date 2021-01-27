@@ -25,20 +25,11 @@ repositories {
 }
 
 dependencies {
+    implementation(Brukernotifikasjon.schemas)
     implementation(DittNAV.Common.utils)
-    implementation(Jackson.dataTypeJsr310)
-    implementation(Kotlinx.coroutines)
-    implementation(Kotlinx.htmlJvm)
-    implementation(Ktor.auth)
-    implementation(Ktor.authJwt)
-    implementation(Ktor.clientApache)
-    implementation(Ktor.clientJackson)
-    implementation(Ktor.clientJson)
-    implementation(Ktor.clientLogging)
-    implementation(Ktor.clientLoggingJvm)
-    implementation(Ktor.clientSerializationJvm)
+    implementation(Kafka.Apache.clients)
+    implementation(Kafka.Confluent.avroSerializer)
     implementation(Ktor.htmlBuilder)
-    implementation(Ktor.jackson)
     implementation(Ktor.serverNetty)
     implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
@@ -47,7 +38,6 @@ dependencies {
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
 
-
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
@@ -55,9 +45,6 @@ dependencies {
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
 
-    testRuntimeOnly(Bouncycastle.bcprovJdk15on)
-    testRuntimeOnly(Jjwt.impl)
-    testRuntimeOnly(Jjwt.jackson)
     testRuntimeOnly(Junit.engine)
 }
 
