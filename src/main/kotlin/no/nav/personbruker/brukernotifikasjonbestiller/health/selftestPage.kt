@@ -38,7 +38,7 @@ suspend fun ApplicationCall.buildSelftestPage(healthService: HealthService) = co
             }
             table {
                 thead {
-                    tr { th { +"SELFTEST dittnav-varselbestiller" } }
+                    tr { th { +"SELFTEST dittnav-brukernotifikasjonbestiller" } }
                 }
                 tbody {
                     healthChecks.map {
