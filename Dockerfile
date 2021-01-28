@@ -1,4 +1,4 @@
-FROM navikt/java:13-appdynamics
+FROM navikt/java:15-appdynamics
 COPY build/libs/dittnav-brukernotifikasjonbestiller-all.jar /app/app.jar
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 \
                -XX:+HeapDumpOnOutOfMemoryError \

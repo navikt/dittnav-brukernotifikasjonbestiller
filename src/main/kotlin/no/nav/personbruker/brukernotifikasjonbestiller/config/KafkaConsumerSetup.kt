@@ -30,21 +30,21 @@ object KafkaConsumerSetup {
 
     fun setupConsumerForTheBeskjedInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Beskjed>): Consumer<Nokkel, Beskjed> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(kafkaProps)
-        return Consumer(Kafka.beskjedTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheOppgaveInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Oppgave>): Consumer<Nokkel, Oppgave> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(kafkaProps)
-        return Consumer(Kafka.oppgaveTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.oppgaveInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheStatusoppdateringInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Statusoppdatering>): Consumer<Nokkel, Statusoppdatering> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(kafkaProps)
-        return Consumer(Kafka.oppgaveTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.statusoppdateringInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheDoneInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Done>): Consumer<Nokkel, Done> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(kafkaProps)
-        return Consumer(Kafka.doneTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventProcessor)
     }
 }
