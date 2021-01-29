@@ -13,18 +13,53 @@ object KafkaConsumerSetup {
     private val log: Logger = LoggerFactory.getLogger(KafkaConsumerSetup::class.java)
 
     fun startAllKafkaPollers(appContext: ApplicationContext) {
-        appContext.beskjedConsumer.startPolling()
-        appContext.oppgaveConsumer.startPolling()
-        appContext.statusoppdateringConsumer.startPolling()
-        appContext.doneConsumer.startPolling()
+        if(shouldPollBeskjed()) {
+            appContext.beskjedConsumer.startPolling()
+        } else {
+            log.info("Unnlater å starte polling av beskjed")
+        }
+
+        if(shouldPollOppgave()) {
+            appContext.oppgaveConsumer.startPolling()
+        } else {
+            log.info("Unnlater å starte polling av oppgave")
+        }
+
+        if(shouldPollStatusoppdatering()) {
+            appContext.statusoppdateringConsumer.startPolling()
+        } else {
+            log.info("Unnlater å starte polling av statusoppdatering")
+        }
+
+        if(shouldPollDone()) {
+            appContext.doneConsumer.startPolling()
+        } else {
+            log.info("Unnlater å starte polling av done")
+        }
+
     }
 
     suspend fun stopAllKafkaConsumers(appContext: ApplicationContext) {
         log.info("Begynner å stoppe kafka-pollerne...")
-        appContext.beskjedConsumer.stopPolling()
-        appContext.oppgaveConsumer.stopPolling()
-        appContext.statusoppdateringConsumer.stopPolling()
-        appContext.doneConsumer.stopPolling()
+        if(!appContext.beskjedConsumer.isCompleted()) {
+            appContext.beskjedConsumer.stopPolling()
+        }
+
+        if(!appContext.oppgaveConsumer.isCompleted()) {
+            appContext.oppgaveConsumer.stopPolling()
+        }
+
+        if(!appContext.oppgaveConsumer.isCompleted()) {
+            appContext.oppgaveConsumer.stopPolling()
+        }
+
+        if(!appContext.statusoppdateringConsumer.isCompleted()) {
+            appContext.statusoppdateringConsumer.stopPolling()
+        }
+
+        if(!appContext.doneConsumer.isCompleted()) {
+            appContext.doneConsumer.stopPolling()
+        }
         log.info("...ferdig med å stoppe kafka-pollerne.")
     }
 
@@ -46,5 +81,11 @@ object KafkaConsumerSetup {
     fun setupConsumerForTheDoneInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Done>): Consumer<Nokkel, Done> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(kafkaProps)
         return Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventProcessor)
+    }
+
+    suspend fun restartPolling(appContext: ApplicationContext) {
+        stopAllKafkaConsumers(appContext)
+        appContext.reinitializeConsumers()
+        startAllKafkaPollers(appContext)
     }
 }

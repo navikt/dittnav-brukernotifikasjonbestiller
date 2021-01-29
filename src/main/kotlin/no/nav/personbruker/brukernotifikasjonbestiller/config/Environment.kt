@@ -1,5 +1,6 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.config
 
+import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
 
 data class Environment(
@@ -14,3 +15,11 @@ data class Environment(
 fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null
 }
+
+fun shouldPollBeskjed() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED", "false").toBoolean()
+
+fun shouldPollOppgave() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE", "false").toBoolean()
+
+fun shouldPollStatusoppdatering() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING", "false").toBoolean()
+
+fun shouldPollDone() = StringEnvVar.getOptionalEnvVar("POLL_DONE", "false").toBoolean()
