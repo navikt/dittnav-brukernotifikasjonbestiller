@@ -9,9 +9,8 @@ import io.ktor.routing.Routing
 import io.ktor.routing.get
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
-import no.nav.personbruker.brukernotifikasjonbestiller.config.Environment
 
-fun Routing.healthApi(environment: Environment, collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry) {
+fun Routing.healthApi(healthService: HealthService, collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry) {
 
     val pingJsonResponse = """{"ping": "pong"}"""
 
@@ -27,10 +26,6 @@ fun Routing.healthApi(environment: Environment, collectorRegistry: CollectorRegi
         call.respondText(text = "READY", contentType = ContentType.Text.Plain)
     }
 
-    get("/internal/selftest") {
-        call.pingDependencies(environment)
-    }
-
     get("/metrics") {
         val names = call.request.queryParameters.getAll("name")?.toSet() ?: emptySet()
         call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004), HttpStatusCode.OK) {
@@ -38,4 +33,15 @@ fun Routing.healthApi(environment: Environment, collectorRegistry: CollectorRegi
         }
     }
 
+    get("/internal/selftest") {
+        call.buildSelftestPage(healthService)
+    }
 }
+
+private suspend fun isReady(healthService: HealthService): Boolean {
+    val healthChecks = healthService.getHealthChecks()
+    return healthChecks
+            .filter { healthStatus -> healthStatus.includeInReadiness }
+            .all { healthStatus -> Status.OK == healthStatus.status }
+}
+

@@ -25,19 +25,11 @@ repositories {
 }
 
 dependencies {
-    implementation(Jackson.dataTypeJsr310)
-    implementation(Kotlinx.coroutines)
-    implementation(Kotlinx.htmlJvm)
-    implementation(Ktor.auth)
-    implementation(Ktor.authJwt)
-    implementation(Ktor.clientApache)
-    implementation(Ktor.clientJackson)
-    implementation(Ktor.clientJson)
-    implementation(Ktor.clientLogging)
-    implementation(Ktor.clientLoggingJvm)
-    implementation(Ktor.clientSerializationJvm)
+    implementation(Brukernotifikasjon.schemas)
+    implementation(DittNAV.Common.utils)
+    implementation(Kafka.Apache.clients)
+    implementation(Kafka.Confluent.avroSerializer)
     implementation(Ktor.htmlBuilder)
-    implementation(Ktor.jackson)
     implementation(Ktor.serverNetty)
     implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
@@ -46,7 +38,6 @@ dependencies {
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
 
-
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
@@ -54,9 +45,6 @@ dependencies {
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
 
-    testRuntimeOnly(Bouncycastle.bcprovJdk15on)
-    testRuntimeOnly(Jjwt.impl)
-    testRuntimeOnly(Jjwt.jackson)
     testRuntimeOnly(Junit.engine)
 }
 
@@ -81,7 +69,7 @@ tasks {
         environment("LOGINSERVICE_IDPORTEN_DISCOVERY_URL", "http://localhost:9000/.well-known/openid-configuration")
         environment("LOGINSERVICE_IDPORTEN_AUDIENCE", "stubOidcClient")
         environment("OIDC_CLAIM_CONTAINING_THE_IDENTITY", "pid")
-        
+
         environment("NAIS_CLUSTER_NAME", "dev-sbs")
         environment("NAIS_NAMESPACE", "personbruker")
         environment("SENSU_HOST", "stub")
