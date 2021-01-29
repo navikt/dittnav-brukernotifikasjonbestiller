@@ -10,16 +10,19 @@ import no.nav.personbruker.brukernotifikasjonbestiller.oppgave.OppgaveEventServi
 import no.nav.personbruker.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
 import no.nav.personbruker.dittnav.common.util.kafka.producer.KafkaProducerWrapper
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.slf4j.LoggerFactory
 
 class ApplicationContext {
+
+    private val log = LoggerFactory.getLogger(ApplicationContext::class.java)
 
     val environment = Environment()
     val healthService = HealthService(this)
 
-    val beskjedConsumer = initializeBeskjedConsumer()
-    val oppgaveConsumer = initializeOppgaveConsumer()
-    val statusoppdateringConsumer = initializeStatusoppdateringConsumer()
-    val doneConsumer = initializeDoneConsumer()
+    var beskjedConsumer = initializeBeskjedConsumer()
+    var oppgaveConsumer = initializeOppgaveConsumer()
+    var statusoppdateringConsumer = initializeStatusoppdateringConsumer()
+    var doneConsumer = initializeDoneConsumer()
 
     val beskjedProducer = initializeBeskjedProducer()
     val oppgaveProducer = initializeOppgaveProducer()
@@ -76,6 +79,36 @@ class ApplicationContext {
         val kafkaProducer = KafkaProducer<Nokkel, Done>(producerProps)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, kafkaProducer)
         return Producer(kafkaProducerWrapper)
+    }
+
+    fun reinitializeConsumers() {
+        if (beskjedConsumer.isCompleted()) {
+            beskjedConsumer = initializeBeskjedConsumer()
+            log.info("beskjedConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("beskjedConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (oppgaveConsumer.isCompleted()) {
+            oppgaveConsumer = initializeOppgaveConsumer()
+            log.info("oppgaveConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("oppgaveConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (statusoppdateringConsumer.isCompleted()) {
+            statusoppdateringConsumer = initializeStatusoppdateringConsumer()
+            log.info("statusoppdateringConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("statusoppdateringConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (doneConsumer.isCompleted()) {
+            doneConsumer = initializeDoneConsumer()
+            log.info("doneConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("doneConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
     }
 
 
