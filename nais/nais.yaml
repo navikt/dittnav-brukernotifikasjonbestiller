@@ -2,7 +2,7 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: dittnav-brukernotifikasjonbestiller
-  namespace: {{namespace}}
+  namespace: personbruker
   labels:
     team: personbruker
 spec:
@@ -29,6 +29,11 @@ spec:
 {{/each}}
   vault:
     enabled: true
+    paths:
+      - kvPath: /kv/{{vault_secrets_root}}/sbs/dittnav-brukernotifikasjonbestiller/personbruker
+        mountPath: /var/run/secrets/nais.io/vault
+      - kvPath: /serviceuser/data/{{vault_namespace}}/srvdittnav-bnb
+        mountPath: /secret/serviceuser
   resources:
     limits:
       cpu: "3"
