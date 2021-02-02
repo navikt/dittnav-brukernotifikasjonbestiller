@@ -1,15 +1,13 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.*
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.brukernotifikasjonbestiller.common.exception.RetriableKafkaException
+import no.nav.personbruker.brukernotifikasjonbestiller.common.exception.UnretriableKafkaException
 import no.nav.personbruker.brukernotifikasjonbestiller.health.HealthCheck
 import no.nav.personbruker.brukernotifikasjonbestiller.health.HealthStatus
 import no.nav.personbruker.brukernotifikasjonbestiller.health.Status
-import no.nav.personbruker.dittnav.common.util.database.exception.RetriableDatabaseException
-import no.nav.personbruker.dittnav.common.util.database.exception.UnretriableDatabaseException
-import no.nav.personbruker.dittnav.common.util.kafka.consumer.rollbackToLastCommitted
-import no.nav.personbruker.dittnav.common.util.kafka.exception.RetriableKafkaException
-import no.nav.personbruker.dittnav.common.util.kafka.exception.UnretriableKafkaException
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -75,15 +73,7 @@ class Consumer<K, V>(
         } catch (ure: UnretriableKafkaException) {
             log.warn("Alvorlig feil ved post mot kafka. Stopper polling. Topic: $topic", ure)
             stopPolling()
-
-        } catch (rde: RetriableDatabaseException) {
-            log.warn("Klarte ikke å skrive til databasen, prøver igjen senrere. Topic: $topic", rde)
-
-        } catch (ude: UnretriableDatabaseException) {
-            log.error("Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic", ude)
-            stopPolling()
-
-        } catch (re: RetriableException) {
+        }  catch (re: RetriableException) {
             log.warn("Polling mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
 
         } catch (ce: CancellationException) {

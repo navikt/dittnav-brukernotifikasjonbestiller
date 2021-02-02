@@ -3,12 +3,11 @@ package no.nav.personbruker.brukernotifikasjonbestiller.config
 import no.nav.brukernotifikasjon.schemas.*
 import no.nav.personbruker.brukernotifikasjonbestiller.beskjed.BeskjedEventService
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.Consumer
-import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.Producer
+import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.brukernotifikasjonbestiller.oppgave.OppgaveEventService
 import no.nav.personbruker.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
-import no.nav.personbruker.dittnav.common.util.kafka.producer.KafkaProducerWrapper
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
 
@@ -19,97 +18,71 @@ class ApplicationContext {
     val environment = Environment()
     val healthService = HealthService(this)
 
-    var beskjedConsumer = initializeBeskjedConsumer()
-    var oppgaveConsumer = initializeOppgaveConsumer()
-    var statusoppdateringConsumer = initializeStatusoppdateringConsumer()
-    var doneConsumer = initializeDoneConsumer()
+    var beskjedConsumer = initializeBeskjedProcessor()
+    var oppgaveConsumer = initializeOppgaveProcessor()
+    var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
+    var doneConsumer = initializeDoneProcessor()
 
-    val beskjedProducer = initializeBeskjedProducer()
-    val oppgaveProducer = initializeOppgaveProducer()
-    val statusoppdateringProducer = initializeStatusoppdateringProducer()
-    val doneProducer = initializeDoneProducer()
-
-    private fun initializeBeskjedConsumer(): Consumer<Nokkel, Beskjed> {
+    private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val beskjedEventProcessor = BeskjedEventService()
+        val producerProps = Kafka.producerProps(environment)
+        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, KafkaProducer<Nokkel, Beskjed>(producerProps))
+        val beskjedEventProcessor = BeskjedEventService(kafkaProducerWrapper)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventProcessor)
     }
 
-    private fun initializeBeskjedProducer(): Producer<Nokkel, Beskjed> {
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = KafkaProducer<Nokkel, Beskjed>(producerProps)
-        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, kafkaProducer)
-        return Producer(kafkaProducerWrapper)
-    }
-
-    private fun initializeOppgaveConsumer(): Consumer<Nokkel, Oppgave> {
+    private fun initializeOppgaveProcessor(): Consumer<Nokkel, Oppgave> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
-        val oppgaveEventProcessor = OppgaveEventService()
+        val producerProps = Kafka.producerProps(environment)
+        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.oppgaveMainTopicName, KafkaProducer<Nokkel, Oppgave>(producerProps))
+        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventProcessor)
     }
 
-    private fun initializeOppgaveProducer(): Producer<Nokkel, Oppgave> {
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = KafkaProducer<Nokkel, Oppgave>(producerProps)
-        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.oppgaveMainTopicName, kafkaProducer)
-        return Producer(kafkaProducerWrapper)
-    }
-
-    private fun initializeStatusoppdateringConsumer(): Consumer<Nokkel, Statusoppdatering> {
+    private fun initializeStatusoppdateringProcessor(): Consumer<Nokkel, Statusoppdatering> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
-        val statusoppdateringEventProcessor = StatusoppdateringEventService()
+        val producerProps = Kafka.producerProps(environment)
+        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.statusoppdateringMainTopicName, KafkaProducer<Nokkel, Statusoppdatering>(producerProps))
+        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper)
         return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventProcessor)
     }
 
-    private fun initializeStatusoppdateringProducer(): Producer<Nokkel, Statusoppdatering> {
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = KafkaProducer<Nokkel, Statusoppdatering>(producerProps)
-        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.statusoppdateringMainTopicName, kafkaProducer)
-        return Producer(kafkaProducerWrapper)
-    }
-
-    private fun initializeDoneConsumer(): Consumer<Nokkel, Done> {
+    private fun initializeDoneProcessor(): Consumer<Nokkel, Done> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
-        val doneEventProcessor = DoneEventService()
+        val producerProps = Kafka.producerProps(environment)
+        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, KafkaProducer<Nokkel, Done>(producerProps))
+        val doneEventProcessor = DoneEventService(kafkaProducerWrapper)
         return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventProcessor)
     }
 
-    private fun initializeDoneProducer(): Producer<Nokkel, Done> {
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = KafkaProducer<Nokkel, Done>(producerProps)
-        val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, kafkaProducer)
-        return Producer(kafkaProducerWrapper)
-    }
 
     fun reinitializeConsumers() {
         if (beskjedConsumer.isCompleted()) {
-            beskjedConsumer = initializeBeskjedConsumer()
+            beskjedConsumer = initializeBeskjedProcessor()
             log.info("beskjedConsumer har blitt reinstansiert.")
         } else {
             log.warn("beskjedConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
         if (oppgaveConsumer.isCompleted()) {
-            oppgaveConsumer = initializeOppgaveConsumer()
+            oppgaveConsumer = initializeOppgaveProcessor()
             log.info("oppgaveConsumer har blitt reinstansiert.")
         } else {
             log.warn("oppgaveConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
         if (statusoppdateringConsumer.isCompleted()) {
-            statusoppdateringConsumer = initializeStatusoppdateringConsumer()
+            statusoppdateringConsumer = initializeStatusoppdateringProcessor()
             log.info("statusoppdateringConsumer har blitt reinstansiert.")
         } else {
             log.warn("statusoppdateringConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
         if (doneConsumer.isCompleted()) {
-            doneConsumer = initializeDoneConsumer()
+            doneConsumer = initializeDoneProcessor()
             log.info("doneConsumer har blitt reinstansiert.")
         } else {
             log.warn("doneConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
     }
-
-
 }
