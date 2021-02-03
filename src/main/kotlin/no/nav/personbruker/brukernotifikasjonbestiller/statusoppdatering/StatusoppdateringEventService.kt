@@ -7,10 +7,11 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaProduce
 import org.apache.kafka.clients.consumer.ConsumerRecords
 
 class StatusoppdateringEventService(
-        private val eventProducer: KafkaProducerWrapper<Statusoppdatering>
+        private val eventProducer: KafkaProducerWrapper<Nokkel, Statusoppdatering>
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Statusoppdatering>) {
-        TODO("Not yet implemented")
+        val eventList = events.asWrapperList()
+        eventProducer.sendEvents(eventList)
     }
 }

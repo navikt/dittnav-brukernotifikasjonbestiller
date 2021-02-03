@@ -1,18 +1,17 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.brukernotifikasjonbestiller.common.exception.RetriableKafkaException
 import no.nav.personbruker.brukernotifikasjonbestiller.common.exception.UnretriableKafkaException
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
 
-class KafkaProducerWrapper<T>(
+class KafkaProducerWrapper<K, V>(
         private val destinationTopicName: String,
-        private val kafkaProducer: KafkaProducer<Nokkel, T>
+        private val kafkaProducer: KafkaProducer<K, V>
 ) {
 
-    fun sendEvents(events: List<RecordKeyValueWrapper<T>>) {
+    fun sendEvents(events: List<RecordKeyValueWrapper<K, V>>) {
         try {
             kafkaProducer.beginTransaction()
             events.forEach { event ->
@@ -28,7 +27,7 @@ class KafkaProducerWrapper<T>(
         }
     }
 
-    private fun sendEvent(event: RecordKeyValueWrapper<T>) {
+    private fun sendEvent(event: RecordKeyValueWrapper<K, V>) {
         val producerRecord = ProducerRecord(destinationTopicName, event.key, event.value)
         kafkaProducer.send(producerRecord)
     }
