@@ -8,7 +8,7 @@ metadata:
 spec:
   envFrom:
     - configmap: loginservice-idporten
-    - secret: srvdittnav-bnb
+    - secret: dittnav-brukernotifikasjonbestiller-secret
   image: {{version}}
   port: 8080
   liveness:
