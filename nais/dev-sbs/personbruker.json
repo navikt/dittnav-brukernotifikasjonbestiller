@@ -1,8 +1,0 @@
-{
-  "namespace": "personbruker",
-  "vault_secrets_root": "preprod",
-  "vault_namespace": "dev",
-  "ingresses": [
-    "https://dittnav-brukernotifikasjonbestiller.dev.nav.no"
-  ]
-}

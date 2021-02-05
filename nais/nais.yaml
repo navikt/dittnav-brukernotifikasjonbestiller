@@ -8,6 +8,7 @@ metadata:
 spec:
   envFrom:
     - configmap: loginservice-idporten
+    - secret: srvdittnav-bnb
   image: {{version}}
   port: 8080
   liveness:
@@ -20,20 +21,9 @@ spec:
     enabled: true
     path: /person/dittnav-brukernotifikasjonbestiller/metrics
   replicas:
-    min: 2
-    max: 4
+    min: 1
+    max: 1
   webproxy: true
-  ingresses:
-{{#each ingresses}}
-  - "{{this}}"
-{{/each}}
-  vault:
-    enabled: true
-    paths:
-      - kvPath: /kv/{{vault_secrets_root}}/sbs/dittnav-brukernotifikasjonbestiller/personbruker
-        mountPath: /var/run/secrets/nais.io/vault
-      - kvPath: /serviceuser/data/{{vault_namespace}}/srvdittnav-bnb
-        mountPath: /secret/serviceuser
   resources:
     limits:
       cpu: "3"
@@ -41,3 +31,9 @@ spec:
     requests:
       cpu: "500m"
       memory: 580Mi
+  accessPolicy:
+     outbound:
+       external:
+         - host: "kafka-schema-registry.nais-q.adeo.no"
+  kafka:
+    pool: "nav-dev"
