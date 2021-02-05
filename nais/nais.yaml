@@ -35,5 +35,3 @@ spec:
      outbound:
        external:
          - host: "kafka-schema-registry.nais-q.adeo.no"
-  kafka:
-    pool: "nav-dev"
