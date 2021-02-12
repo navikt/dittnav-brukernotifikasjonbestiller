@@ -15,25 +15,13 @@ class ApplicationContext {
 
     private val log = LoggerFactory.getLogger(ApplicationContext::class.java)
 
-    private val environment: Environment
-    val healthService: HealthService
+    val environment = Environment()
+    val healthService = HealthService(this)
 
-    var beskjedConsumer: Consumer<Nokkel, Beskjed>
-    var oppgaveConsumer: Consumer<Nokkel, Oppgave>
-    var statusoppdateringConsumer: Consumer<Nokkel, Statusoppdatering>
-    var doneConsumer: Consumer<Nokkel, Done>
-
-    init {
-        log.info("Venter 30 sek på at Istio sidecars skal bli klare.")
-        Thread.sleep(30000)
-        this.environment = Environment()
-        this.healthService = HealthService(this)
-
-        this.beskjedConsumer = initializeBeskjedProcessor()
-        this.oppgaveConsumer = initializeOppgaveProcessor()
-        this.statusoppdateringConsumer = initializeStatusoppdateringProcessor()
-        this.doneConsumer = initializeDoneProcessor()
-    }
+    var beskjedConsumer = initializeBeskjedProcessor()
+    var oppgaveConsumer = initializeOppgaveProcessor()
+    var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
+    var doneConsumer = initializeDoneProcessor()
 
     private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
