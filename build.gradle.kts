@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     implementation(Brukernotifikasjon.schemas)
+    implementation(Brukernotifikasjon_internal.schemas)
     implementation(DittNAV.Common.utils)
     implementation(Kafka.Apache.clients)
     implementation(Kafka.Confluent.avroSerializer)
