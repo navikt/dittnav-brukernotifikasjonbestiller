@@ -7,7 +7,7 @@ repositories {
     maven("https://jitpack.io")
 }
 
-val dittNavDependenciesVersion = "legger-til-schemas-internal-SNAPSHOT"
+val dittNavDependenciesVersion = "2021.02.17-10.03-2adc041acb6c"
 
 dependencies {
     implementation("com.github.navikt:dittnav-dependencies:$dittNavDependenciesVersion")
