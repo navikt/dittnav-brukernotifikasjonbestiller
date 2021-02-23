@@ -20,7 +20,7 @@ class OppgaveEventService(
             val externalNokkel = event.key()
             val externalOppgave = event.value()
             val internalNokkel = OppgaveTransformer.toNokkelInternal(externalNokkel, externalOppgave)
-            val internalOppgave = OppgaveTransformer.toOppgaveInternal(externalNokkel, externalOppgave)
+            val internalOppgave = OppgaveTransformer.toOppgaveInternal(externalOppgave)
             successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalOppgave))
         }
         eventProducer.sendEvents(eventList)

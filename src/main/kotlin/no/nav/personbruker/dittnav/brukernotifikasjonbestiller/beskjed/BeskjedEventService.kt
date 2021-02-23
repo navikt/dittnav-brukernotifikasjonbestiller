@@ -20,7 +20,7 @@ class BeskjedEventService(
             val externalNokkel = event.key()
             val externalBeskjed = event.value()
             val internalNokkel = BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
-            val internalBeskjed = BeskjedTransformer.toBeskjedInternal(externalNokkel, externalBeskjed)
+            val internalBeskjed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalBeskjed))
         }
         eventProducer.sendEvents(eventList)

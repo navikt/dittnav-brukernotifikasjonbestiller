@@ -20,7 +20,7 @@ class DoneEventService(
             val externalNokkel = event.key()
             val externalDone = event.value()
             val internalNokkel = DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
-            val internalDone = DoneTransformer.toDoneInternal(externalNokkel, externalDone)
+            val internalDone = DoneTransformer.toDoneInternal(externalDone)
             successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalDone))
         }
         eventProducer.sendEvents(eventList)

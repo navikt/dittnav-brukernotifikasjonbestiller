@@ -20,7 +20,7 @@ class StatusoppdateringEventService(
             val externalNokkel = event.key()
             val externalStatusoppdatering = event.value()
             val internalNokkel = StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
-            val internalStatusoppdatering = StatusoppdateringTransformer.toStatusoppdateringInternal(externalNokkel, externalStatusoppdatering)
+            val internalStatusoppdatering = StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalStatusoppdatering))
         }
         eventProducer.sendEvents(eventList)
