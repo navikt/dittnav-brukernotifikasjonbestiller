@@ -1,5 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
-fun createRandomStringULID(): String {
-    return "123"
+import de.huxhorn.sulky.ulid.ULID
+
+fun createULID(): String {
+    return ULID().nextULID()
 }

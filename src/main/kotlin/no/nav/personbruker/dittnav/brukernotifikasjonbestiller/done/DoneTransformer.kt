@@ -5,15 +5,14 @@ import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createRandomStringULID
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validateDateTime
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 
 object DoneTransformer {
 
     fun toDoneInternal(externalDone: Done): DoneIntern {
         return DoneIntern.newBuilder()
-                .setUlid(createRandomStringULID())
-                .setTidspunkt(validateDateTime(externalDone.getTidspunkt(), "tidspunkt"))
+                .setUlid(createULID())
+                .setTidspunkt(externalDone.getTidspunkt())
                 .setGrupperingsId(validateNonNullFieldMaxLength(externalDone.getGrupperingsId(), "grupperingsId", MAX_LENGTH_GRUPPERINGSID))
                 .build()
     }

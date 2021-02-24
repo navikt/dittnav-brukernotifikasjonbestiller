@@ -6,15 +6,14 @@ import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createRandomStringULID
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validateDateTime
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 
 object StatusoppdateringTransformer {
 
     fun toStatusoppdateringInternal(externalStatusoppdatering: Statusoppdatering): StatusoppdateringIntern {
         return StatusoppdateringIntern.newBuilder()
-                .setUlid(createRandomStringULID())
-                .setTidspunkt(validateDateTime(externalStatusoppdatering.getTidspunkt(), "tidspunkt"))
+                .setUlid(createULID())
+                .setTidspunkt(externalStatusoppdatering.getTidspunkt())
                 .setGrupperingsId(validateNonNullFieldMaxLength(externalStatusoppdatering.getGrupperingsId(), "grupperingsId", MAX_LENGTH_GRUPPERINGSID))
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalStatusoppdatering.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.STATUSOPPDATERING)))
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalStatusoppdatering.getSikkerhetsnivaa()))

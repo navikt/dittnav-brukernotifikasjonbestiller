@@ -6,15 +6,14 @@ import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createRandomStringULID
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validateDateTime
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 
 object OppgaveTransformer {
 
     fun toOppgaveInternal(externalOppgave: Oppgave): OppgaveIntern {
         return OppgaveIntern.newBuilder()
-                .setUlid(createRandomStringULID())
-                .setTidspunkt(validateDateTime(externalOppgave.getTidspunkt(), "tidspunkt"))
+                .setUlid(createULID())
+                .setTidspunkt(externalOppgave.getTidspunkt())
                 .setGrupperingsId(validateNonNullFieldMaxLength(externalOppgave.getGrupperingsId(), "grupperingsId", MAX_LENGTH_GRUPPERINGSID))
                 .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_BESKJED))
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))
