@@ -38,7 +38,7 @@ dependencies {
     implementation(Prometheus.common)
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
-    implementation("de.huxhorn.sulky:de.huxhorn.sulky.ulid:8.2.0")
+    implementation(ULID.sulkyUlid)
 
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
