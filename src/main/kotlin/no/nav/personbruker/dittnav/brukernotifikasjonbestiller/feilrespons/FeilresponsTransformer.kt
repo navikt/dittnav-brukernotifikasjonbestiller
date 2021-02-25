@@ -24,10 +24,4 @@ object FeilresponsTransformer {
                 .build()
     }
 
-    fun toNonNullNokkel(): Nokkel {
-        return Nokkel.newBuilder()
-                .setSystembruker("empty")
-                .setEventId("empty")
-                .build()
-    }
 }

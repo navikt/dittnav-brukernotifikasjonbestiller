@@ -37,15 +37,12 @@ class BeskjedEventService(
                 val internalBeskjed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
                 successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalBeskjed))
             } catch (nne: NokkelNullException) {
-                val feilrespons = getFeilrespons(FeilresponsTransformer.toNonNullNokkel(), nne)
-                problematicEvents.add(feilrespons)
                 log.warn("Eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
             } catch (fve: FieldValidationException) {
                 val feilrespons = getFeilrespons(event.key(), fve)
                 problematicEvents.add(feilrespons)
                 log.warn("Validering av beskjed-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
             } catch (e: Exception) {
-                //TODO: hva gjør vi hvis vi ikke kan konvertere til feilrespons?
                 val feilrespons = getFeilrespons(event.key(), e)
                 problematicEvents.add(feilrespons)
                 log.warn("Transformasjon av beskjed-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)

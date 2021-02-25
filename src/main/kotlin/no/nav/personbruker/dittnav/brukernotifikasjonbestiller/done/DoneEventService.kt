@@ -37,15 +37,12 @@ class DoneEventService(
                 val internalDone = DoneTransformer.toDoneInternal(externalDone)
                 successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalDone))
             } catch (nne: NokkelNullException) {
-                val feilrespons = getFeilrespons(FeilresponsTransformer.toNonNullNokkel(), nne)
-                problematicEvents.add(feilrespons)
                 log.warn("Eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
             } catch (fve: FieldValidationException) {
                 val feilrespons = getFeilrespons(event.key(), fve)
                 problematicEvents.add(feilrespons)
                 log.warn("Validering av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
             } catch (e: Exception) {
-                //TODO: hva gjør vi hvis vi ikke kan konvertere til feilrespons?
                 val feilrespons = getFeilrespons(event.key(), e)
                 problematicEvents.add(feilrespons)
                 log.warn("Transformasjon av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
