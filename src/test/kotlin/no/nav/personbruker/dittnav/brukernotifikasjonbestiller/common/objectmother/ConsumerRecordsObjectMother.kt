@@ -21,7 +21,7 @@ object ConsumerRecordsObjectMother {
         val allRecords = mutableListOf<ConsumerRecord<Nokkel, Beskjed>>()
         for (i in 0 until totalNumber) {
             val schemaRecord = AvroBeskjedObjectMother.createBeskjed(i)
-            val nokkel = AvroNokkelObjectMother.createNokkelWithEventId(i)
+            val nokkel = AvroNokkelObjectMother.createNokkelWithEventId(i.toString())
 
             allRecords.add(ConsumerRecord(topicName, i, i.toLong(), nokkel, schemaRecord))
         }
