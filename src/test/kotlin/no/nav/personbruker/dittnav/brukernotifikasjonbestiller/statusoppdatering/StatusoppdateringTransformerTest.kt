@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 internal class StatusoppdateringTransformerTest {
 
-    val eventId = "1"
+    private val eventId = "1"
 
     @Test
     fun `should transform from external to internal`() {
