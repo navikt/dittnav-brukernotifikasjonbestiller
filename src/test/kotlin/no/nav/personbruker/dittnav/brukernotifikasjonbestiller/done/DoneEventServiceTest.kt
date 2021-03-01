@@ -17,13 +17,14 @@ import org.junit.jupiter.api.Test
 internal class DoneEventServiceTest {
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, DoneIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val topic = "topic-done-test"
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalDone = AvroDoneObjectMother.createDone()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone, topic)
         val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -41,7 +42,7 @@ internal class DoneEventServiceTest {
         val externalNullNokkel = null
         val externalDone = AvroDoneObjectMother.createDone()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalDone)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalDone, topic)
         val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -60,7 +61,7 @@ internal class DoneEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalDoneWithTooLongGrupperingsid = AvroDoneObjectMother.createDoneWithGrupperingsId("G".repeat(101))
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDoneWithTooLongGrupperingsid)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDoneWithTooLongGrupperingsid, topic)
         val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -79,7 +80,7 @@ internal class DoneEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalUnexpectedDone = mockk<Done>()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedDone)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
         val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit

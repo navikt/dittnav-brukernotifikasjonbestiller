@@ -14,30 +14,30 @@ internal class DoneTransformerTest {
 
     @Test
     fun `should transform from external to internal`() {
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val doneExternal = AvroDoneObjectMother.createDone()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalDone = AvroDoneObjectMother.createDone()
 
-        val transformedNokkel = DoneTransformer.toNokkelInternal(nokkelExternal, doneExternal)
-        val transformedDone = DoneTransformer.toDoneInternal(doneExternal)
+        val transformedNokkel = DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
+        val transformedDone = DoneTransformer.toDoneInternal(externalDone)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` doneExternal.getFodselsnummer()
-        transformedNokkel.getSystembruker() `should be equal to` nokkelExternal.getSystembruker()
-        transformedNokkel.getEventId() `should be equal to` nokkelExternal.getEventId()
+        transformedNokkel.getFodselsnummer() `should be equal to` externalDone.getFodselsnummer()
+        transformedNokkel.getSystembruker() `should be equal to` externalNokkel.getSystembruker()
+        transformedNokkel.getEventId() `should be equal to` externalNokkel.getEventId()
 
-        transformedDone.getGrupperingsId() `should be equal to` doneExternal.getGrupperingsId()
-        transformedDone.getTidspunkt() `should be equal to` doneExternal.getTidspunkt()
+        transformedDone.getGrupperingsId() `should be equal to` externalDone.getGrupperingsId()
+        transformedDone.getTidspunkt() `should be equal to` externalDone.getTidspunkt()
 
     }
 
     @Test
     fun `do not allow empty fodselsnummer`() {
         val fodselsnummerEmpty = ""
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val doneExternal = AvroDoneObjectMother.createDoneWithFodselsnummer(fodselsnummerEmpty)
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalDone = AvroDoneObjectMother.createDoneWithFodselsnummer(fodselsnummerEmpty)
 
         invoking {
             runBlocking {
-                DoneTransformer.toNokkelInternal(nokkelExternal, doneExternal)
+                DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
         } `should throw` FieldValidationException::class
     }
@@ -45,12 +45,12 @@ internal class DoneTransformerTest {
     @Test
     fun `do not allow too long fodselsnummer`() {
         val tooLongFnr = "1".repeat(12)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val doneExternal = AvroDoneObjectMother.createDoneWithFodselsnummer(tooLongFnr)
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalDone = AvroDoneObjectMother.createDoneWithFodselsnummer(tooLongFnr)
 
         invoking {
             runBlocking {
-                DoneTransformer.toNokkelInternal(nokkelExternal, doneExternal)
+                DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
         } `should throw` FieldValidationException::class
     }
@@ -58,12 +58,12 @@ internal class DoneTransformerTest {
     @Test
     fun `do not allow too long systembruker`() {
         val tooLongSystembruker = "P".repeat(101)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithSystembruker(tooLongSystembruker)
-        val doneExternal = AvroDoneObjectMother.createDone()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithSystembruker(tooLongSystembruker)
+        val externalDone = AvroDoneObjectMother.createDone()
 
         invoking {
             runBlocking {
-                DoneTransformer.toNokkelInternal(nokkelExternal, doneExternal)
+                DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
         } `should throw` FieldValidationException::class
     }
@@ -71,12 +71,12 @@ internal class DoneTransformerTest {
     @Test
     fun `do not allow too long eventid`() {
         val tooLongEventId = "1".repeat(51)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(tooLongEventId)
-        val doneExternal = AvroDoneObjectMother.createDone()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(tooLongEventId)
+        val externalDone = AvroDoneObjectMother.createDone()
 
         invoking {
             runBlocking {
-                DoneTransformer.toNokkelInternal(nokkelExternal, doneExternal)
+                DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
         } `should throw` FieldValidationException::class
     }
@@ -84,11 +84,11 @@ internal class DoneTransformerTest {
     @Test
     fun `do not allow too long grupperingsId`() {
         val tooLongGrupperingsId = "G".repeat(101)
-        val doneExternal = AvroDoneObjectMother.createDoneWithGrupperingsId(tooLongGrupperingsId)
+        val externalDone = AvroDoneObjectMother.createDoneWithGrupperingsId(tooLongGrupperingsId)
 
         invoking {
             runBlocking {
-                DoneTransformer.toDoneInternal(doneExternal)
+                DoneTransformer.toDoneInternal(externalDone)
             }
         } `should throw` FieldValidationException::class
     }

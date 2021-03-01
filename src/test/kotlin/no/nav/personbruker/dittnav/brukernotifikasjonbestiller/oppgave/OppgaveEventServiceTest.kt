@@ -17,13 +17,14 @@ import org.junit.jupiter.api.Test
 internal class OppgaveEventServiceTest {
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, OppgaveIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val topic = "topic-oppgave-test"
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalOppgave = AvroOppgaveObjectMother.createOppgave()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgave)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgave, topic)
         val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -41,7 +42,7 @@ internal class OppgaveEventServiceTest {
         val externalNullNokkel = null
         val externalOppgave = AvroOppgaveObjectMother.createOppgave()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalOppgave)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalOppgave, topic)
         val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -60,7 +61,7 @@ internal class OppgaveEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalOppgaveWithTooLongGrupperingsid = AvroOppgaveObjectMother.createOppgaveWithGrupperingsId("G".repeat(101))
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgaveWithTooLongGrupperingsid)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgaveWithTooLongGrupperingsid, topic)
         val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -79,7 +80,7 @@ internal class OppgaveEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalUnexpectedOppgave = mockk<Oppgave>()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedOppgave)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedOppgave, topic)
         val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit

@@ -10,7 +10,6 @@ import org.apache.kafka.common.TopicPartition
 
 object ConsumerRecordsObjectMother {
 
-    private val defaultTopicName = "topic-name-test"
     private val defaultPartition = 1
     private val defaultOffset = 1
 
@@ -32,12 +31,12 @@ object ConsumerRecordsObjectMother {
         return allRecords
     }
 
-    fun <T> createConsumerRecords(nokkel: Nokkel?, event: T?): ConsumerRecords<Nokkel, T> {
+    fun <T> createConsumerRecords(nokkel: Nokkel?, event: T?, topic: String): ConsumerRecords<Nokkel, T> {
         val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, T>>>()
         val recordsForSingleTopic = mutableListOf<ConsumerRecord<Nokkel, T>>()
 
-        recordsForSingleTopic.add(ConsumerRecord(defaultTopicName, defaultPartition, defaultOffset.toLong(), nokkel, event))
-        allRecords[TopicPartition(defaultTopicName, defaultPartition)] = recordsForSingleTopic
+        recordsForSingleTopic.add(ConsumerRecord(topic, defaultPartition, defaultOffset.toLong(), nokkel, event))
+        allRecords[TopicPartition(topic, defaultPartition)] = recordsForSingleTopic
 
         return ConsumerRecords(allRecords)
     }

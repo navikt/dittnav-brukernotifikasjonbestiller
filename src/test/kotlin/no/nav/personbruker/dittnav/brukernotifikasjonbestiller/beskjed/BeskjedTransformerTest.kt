@@ -15,33 +15,33 @@ internal class BeskjedTransformerTest {
 
     @Test
     fun `should transform from external to internal`() {
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjed()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
-        val transformedNokkel = BeskjedTransformer.toNokkelInternal(nokkelExternal, beskjedExternal)
-        val transformedBeskjed = BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+        val transformedNokkel = BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
+        val transformedBeskjed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` beskjedExternal.getFodselsnummer()
-        transformedNokkel.getSystembruker() `should be equal to` nokkelExternal.getSystembruker()
-        transformedNokkel.getEventId() `should be equal to` nokkelExternal.getEventId()
+        transformedNokkel.getFodselsnummer() `should be equal to` externalBeskjed.getFodselsnummer()
+        transformedNokkel.getSystembruker() `should be equal to` externalNokkel.getSystembruker()
+        transformedNokkel.getEventId() `should be equal to` externalNokkel.getEventId()
 
-        transformedBeskjed.getGrupperingsId() `should be equal to` beskjedExternal.getGrupperingsId()
-        transformedBeskjed.getLink() `should be equal to` beskjedExternal.getLink()
-        transformedBeskjed.getTekst() `should be equal to` beskjedExternal.getTekst()
-        transformedBeskjed.getSikkerhetsnivaa() `should be equal to` beskjedExternal.getSikkerhetsnivaa()
-        transformedBeskjed.getTidspunkt() `should be equal to` beskjedExternal.getTidspunkt()
-        transformedBeskjed.getEksternVarsling() `should be equal to` beskjedExternal.getEksternVarsling()
+        transformedBeskjed.getGrupperingsId() `should be equal to` externalBeskjed.getGrupperingsId()
+        transformedBeskjed.getLink() `should be equal to` externalBeskjed.getLink()
+        transformedBeskjed.getTekst() `should be equal to` externalBeskjed.getTekst()
+        transformedBeskjed.getSikkerhetsnivaa() `should be equal to` externalBeskjed.getSikkerhetsnivaa()
+        transformedBeskjed.getTidspunkt() `should be equal to` externalBeskjed.getTidspunkt()
+        transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjed.getEksternVarsling()
     }
 
     @Test
     fun `do not allow empty fodselsnummer`() {
         val fodselsnummerEmpty = ""
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithFodselsnummer(fodselsnummerEmpty)
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithFodselsnummer(fodselsnummerEmpty)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toNokkelInternal(nokkelExternal, beskjedExternal)
+                BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -49,12 +49,12 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long fodselsnummer`() {
         val tooLongFnr = "1".repeat(12)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithFodselsnummer(tooLongFnr)
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithFodselsnummer(tooLongFnr)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toNokkelInternal(nokkelExternal, beskjedExternal)
+                BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -71,12 +71,12 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long systembruker`() {
         val tooLongSystembruker = "P".repeat(101)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithSystembruker(tooLongSystembruker)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjed()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithSystembruker(tooLongSystembruker)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toNokkelInternal(nokkelExternal, beskjedExternal)
+                BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -84,12 +84,12 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long eventid`() {
         val tooLongEventId = "1".repeat(51)
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(tooLongEventId)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjed()
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(tooLongEventId)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toNokkelInternal(nokkelExternal, beskjedExternal)
+                BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -97,11 +97,11 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long grupperingsId`() {
         val tooLongGrupperingsId = "G".repeat(101)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithGrupperingsId(tooLongGrupperingsId)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithGrupperingsId(tooLongGrupperingsId)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -109,21 +109,21 @@ internal class BeskjedTransformerTest {
     @Test
     fun `should allow text length up to the limit`() {
         val textWithMaxAllowedLength = "B".repeat(300)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithText(textWithMaxAllowedLength)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithText(textWithMaxAllowedLength)
 
         runBlocking {
-            BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+            BeskjedTransformer.toBeskjedInternal(externalBeskjed)
         }
     }
 
     @Test
     fun `do not allow empty tekst`() {
         val emptyText = ""
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithText(emptyText)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithText(emptyText)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -131,11 +131,11 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long tekst`() {
         val tooLongText = "T".repeat(501)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithText(tooLongText)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithText(tooLongText)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -143,11 +143,11 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow too long link`() {
         val tooLongLink = "http://" + "L".repeat(201)
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithLink(tooLongLink)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithLink(tooLongLink)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -155,11 +155,11 @@ internal class BeskjedTransformerTest {
     @Test
     fun `do not allow invalid link`() {
         val invalidLink = "invalidUrl"
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithLink(invalidLink)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithLink(invalidLink)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }
@@ -167,20 +167,20 @@ internal class BeskjedTransformerTest {
     @Test
     fun `should allow empty link`() {
         val emptyLink = ""
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithLink(emptyLink)
-        val transformed = BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithLink(emptyLink)
+        val transformed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
 
-        beskjedExternal.getLink() `should be equal to` transformed.getLink()
+        externalBeskjed.getLink() `should be equal to` transformed.getLink()
     }
 
     @Test
     fun `do not allow invalid sikkerhetsnivaa`() {
         val invalidSikkerhetsnivaa = 2
-        val beskjedExternal = AvroBeskjedObjectMother.createBeskjedWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
 
         invoking {
             runBlocking {
-                BeskjedTransformer.toBeskjedInternal(beskjedExternal)
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
         } `should throw` FieldValidationException::class
     }

@@ -18,13 +18,14 @@ internal class BeskjedEventServiceTest {
 
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, BeskjedIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val topic = "topic-beskjed-test"
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -42,7 +43,7 @@ internal class BeskjedEventServiceTest {
         val externalNullNokkel = null
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalBeskjed)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalBeskjed, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -61,7 +62,7 @@ internal class BeskjedEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalBeskjedWithTooLongGrupperingsid = AvroBeskjedObjectMother.createBeskjedWithGrupperingsId("G".repeat(101))
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjedWithTooLongGrupperingsid)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjedWithTooLongGrupperingsid, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -80,7 +81,7 @@ internal class BeskjedEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalUnexpectedBeskjed = mockk<Beskjed>()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedBeskjed)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit

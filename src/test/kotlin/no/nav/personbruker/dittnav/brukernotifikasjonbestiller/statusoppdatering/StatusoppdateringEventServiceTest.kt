@@ -18,13 +18,14 @@ internal class StatusoppdateringEventServiceTest {
 
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val topic = "topic-statusoppdatering-test"
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -42,7 +43,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalNullNokkel = null
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalStatusoppdatering)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -61,7 +62,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalStatusoppdateringWithTooLongGrupperingsid = AvroStatusoppdateringObjectMother.createStatusoppdateringWithGrupperingsId("G".repeat(101))
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdateringWithTooLongGrupperingsid)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdateringWithTooLongGrupperingsid, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit
@@ -80,7 +81,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalUnexpectedStatusoppdatering = mockk<Statusoppdatering>()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedStatusoppdatering)
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
 
         every { internalEventProducer.sendEvents(any()) } returns Unit

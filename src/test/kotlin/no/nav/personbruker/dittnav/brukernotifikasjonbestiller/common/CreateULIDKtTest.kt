@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 internal class CreateULIDKtTest {
 
     @Test
-    fun `Skal ha en leksikografisk rekkefolge paa naar de ble opprettet`() {
+    fun `Skal ha en leksikografisk rekkefolge paa naar ulid ble opprettet`() {
         runBlocking {
             val ulid_1 = createULID()
             delay(100)
