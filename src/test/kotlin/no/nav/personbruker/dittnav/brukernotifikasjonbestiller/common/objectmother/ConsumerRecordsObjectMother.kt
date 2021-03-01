@@ -10,6 +10,10 @@ import org.apache.kafka.common.TopicPartition
 
 object ConsumerRecordsObjectMother {
 
+    private val defaultTopicName = "topic-name-test"
+    private val defaultPartition = 1
+    private val defaultOffset = 1
+
     fun giveMeANumberOfBeskjedRecords(numberOfRecords: Int, topicName: String): ConsumerRecords<Nokkel, Beskjed> {
         val records = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, Beskjed>>>()
         val recordsForSingleTopic = createBeskjedRecords(topicName, numberOfRecords)
@@ -26,5 +30,15 @@ object ConsumerRecordsObjectMother {
             allRecords.add(ConsumerRecord(topicName, i, i.toLong(), nokkel, schemaRecord))
         }
         return allRecords
+    }
+
+    fun <T> createConsumerRecords(nokkel: Nokkel?, event: T?): ConsumerRecords<Nokkel, T> {
+        val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, T>>>()
+        val recordsForSingleTopic = mutableListOf<ConsumerRecord<Nokkel, T>>()
+
+        recordsForSingleTopic.add(ConsumerRecord(defaultTopicName, defaultPartition, defaultOffset.toLong(), nokkel, event))
+        allRecords[TopicPartition(defaultTopicName, defaultPartition)] = recordsForSingleTopic
+
+        return ConsumerRecords(allRecords)
     }
 }

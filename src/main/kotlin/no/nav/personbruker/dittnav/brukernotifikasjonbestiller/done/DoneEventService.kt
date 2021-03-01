@@ -37,24 +37,25 @@ class DoneEventService(
                 val internalDone = DoneTransformer.toDoneInternal(externalDone)
                 successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalDone))
             } catch (nne: NokkelNullException) {
-                log.warn("Eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
+                log.warn("Done-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
             } catch (fve: FieldValidationException) {
-                val feilrespons = getFeilrespons(event.key(), fve)
+                val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), fve, Eventtype.DONE)
                 problematicEvents.add(feilrespons)
                 log.warn("Validering av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
             } catch (e: Exception) {
-                val feilrespons = getFeilrespons(event.key(), e)
+                val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), e, Eventtype.DONE)
                 problematicEvents.add(feilrespons)
                 log.warn("Transformasjon av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
             }
         }
-        internalEventProducer.sendEvents(successfullyValidatedEvents)
-        feilresponsEventProducer.sendEvents(problematicEvents)
+
+        if (successfullyValidatedEvents.isNotEmpty()) {
+            internalEventProducer.sendEvents(successfullyValidatedEvents)
+        }
+
+        if (problematicEvents.isNotEmpty()) {
+            feilresponsEventProducer.sendEvents(problematicEvents)
+        }
     }
 
-    private fun getFeilrespons(externalNokkel: Nokkel, exception: Exception): RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons> {
-        val nokkelFeilrespons = FeilresponsTransformer.toNokkelFeilrespons(externalNokkel, Eventtype.DONE)
-        val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
-        return RecordKeyValueWrapper(nokkelFeilrespons, feilrespons)
-    }
 }
