@@ -13,10 +13,9 @@ internal class FeilresponsTransformerTest {
     @Test
     fun `should transform from external to feilrespons`() {
         val eventtype = Eventtype.BESKJED
-        val feilmelding = "Simulert feil i test."
 
         val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
-        val exception = FieldValidationException(feilmelding)
+        val exception = FieldValidationException("Simulert feil i test.")
 
         val nokkelFeilrespons = FeilresponsTransformer.toNokkelFeilrespons(nokkelExternal, eventtype)
         val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
@@ -24,6 +23,6 @@ internal class FeilresponsTransformerTest {
         nokkelFeilrespons.getSystembruker() `should be equal to` nokkelExternal.getSystembruker()
         nokkelFeilrespons.getEventId() `should be equal to` nokkelExternal.getEventId()
         nokkelFeilrespons.getBrukernotifikasjonstype() `should be equal to` eventtype.toString()
-        feilrespons.getFeilmelding() `should be equal to` feilmelding
+        feilrespons.getFeilmelding() `should be equal to` exception.toString()
     }
 }

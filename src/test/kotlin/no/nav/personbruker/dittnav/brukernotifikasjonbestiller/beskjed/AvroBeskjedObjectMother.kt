@@ -45,7 +45,6 @@ object AvroBeskjedObjectMother {
         return createBeskjed(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, synligFremTil)
     }
 
-
     private fun createBeskjed(fodselsnummer: String, text: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, link: String, grupperingsid: String, synligFremTil: Long?): Beskjed {
         return Beskjed(
                 Instant.now().toEpochMilli(),
