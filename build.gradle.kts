@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     implementation(Brukernotifikasjon.schemas)
+    implementation(Brukernotifikasjon.schemas_internal)
     implementation(DittNAV.Common.utils)
     implementation(Kafka.Apache.clients)
     implementation(Kafka.Confluent.avroSerializer)
@@ -37,6 +38,7 @@ dependencies {
     implementation(Prometheus.common)
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
+    implementation(ULID.sulkyUlid)
 
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)

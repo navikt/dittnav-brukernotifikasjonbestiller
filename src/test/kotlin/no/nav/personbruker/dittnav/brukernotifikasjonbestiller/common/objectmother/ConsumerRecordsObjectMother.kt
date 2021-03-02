@@ -10,6 +10,9 @@ import org.apache.kafka.common.TopicPartition
 
 object ConsumerRecordsObjectMother {
 
+    private val defaultPartition = 1
+    private val defaultOffset = 1
+
     fun giveMeANumberOfBeskjedRecords(numberOfRecords: Int, topicName: String): ConsumerRecords<Nokkel, Beskjed> {
         val records = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, Beskjed>>>()
         val recordsForSingleTopic = createBeskjedRecords(topicName, numberOfRecords)
@@ -21,10 +24,20 @@ object ConsumerRecordsObjectMother {
         val allRecords = mutableListOf<ConsumerRecord<Nokkel, Beskjed>>()
         for (i in 0 until totalNumber) {
             val schemaRecord = AvroBeskjedObjectMother.createBeskjed(i)
-            val nokkel = AvroNokkelObjectMother.createNokkelWithEventId(i)
+            val nokkel = AvroNokkelObjectMother.createNokkelWithEventId(i.toString())
 
             allRecords.add(ConsumerRecord(topicName, i, i.toLong(), nokkel, schemaRecord))
         }
         return allRecords
+    }
+
+    fun <T> createConsumerRecords(nokkel: Nokkel?, event: T?, topic: String): ConsumerRecords<Nokkel, T> {
+        val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, T>>>()
+        val recordsForSingleTopic = mutableListOf<ConsumerRecord<Nokkel, T>>()
+
+        recordsForSingleTopic.add(ConsumerRecord(topic, defaultPartition, defaultOffset.toLong(), nokkel, event))
+        allRecords[TopicPartition(topic, defaultPartition)] = recordsForSingleTopic
+
+        return ConsumerRecords(allRecords)
     }
 }
