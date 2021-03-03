@@ -39,6 +39,10 @@ dependencies {
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
     implementation(ULID.sulkyUlid)
+    implementation(Ktor.clientApache)
+    implementation(Ktor.clientJson)
+    implementation(Ktor.clientJackson)
+    implementation(Jackson.dataTypeJsr310)
 
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)

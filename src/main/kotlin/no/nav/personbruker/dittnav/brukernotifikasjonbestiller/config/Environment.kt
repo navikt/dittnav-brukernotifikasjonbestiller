@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
+import java.net.URL
 
 data class Environment(
         val bootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS"),
@@ -9,7 +10,8 @@ data class Environment(
         val username: String = getEnvVar("SERVICEUSER_USERNAME"),
         val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
         val groupId: String = getEnvVar("GROUP_ID"),
-        val applicationName: String = "dittnav-brukernotifikasjonbestiller"
+        val applicationName: String = "dittnav-brukernotifikasjonbestiller",
+        val eventHandlerURL: URL = URL(getEnvVar("EVENT_HANDLER_URL").trimEnd('/'))
 )
 
 fun isCurrentlyRunningOnNais(): Boolean {

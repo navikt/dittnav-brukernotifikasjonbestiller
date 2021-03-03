@@ -7,6 +7,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Cons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
 import org.apache.kafka.clients.producer.KafkaProducer
@@ -18,6 +20,10 @@ class ApplicationContext {
 
     val environment = Environment()
     val healthService = HealthService(this)
+
+    val httpClient = HttpClientBuilder.build()
+    val nameResolver = ProducerNameResolver(httpClient, environment.eventHandlerURL)
+    val nameScrubber = ProducerNameScrubber(nameResolver)
 
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()
