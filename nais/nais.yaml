@@ -31,6 +31,12 @@ spec:
     requests:
       cpu: "500m"
       memory: 580Mi
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_12
+        databases:
+          - name: brukernotifikasjonbestiller-cache
+            envVarPrefix: DB
   accessPolicy:
      outbound:
        external:
