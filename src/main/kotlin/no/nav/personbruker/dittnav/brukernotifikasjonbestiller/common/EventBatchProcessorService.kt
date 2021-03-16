@@ -1,13 +1,13 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 
 interface EventBatchProcessorService<K, V> {
 
     suspend fun processEvents(events: ConsumerRecords<K, V>)
 
-    fun ConsumerRecords<K, V>.asWrapperList() : List<RecordKeyValueWrapper<K, V>> = map { record ->
-        RecordKeyValueWrapper(record.key(), record.value())
-    }
+    val ConsumerRecord<Nokkel, V>.systembruker: String? get() = key().getSystembruker()
+
 }

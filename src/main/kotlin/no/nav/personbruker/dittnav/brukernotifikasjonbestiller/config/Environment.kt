@@ -1,7 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
+import no.nav.personbruker.dittnav.common.util.config.IntEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
+import java.net.URL
 
 data class Environment(
         val bootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS"),
@@ -9,8 +11,15 @@ data class Environment(
         val username: String = getEnvVar("SERVICEUSER_USERNAME"),
         val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
         val groupId: String = getEnvVar("GROUP_ID"),
-        val applicationName: String = "dittnav-brukernotifikasjonbestiller"
-)
+        val applicationName: String = "dittnav-brukernotifikasjonbestiller",
+        val eventHandlerURL: URL = URL(getEnvVar("EVENT_HANDLER_URL").trimEnd('/')),
+        val clusterName: String = getEnvVar("NAIS_CLUSTER_NAME"),
+        val namespace: String = getEnvVar("NAIS_NAMESPACE"),
+        val sensuHost: String = getEnvVar("SENSU_HOST"),
+        val sensuPort: Int = IntEnvVar.getEnvVarAsInt("SENSU_PORT"),
+        val sensuBatchingEnabled: Boolean = getEnvVar("SENSU_BATCHING_ENABLED", "true").toBoolean(),
+        val sensuBatchesPerSecond: Int = getEnvVar("SENSU_BATCHING_ENABLED", "3").toInt()
+        )
 
 fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null

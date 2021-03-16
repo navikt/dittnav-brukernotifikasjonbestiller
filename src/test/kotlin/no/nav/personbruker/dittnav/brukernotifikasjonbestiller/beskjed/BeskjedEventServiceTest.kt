@@ -1,8 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
@@ -11,6 +12,8 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.junit.jupiter.api.Test
 
@@ -18,6 +21,8 @@ internal class BeskjedEventServiceTest {
 
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, BeskjedIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
+    private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-beskjed-test"
 
     @Test
@@ -26,14 +31,18 @@ internal class BeskjedEventServiceTest {
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             beskjedEventService.processEvents(externalEvents)
         }
 
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -44,15 +53,18 @@ internal class BeskjedEventServiceTest {
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             beskjedEventService.processEvents(externalEvents)
         }
 
+        coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -63,10 +75,12 @@ internal class BeskjedEventServiceTest {
         val externalBeskjedWithTooLongGrupperingsid = AvroBeskjedObjectMother.createBeskjedWithGrupperingsId("G".repeat(101))
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjedWithTooLongGrupperingsid, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             beskjedEventService.processEvents(externalEvents)
@@ -74,6 +88,7 @@ internal class BeskjedEventServiceTest {
 
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
     @Test
@@ -82,10 +97,12 @@ internal class BeskjedEventServiceTest {
         val externalUnexpectedBeskjed = mockk<Beskjed>()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             beskjedEventService.processEvents(externalEvents)
@@ -93,6 +110,7 @@ internal class BeskjedEventServiceTest {
 
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
 }
