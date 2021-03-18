@@ -1,8 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering
 
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
@@ -11,6 +9,8 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.junit.jupiter.api.Test
 
@@ -18,6 +18,8 @@ internal class StatusoppdateringEventServiceTest {
 
     private val internalEventProducer = mockk<KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>>(relaxed = true)
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
+    private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
+    private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-statusoppdatering-test"
 
     @Test
@@ -26,14 +28,18 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             statusoppdateringEventService.processEvents(externalEvents)
         }
 
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -44,15 +50,18 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             statusoppdateringEventService.processEvents(externalEvents)
         }
 
+        coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -63,10 +72,12 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdateringWithTooLongGrupperingsid = AvroStatusoppdateringObjectMother.createStatusoppdateringWithGrupperingsId("G".repeat(101))
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdateringWithTooLongGrupperingsid, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             statusoppdateringEventService.processEvents(externalEvents)
@@ -74,6 +85,7 @@ internal class StatusoppdateringEventServiceTest {
 
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
     @Test
@@ -82,10 +94,12 @@ internal class StatusoppdateringEventServiceTest {
         val externalUnexpectedStatusoppdatering = mockk<Statusoppdatering>()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
 
-        every { internalEventProducer.sendEvents(any()) } returns Unit
-        every { feilresponsEventProducer.sendEvents(any()) } returns Unit
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
 
         runBlocking {
             statusoppdateringEventService.processEvents(externalEvents)
@@ -93,6 +107,7 @@ internal class StatusoppdateringEventServiceTest {
 
         coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
 }

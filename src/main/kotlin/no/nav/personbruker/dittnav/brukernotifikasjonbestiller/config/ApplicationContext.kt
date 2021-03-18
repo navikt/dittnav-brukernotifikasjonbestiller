@@ -7,8 +7,15 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Cons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
+import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
+import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
+import no.nav.personbruker.dittnav.common.metrics.influx.InfluxMetricsReporter
+import no.nav.personbruker.dittnav.common.metrics.influx.SensuConfig
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
 
@@ -16,8 +23,14 @@ class ApplicationContext {
 
     private val log = LoggerFactory.getLogger(ApplicationContext::class.java)
 
-    val environment = Environment()
+    private val environment = Environment()
     val healthService = HealthService(this)
+
+    private val httpClient = HttpClientBuilder.build()
+    private val nameResolver = ProducerNameResolver(httpClient, environment.eventHandlerURL)
+    private val nameScrubber = ProducerNameScrubber(nameResolver)
+    private val metricsReporter = resolveMetricsReporter(environment)
+    private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
 
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()
@@ -29,7 +42,7 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
         val producerProps = Kafka.producerProps(environment)
         val internalKafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps))
-        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventProcessor)
     }
 
@@ -37,7 +50,7 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.oppgaveMainTopicName, KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps))
-        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventProcessor)
     }
 
@@ -45,7 +58,7 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.statusoppdateringMainTopicName, KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps))
-        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector)
         return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventProcessor)
     }
 
@@ -53,7 +66,7 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, KafkaProducer<NokkelIntern, DoneIntern>(producerProps))
-        val doneEventProcessor = DoneEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val doneEventProcessor = DoneEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector)
         return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventProcessor)
     }
 
@@ -92,5 +105,24 @@ class ApplicationContext {
         }
 
         feilresponsKafkaProducerWrapper = initializeFeilresponsKafkaProducer()
+    }
+
+    private fun resolveMetricsReporter(environment: Environment): MetricsReporter {
+        return if (environment.sensuHost == "" || environment.sensuHost == "stub") {
+            StubMetricsReporter()
+        } else {
+            val sensuConfig = SensuConfig(
+                    applicationName = environment.applicationName,
+                    hostName = environment.sensuHost,
+                    hostPort = environment.sensuPort,
+                    clusterName = environment.clusterName,
+                    namespace = environment.namespace,
+                    eventsTopLevelName = "dittnav-brukernotifikasjonbestiller",
+                    enableEventBatching = environment.sensuBatchingEnabled,
+                    eventBatchesPerSecond = environment.sensuBatchesPerSecond
+            )
+
+            InfluxMetricsReporter(sensuConfig)
+        }
     }
 }
