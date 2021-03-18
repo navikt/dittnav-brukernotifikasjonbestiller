@@ -37,6 +37,9 @@ spec:
         databases:
           - name: brukernotifikasjonbestiller-cache
             envVarPrefix: DB
+        maintenanceWindow:
+          day: 1
+          hour: 4
   accessPolicy:
      outbound:
        external:

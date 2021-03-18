@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import no.nav.brukernotifikasjon.schemas.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
@@ -17,6 +18,7 @@ class ApplicationContext {
 
     val environment = Environment()
     val healthService = HealthService(this)
+    val database: Database = PostgresDatabase(environment)
 
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()

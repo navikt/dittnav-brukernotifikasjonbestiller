@@ -9,7 +9,13 @@ data class Environment(
         val username: String = getEnvVar("SERVICEUSER_USERNAME"),
         val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
         val groupId: String = getEnvVar("GROUP_ID"),
-        val applicationName: String = "dittnav-brukernotifikasjonbestiller"
+        val applicationName: String = "dittnav-brukernotifikasjonbestiller",
+        val dbUser: String = getEnvVar("DB_USERNAME"),
+        val dbPassword: String = getEnvVar("DB_PASSWORD"),
+        val dbHost: String = getEnvVar("DB_HOST"),
+        val dbPort: String = getEnvVar("DB_PORT"),
+        val dbName: String = getEnvVar("DB_DATABASE"),
+        val dbUrl: String ="jdbc:postgresql://${dbHost}:${dbPort}/${dbName}"
 )
 
 fun isCurrentlyRunningOnNais(): Boolean {
