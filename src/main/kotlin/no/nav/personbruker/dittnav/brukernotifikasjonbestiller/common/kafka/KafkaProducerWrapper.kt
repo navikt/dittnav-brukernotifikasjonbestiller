@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.RetriableKafkaException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnretriableKafkaException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException

@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import no.nav.brukernotifikasjon.schemas.*
 import no.nav.brukernotifikasjon.schemas.internal.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
@@ -23,8 +24,9 @@ class ApplicationContext {
 
     private val log = LoggerFactory.getLogger(ApplicationContext::class.java)
 
-    private val environment = Environment()
+    val environment = Environment()
     val healthService = HealthService(this)
+    val database: Database = PostgresDatabase(environment)
 
     private val httpClient = HttpClientBuilder.build()
     private val nameResolver = ProducerNameResolver(httpClient, environment.eventHandlerURL)

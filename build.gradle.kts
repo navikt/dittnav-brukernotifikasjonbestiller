@@ -29,6 +29,8 @@ dependencies {
     implementation(Brukernotifikasjon.schemas_internal)
     implementation(DittNAV.Common.influx)
     implementation(DittNAV.Common.utils)
+    implementation(Flyway.core)
+    implementation(Hikari.cp)
     implementation(Kafka.Apache.clients)
     implementation(Kafka.Confluent.avroSerializer)
     implementation(Ktor.htmlBuilder)
@@ -39,12 +41,14 @@ dependencies {
     implementation(Prometheus.common)
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
+    implementation(Postgresql.postgresql)
     implementation(ULID.sulkyUlid)
     implementation(Ktor.clientApache)
     implementation(Ktor.clientJson)
     implementation(Ktor.clientJackson)
     implementation(Jackson.dataTypeJsr310)
 
+    testImplementation(H2Database.h2)
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
@@ -71,6 +75,12 @@ tasks {
     register("runServer", JavaExec::class) {
         println("Setting default environment variables for running with DittNAV docker-compose")
 
+        environment("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
+        environment("KAFKA_SCHEMAREGISTRY_SERVERS", "http://localhost:8081")
+        environment("SERVICEUSER_USERNAME", "username")
+        environment("SERVICEUSER_PASSWORD", "password")
+        environment("GROUP_ID", "dittnav_brukernotifikasjonbestiller")
+
         environment("CORS_ALLOWED_ORIGINS", "localhost:9002")
 
         environment("LOGINSERVICE_IDPORTEN_DISCOVERY_URL", "http://localhost:9000/.well-known/openid-configuration")
@@ -81,6 +91,13 @@ tasks {
         environment("NAIS_NAMESPACE", "personbruker")
         environment("SENSU_HOST", "stub")
         environment("SENSU_PORT", "")
+
+        environment("DB_HOST", "localhost")
+        environment("DB_PORT", "5434")
+        environment("DB_DATABASE", "brukernotifikasjonbestiller-cache")
+        environment("DB_USERNAME", "dittnav-brukernotifikasjonbestiller-user")
+        environment("DB_PASSWORD", "testpassword")
+
 
         main = application.mainClassName
         classpath = sourceSets["main"].runtimeClasspath
