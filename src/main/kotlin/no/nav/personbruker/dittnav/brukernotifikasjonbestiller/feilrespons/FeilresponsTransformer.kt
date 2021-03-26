@@ -1,6 +1,5 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
@@ -10,16 +9,16 @@ import java.time.ZoneOffset
 
 object FeilresponsTransformer {
 
-    fun createFeilrespons(externalNokkel: Nokkel, exception: Exception, type: Eventtype): RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons> {
-        val nokkelFeilrespons = toNokkelFeilrespons(externalNokkel, type)
+    fun createFeilrespons(eventId: String, systembruker: String, exception: Exception, type: Eventtype): RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons> {
+        val nokkelFeilrespons = toNokkelFeilrespons(eventId, systembruker, type)
         val feilrespons = toFeilrespons(exception)
         return RecordKeyValueWrapper(nokkelFeilrespons, feilrespons)
     }
 
-    fun toNokkelFeilrespons(externalNokkel: Nokkel, type: Eventtype): NokkelFeilrespons {
+    fun toNokkelFeilrespons(eventId: String, systembruker: String, type: Eventtype): NokkelFeilrespons {
         return NokkelFeilrespons.newBuilder()
-                .setSystembruker(externalNokkel.getSystembruker())
-                .setEventId(externalNokkel.getEventId())
+                .setSystembruker(systembruker)
+                .setEventId(eventId)
                 .setBrukernotifikasjonstype(type.toString())
                 .build()
     }

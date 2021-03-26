@@ -44,13 +44,15 @@ class DoneEventService(
                     countNokkelWasNull()
                     log.warn("Done-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
                 } catch (fve: FieldValidationException) {
-                    countFailedEventForSystemUser(event.systembruker ?: "NoProducerSpecified")
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), fve, Eventtype.DONE)
+                    val systembruker = event.systembruker ?: "NoProducerSpecified"
+                    countFailedEventForSystemUser(systembruker)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.DONE)
                     problematicEvents.add(feilrespons)
                     log.warn("Validering av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (e: Exception) {
-                    countFailedEventForSystemUser(event.systembruker ?: "NoProducerSpecified")
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), e, Eventtype.DONE)
+                    val systembruker = event.systembruker ?: "NoProducerSpecified"
+                    countFailedEventForSystemUser(systembruker)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.DONE)
                     problematicEvents.add(feilrespons)
                     log.warn("Transformasjon av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
                 }

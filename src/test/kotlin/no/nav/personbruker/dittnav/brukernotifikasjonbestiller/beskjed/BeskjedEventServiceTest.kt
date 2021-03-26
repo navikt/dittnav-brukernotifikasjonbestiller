@@ -1,20 +1,22 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.addDuplicatesToProblematicEventsList
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.getDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.sendRemainingValidatedEventsToInternalTopicAndPersistToDB
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class BeskjedEventServiceTest {
@@ -23,15 +25,26 @@ internal class BeskjedEventServiceTest {
     private val feilresponsEventProducer = mockk<KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>>(relaxed = true)
     private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
+    private val brukernotifikasjonbestillingRepository = mockk<BrukernotifikasjonbestillingRepository>(relaxed = true)
     private val topic = "topic-beskjed-test"
+
+    @BeforeEach
+    private fun resetMocks() {
+        mockkStatic("no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEventsKt")
+    }
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
+
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
+
+        coEvery { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns emptyList()
+        coEvery { addDuplicatesToProblematicEventsList(any(), any(), any()) } returns Unit
+        coEvery { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -43,7 +56,9 @@ internal class BeskjedEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { internalEventProducer.sendEvents(any()) }
+        coVerify(exactly = 1) { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
+        coVerify(exactly = 1) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
+        coVerify(exactly = 1) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -53,7 +68,7 @@ internal class BeskjedEventServiceTest {
         val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -75,7 +90,7 @@ internal class BeskjedEventServiceTest {
         val externalBeskjedWithTooLongGrupperingsid = AvroBeskjedObjectMother.createBeskjedWithGrupperingsId("G".repeat(101))
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjedWithTooLongGrupperingsid, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -97,7 +112,7 @@ internal class BeskjedEventServiceTest {
         val externalUnexpectedBeskjed = mockk<Beskjed>()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
-        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector)
+        val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {

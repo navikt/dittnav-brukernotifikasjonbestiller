@@ -17,7 +17,7 @@ internal class FeilresponsTransformerTest {
         val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId(eventId)
         val exception = FieldValidationException("Simulert feil i test.")
 
-        val nokkelFeilrespons = FeilresponsTransformer.toNokkelFeilrespons(nokkelExternal, eventtype)
+        val nokkelFeilrespons = FeilresponsTransformer.toNokkelFeilrespons(nokkelExternal.getEventId(), nokkelExternal.getSystembruker(), eventtype)
         val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
 
         nokkelFeilrespons.getSystembruker() `should be equal to` nokkelExternal.getSystembruker()

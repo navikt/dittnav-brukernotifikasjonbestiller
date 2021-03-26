@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import no.nav.brukernotifikasjon.schemas.*
 import no.nav.brukernotifikasjon.schemas.internal.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
@@ -27,6 +28,7 @@ class ApplicationContext {
     val environment = Environment()
     val healthService = HealthService(this)
     val database: Database = PostgresDatabase(environment)
+    val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
     private val httpClient = HttpClientBuilder.build()
     private val nameResolver = ProducerNameResolver(httpClient, environment.eventHandlerURL)
@@ -44,7 +46,7 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
         val producerProps = Kafka.producerProps(environment)
         val internalKafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps))
-        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector)
+        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, brukernotifikasjonbestillingRepository)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventProcessor)
     }
 
