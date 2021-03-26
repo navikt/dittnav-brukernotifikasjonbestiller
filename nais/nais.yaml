@@ -31,7 +31,23 @@ spec:
     requests:
       cpu: "500m"
       memory: 580Mi
+  gcp:
+    sqlInstances:
+      - name: brukernotifikasjonbestiller
+        type: POSTGRES_11
+        tier: db-f1-micro
+        diskType: SSD
+        diskSize: 10
+        diskAutoresize: false
+        autoBackupTime: "03:00"
+        databases:
+          - name: brukernotifikasjonbestiller
+            envVarPrefix: DB
+        maintenanceWindow:
+          day: 1
+          hour: 4
+        cascadingDelete: false
   accessPolicy:
-     outbound:
-       external:
-         - host: kafka-schema-registry.nais-q.adeo.no
+    outbound:
+      external:
+        - host: kafka-schema-registry.nais-q.adeo.no
