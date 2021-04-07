@@ -3,6 +3,19 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.BatchUpdateException
 
 class ListPersistActionResult<T> private constructor(private val resultList: List<RowResult<T>>) {
+
+    fun getPersistedEntitites() = resultList.filter { result ->
+        result.status == PersistFailureReason.NO_ERROR
+    }.map { result ->
+        result.entity
+    }
+
+    fun getConflictingEntities() = resultList.filter { result ->
+        result.status == PersistFailureReason.CONFLICTING_KEYS
+    }.map { result ->
+        result.entity
+    }
+
     companion object {
         fun <T> mapParamListToResultArray(paramEntities: List<T>, resultArray: IntArray): ListPersistActionResult<T> {
             if (paramEntities.size != resultArray.size) {

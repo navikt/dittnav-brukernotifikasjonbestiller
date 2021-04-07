@@ -24,6 +24,18 @@ repositories {
     mavenLocal()
 }
 
+sourceSets {
+    create("intTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
+}
+
+val intTestImplementation by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
+
 dependencies {
     implementation(Brukernotifikasjon.schemas)
     implementation(Brukernotifikasjon.schemas_internal)
@@ -55,8 +67,11 @@ dependencies {
     testImplementation(Kluent.kluent)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
+    testImplementation(Kotlinx.atomicfu)
 
     testRuntimeOnly(Junit.engine)
+
+    intTestImplementation(Junit.engine)
 }
 
 application {
@@ -103,5 +118,16 @@ tasks {
         classpath = sourceSets["main"].runtimeClasspath
     }
 }
+
+val integrationTest = task<Test>("integrationTest") {
+    description = "Runs integration tests."
+    group = "verification"
+
+    testClassesDirs = sourceSets["intTest"].output.classesDirs
+    classpath = sourceSets["intTest"].runtimeClasspath
+    shouldRunAfter("test")
+}
+
+tasks.check { dependsOn(integrationTest) }
 
 apply(plugin = Shadow.pluginId)

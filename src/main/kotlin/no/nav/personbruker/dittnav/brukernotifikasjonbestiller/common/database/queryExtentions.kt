@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.SQLException
 import java.time.LocalDateTime
 
 fun Connection.executeBatchPersistQuery(sql: String, skipConflicting: Boolean = true, paramInit: PreparedStatement.() -> Unit): IntArray {
@@ -26,6 +27,13 @@ fun <T> ResultSet.mapList(result: ResultSet.() -> T): List<T> =
         }
 
 fun ResultSet.getUtcDateTime(columnLabel: String): LocalDateTime = getTimestamp(columnLabel).toLocalDateTime()
+
+fun <T> ResultSet.singleResult(result: ResultSet.() -> T): T =
+        if (next()) {
+            result()
+        } else {
+            throw SQLException("Found no rows")
+        }
 
 fun <T> IntArray.toBatchPersistResult(paramList: List<T>) = ListPersistActionResult.mapParamListToResultArray(paramList, this)
 

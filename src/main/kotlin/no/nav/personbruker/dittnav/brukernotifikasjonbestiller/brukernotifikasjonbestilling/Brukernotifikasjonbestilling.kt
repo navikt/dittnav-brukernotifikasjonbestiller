@@ -3,8 +3,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasj
 import java.time.LocalDateTime
 
 data class Brukernotifikasjonbestilling(
-        val eventid: String,
+        val eventId: String,
         val systembruker: String,
         val eventtype: String,
-        val eventtidspunkt: LocalDateTime
+        val prosesserttidspunkt: LocalDateTime
 )

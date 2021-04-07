@@ -54,5 +54,14 @@ internal class EventMetricsSessionTest {
         session.getEventsProcessed() `should be` 1
     }
 
-    //TODO legg til duplikat test
+    @Test
+    fun `Skal telle duplikat`() {
+        val session = EventMetricsSession(Eventtype.BESKJED)
+        val systemUser = "dummySystemUser"
+
+        session.countDuplicateEventForSystemUser(systemUser)
+
+        session.getDuplicateKeys().size `should be` 1
+        session.getDuplicateKeys(systemUser) `should be` 1
+    }
 }

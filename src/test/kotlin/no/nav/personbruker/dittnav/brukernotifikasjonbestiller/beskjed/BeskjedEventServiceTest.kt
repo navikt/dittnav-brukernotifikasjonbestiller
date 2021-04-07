@@ -57,8 +57,8 @@ internal class BeskjedEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 1) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
         coVerify(exactly = 1) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -80,7 +80,9 @@ internal class BeskjedEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
-        coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
+        coVerify(exactly = 0) { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
+        coVerify(exactly = 0) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
+        coVerify(exactly = 0) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -101,7 +103,9 @@ internal class BeskjedEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
+        coVerify(exactly = 0) { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
+        coVerify(exactly = 0) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
+        coVerify(exactly = 0) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
@@ -123,7 +127,9 @@ internal class BeskjedEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { internalEventProducer.sendEvents(any()) }
+        coVerify(exactly = 0) { getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
+        coVerify(exactly = 0) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
+        coVerify(exactly = 0) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any(), any(), any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }

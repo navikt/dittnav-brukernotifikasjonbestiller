@@ -7,11 +7,15 @@ import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.addDuplicatesToProblematicEventsList
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.getDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.sendRemainingValidatedEventsToInternalTopicAndPersistToDB
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -22,13 +26,14 @@ import org.slf4j.LoggerFactory
 class DoneEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, DoneIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
-        private val metricsCollector: MetricsCollector
+        private val metricsCollector: MetricsCollector,
+        private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository
 ) : EventBatchProcessorService<Nokkel, Done> {
 
     private val log: Logger = LoggerFactory.getLogger(DoneEventService::class.java)
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Done>) {
-        val successfullyValidatedEvents = mutableListOf<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
+        val successfullyValidatedEvents = mutableMapOf<NokkelIntern, DoneIntern>()
         val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.DONE) {
@@ -38,7 +43,7 @@ class DoneEventService(
                     val externalDone = event.value()
                     val internalNokkel = DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
                     val internalDone = DoneTransformer.toDoneInternal(externalDone)
-                    successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalDone))
+                    successfullyValidatedEvents[internalNokkel] = internalDone
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
@@ -59,7 +64,11 @@ class DoneEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                internalEventProducer.sendEvents(successfullyValidatedEvents)
+                val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
+                if (duplicateEvents.isNotEmpty()) {
+                    addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                }
+                sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.DONE, brukernotifikasjonbestillingRepository)
             }
 
             if (problematicEvents.isNotEmpty()) {

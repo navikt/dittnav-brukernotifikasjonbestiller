@@ -7,28 +7,43 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
 class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
-    suspend fun <T> fetchEventsFromEventId(brukernotifikasjonbestillinger: MutableMap<NokkelIntern, T>): List<Brukernotifikasjonbestilling> {
+    suspend fun <T> fetchEventsThatMatchEventId(events: MutableMap<NokkelIntern, T>): List<Brukernotifikasjonbestilling> {
         var resultat = emptyList<Brukernotifikasjonbestilling>()
         database.queryWithExceptionTranslation {
-            resultat = getEventsByEventId(brukernotifikasjonbestillinger)
+            resultat = getEventsByEventId(events)
         }
 
         return resultat
     }
 
-    suspend fun fetchEventsIfDuplicate(isDuplicateEvents: List<Brukernotifikasjonbestilling>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
-        val resultat = mutableListOf<Brukernotifikasjonbestilling>()
+    suspend fun fetchDuplicatesOfEventtype(eventtype: Eventtype, isDuplicateEvents: List<Brukernotifikasjonbestilling>): List<Brukernotifikasjonbestilling> {
+        val result = mutableListOf<Brukernotifikasjonbestilling>()
         database.queryWithExceptionTranslation {
             isDuplicateEvents.forEach { event ->
-                resultat.add(getEventsByIds(event.eventid, event.systembruker, eventtype))
+                result.add(getEventsByIds(event.eventId, event.systembruker, eventtype))
             }
         }
-        return resultat
+        return result.distinct()
     }
 
-    suspend fun <T> persistInOneBatch(entities: Map<NokkelIntern, T>, eventtype: Eventtype): ListPersistActionResult<NokkelIntern> {
+    suspend fun <T> persistInOneBatch(entities: Map<NokkelIntern, T>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {
         return database.queryWithExceptionTranslation {
-            createBrukernotifikasjonbestilling(entities, eventtype)
+            createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(entities, eventtype))
         }
+    }
+
+    private fun <T> toBrukernotifikasjonbestilling(events: Map<NokkelIntern, T>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
+        val result = mutableListOf<Brukernotifikasjonbestilling>()
+        events.forEach { nokkel, event ->
+            result.add(
+                    Brukernotifikasjonbestilling(
+                            eventId = nokkel.getEventId(),
+                            systembruker = nokkel.getSystembruker(),
+                            eventtype = eventtype.toString(),
+                            prosesserttidspunkt = java.time.LocalDateTime.now()
+                    )
+            )
+        }
+        return result
     }
 }

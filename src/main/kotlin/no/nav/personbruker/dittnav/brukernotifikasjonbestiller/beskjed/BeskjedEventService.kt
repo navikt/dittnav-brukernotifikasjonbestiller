@@ -65,7 +65,9 @@ class BeskjedEventService(
 
             if (successfullyValidatedEvents.isNotEmpty()) {
                 val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
-                addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                if (duplicateEvents.isNotEmpty()) {
+                    addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                }
                 sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
             }
 

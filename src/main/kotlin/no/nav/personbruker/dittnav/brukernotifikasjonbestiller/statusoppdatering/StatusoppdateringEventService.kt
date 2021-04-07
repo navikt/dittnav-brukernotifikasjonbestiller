@@ -7,11 +7,15 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.addDuplicatesToProblematicEventsList
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.getDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.sendRemainingValidatedEventsToInternalTopicAndPersistToDB
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -22,13 +26,14 @@ import org.slf4j.LoggerFactory
 class StatusoppdateringEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
-        private val metricsCollector: MetricsCollector
+        private val metricsCollector: MetricsCollector,
+        private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
     private val log: Logger = LoggerFactory.getLogger(StatusoppdateringEventService::class.java)
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Statusoppdatering>) {
-        val successfullyValidatedEvents = mutableListOf<RecordKeyValueWrapper<NokkelIntern, StatusoppdateringIntern>>()
+        val successfullyValidatedEvents = mutableMapOf<NokkelIntern, StatusoppdateringIntern>()
         val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.STATUSOPPDATERING) {
@@ -38,7 +43,7 @@ class StatusoppdateringEventService(
                     val externalStatusoppdatering = event.value()
                     val internalNokkel = StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
                     val internalStatusoppdatering = StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
-                    successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalStatusoppdatering))
+                    successfullyValidatedEvents[internalNokkel] = internalStatusoppdatering
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
@@ -59,7 +64,11 @@ class StatusoppdateringEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                internalEventProducer.sendEvents(successfullyValidatedEvents)
+                val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
+                if (duplicateEvents.isNotEmpty()) {
+                    addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                }
+                sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.DONE, brukernotifikasjonbestillingRepository)
             }
 
             if (problematicEvents.isNotEmpty()) {
