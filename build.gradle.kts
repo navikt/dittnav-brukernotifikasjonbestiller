@@ -109,7 +109,7 @@ tasks {
 
         environment("DB_HOST", "localhost")
         environment("DB_PORT", "5434")
-        environment("DB_DATABASE", "brukernotifikasjonbestiller-cache")
+        environment("DB_DATABASE", "brukernotifikasjonbestiller")
         environment("DB_USERNAME", "dittnav-brukernotifikasjonbestiller-user")
         environment("DB_PASSWORD", "testpassword")
 

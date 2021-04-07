@@ -17,13 +17,6 @@ object Flyway {
         val dataSource = createDataSourceForLocalDbWithUser(env)
         configBuilder.dataSource(dataSource)
 
-         //TODO må vi gjøre dette i gcp?
-      /*  if (isCurrentlyRunningOnNais()) {
-            configBuilder.initSql("SET ROLE \"${env.dbUser}\"")
-        }
-
-       */
-
         return configBuilder
     }
 
