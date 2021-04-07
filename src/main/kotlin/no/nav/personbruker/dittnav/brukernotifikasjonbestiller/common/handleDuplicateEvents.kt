@@ -26,13 +26,14 @@ suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableMap<Nokke
     return result
 }
 
-fun addDuplicatesToProblematicEventsList(duplicateEvents: List<Brukernotifikasjonbestilling>, problematicEvents: MutableList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>, eventMetricsSession: EventMetricsSession) {
+fun addDuplicatesToProblematicEventsList(duplicateEvents: List<Brukernotifikasjonbestilling>, problematicEvents: MutableList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>, eventMetricsSession: EventMetricsSession): MutableList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>> {
     duplicateEvents.forEach { duplicateEvent ->
         val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
         val feilrespons = FeilresponsTransformer.createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, Eventtype.BESKJED)
         problematicEvents.add(feilrespons)
         logDuplicateEvent(eventMetricsSession, duplicateEvent)
     }
+    return problematicEvents
 }
 
 private fun logDuplicateEvent(eventMetricsSession: EventMetricsSession, duplicateEvent: Brukernotifikasjonbestilling) {

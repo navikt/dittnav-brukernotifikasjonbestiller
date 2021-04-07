@@ -7,12 +7,15 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.addDuplicatesToProblematicEventsList
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.getDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.sendRemainingValidatedEventsToInternalTopicAndPersistToDB
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
@@ -41,7 +44,7 @@ internal class OppgaveEventServiceTest {
         val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
 
         coEvery { getDuplicateEvents(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any()) } returns emptyList()
-        coEvery { addDuplicatesToProblematicEventsList(any(), any(), any()) } returns Unit
+        coEvery { addDuplicatesToProblematicEventsList(any(), any(), any()) } returns mutableListOf()
         coEvery { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any(), any(), any(), any()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -130,5 +133,35 @@ internal class OppgaveEventServiceTest {
         coVerify(exactly = 0) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any(), any(), any(), any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+    }
+
+    @Test
+    fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
+        val externalOppgave = AvroOppgaveObjectMother.createOppgave()
+        val duplicateEvents = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId", "systembruker", Eventtype.BESKJED))
+        val problematicEvents = FeilresponsObjectMother.giveMeANumberOfFeilresponsEvents(1, "eventId", "systembruker", Eventtype.BESKJED)
+
+        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgave, topic)
+        val oppgaveEventService = OppgaveEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, brukernotifikasjonbestillingRepository)
+
+        coEvery { getDuplicateEvents(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any()) } returns duplicateEvents
+        coEvery { addDuplicatesToProblematicEventsList(any(), any(), any()) } returns problematicEvents
+        coEvery { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any(), any(), any(), any()) } returns Unit
+
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
+
+        runBlocking {
+            oppgaveEventService.processEvents(externalEvents)
+        }
+
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 1) { getDuplicateEvents(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any()) }
+        coVerify(exactly = 1) { sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, OppgaveIntern>>(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { addDuplicatesToProblematicEventsList(any(), any(), any()) }
+        coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
     }
 }

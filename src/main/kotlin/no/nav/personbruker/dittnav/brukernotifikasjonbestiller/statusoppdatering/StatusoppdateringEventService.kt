@@ -34,7 +34,7 @@ class StatusoppdateringEventService(
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Statusoppdatering>) {
         val successfullyValidatedEvents = mutableMapOf<NokkelIntern, StatusoppdateringIntern>()
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        var problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.STATUSOPPDATERING) {
             events.forEach { event ->
@@ -66,7 +66,7 @@ class StatusoppdateringEventService(
             if (successfullyValidatedEvents.isNotEmpty()) {
                 val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
                 if (duplicateEvents.isNotEmpty()) {
-                    addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                    problematicEvents = addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
                 }
                 sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.DONE, brukernotifikasjonbestillingRepository)
             }

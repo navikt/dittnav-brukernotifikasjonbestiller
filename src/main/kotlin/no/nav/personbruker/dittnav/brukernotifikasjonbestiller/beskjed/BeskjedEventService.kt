@@ -34,7 +34,7 @@ class BeskjedEventService(
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Beskjed>) {
         val successfullyValidatedEvents = mutableMapOf<NokkelIntern, BeskjedIntern>()
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        var problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.BESKJED) {
             events.forEach { event ->
@@ -66,7 +66,7 @@ class BeskjedEventService(
             if (successfullyValidatedEvents.isNotEmpty()) {
                 val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
                 if (duplicateEvents.isNotEmpty()) {
-                    addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                    problematicEvents = addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
                 }
                 sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
             }
