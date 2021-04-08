@@ -2,7 +2,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasj
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.*
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Array
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -25,18 +24,6 @@ fun <T> Connection.getEventsByEventId(events: MutableMap<NokkelIntern, T>): List
                     it.setArray(1, toVarcharArray(events))
                     it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
                 }
-
-fun Connection.getEventsByIds(eventId: String, systembruker: String, eventtype: Eventtype): Brukernotifikasjonbestilling =
-        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
-                .use {
-                    it.setString(1, eventId)
-                    it.setString(2, systembruker)
-                    it.setString(3, eventtype.toString())
-                    it.executeQuery().singleResult() {
-                        toBrukernotifikasjonbestilling()
-                    }
-                }
-
 
 fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
     return Brukernotifikasjonbestilling(

@@ -45,19 +45,6 @@ class BrukernotifikasjonbestillingRepositoryTest {
     }
 
     @Test
-    fun `Skal returnere korrekt antall duplikat innenfor en eventtypen`() {
-        runBlocking {
-            val expectedEvents = listOf(eventBeskjed1, eventBeskjed2)
-            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
-            val duplicateEvents = listOf(eventBeskjed1, eventBeskjed2, eventOppgave1)
-
-            val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
-            duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
-            duplicateBeskjeder `should contain all` expectedEvents
-        }
-    }
-
-    @Test
     fun `Skal returnere korrekt resultat for vellykket persistering av Brukernotifikasjonbestillinger i batch`() {
         runBlocking {
             val toPersist = giveMeANumberOfInternalEvents(3, "eventId", "systembruker")

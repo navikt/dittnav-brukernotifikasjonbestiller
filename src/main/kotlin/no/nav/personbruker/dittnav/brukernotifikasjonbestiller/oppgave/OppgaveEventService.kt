@@ -7,15 +7,12 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.addDuplicatesToProblematicEventsList
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.getDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.sendRemainingValidatedEventsToInternalTopicAndPersistToDB
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -27,7 +24,7 @@ class OppgaveEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, OppgaveIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
-        private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository
+        private val handleEvents: HandleEvents
 ) : EventBatchProcessorService<Nokkel, Oppgave> {
 
     private val log: Logger = LoggerFactory.getLogger(OppgaveEventService::class.java)
@@ -64,11 +61,12 @@ class OppgaveEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                val duplicateEvents = getDuplicateEvents(successfullyValidatedEvents, brukernotifikasjonbestillingRepository)
+                val duplicateEvents = handleEvents.getDuplicateEvents(successfullyValidatedEvents, Eventtype.OPPGAVE)
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents = addDuplicatesToProblematicEventsList(duplicateEvents, problematicEvents, this)
+                    problematicEvents.addAll(handleEvents.createFeilresponsEvents(duplicateEvents, Eventtype.OPPGAVE))
+                    handleEvents.countDuplicateEvents(this, duplicateEvents)
                 }
-                sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.DONE, brukernotifikasjonbestillingRepository)
+                handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.OPPGAVE)
             }
 
             if (problematicEvents.isNotEmpty()) {
