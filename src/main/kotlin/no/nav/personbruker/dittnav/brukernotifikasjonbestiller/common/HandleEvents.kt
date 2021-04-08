@@ -34,7 +34,7 @@ class HandleEvents(private val brukernotifikasjonbestillingRepository: Brukernot
         duplicateEvents.forEach { duplicateEvent ->
             val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
             val feilrespons = FeilresponsTransformer.createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, eventtype)
-            problematicEvents.add(feilrespons)
+            problematicEvents.add(RecordKeyValueWrapper(feilrespons.key, feilrespons.value))
         }
         return problematicEvents
     }
