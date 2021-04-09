@@ -1,6 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import java.time.Instant
 
 object AvroBeskjedInternObjectMother {
@@ -13,6 +15,18 @@ object AvroBeskjedInternObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+
+    fun giveMeANumberOfInternalBeskjedEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableMap<NokkelIntern, BeskjedIntern> {
+        val events = mutableMapOf<NokkelIntern, BeskjedIntern>()
+
+        for (i in 0 until numberOfEvents) {
+            events.put(
+                    AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-$i", "$eventId-$i", fodselsnummer),
+                    createBeskjedInternWithGrupperingsId("$i")
+            )
+        }
+        return events
+    }
 
     fun createBeskjedInternWithGrupperingsId(grupperingsid: String): BeskjedIntern {
         return createBeskjedIntern(defaultUlid, defaultTidspunkt, defaultSynligFremTil, grupperingsid, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling)

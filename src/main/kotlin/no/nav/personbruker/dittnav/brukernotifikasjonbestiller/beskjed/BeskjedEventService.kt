@@ -31,7 +31,7 @@ class BeskjedEventService(
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Beskjed>) {
         val successfullyValidatedEvents = mutableMapOf<NokkelIntern, BeskjedIntern>()
-        var problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.BESKJED) {
             events.forEach { event ->

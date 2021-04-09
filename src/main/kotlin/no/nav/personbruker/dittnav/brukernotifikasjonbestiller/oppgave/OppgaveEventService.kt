@@ -31,7 +31,7 @@ class OppgaveEventService(
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Oppgave>) {
         val successfullyValidatedEvents = mutableMapOf<NokkelIntern, OppgaveIntern>()
-        var problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.OPPGAVE) {
             events.forEach { event ->

@@ -5,9 +5,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.InternalEventsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import org.amshove.kluent.`should be equal to`
@@ -26,7 +26,7 @@ internal class HandleEventsTest {
     fun `Skal ikke inneholde duplikat i listen som sendes til kafka`() {
         val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
         val duplicateEvent = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED))
-        val successfullyValidatedEvents = InternalEventsObjectMother.giveMeANumberOfInternalEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
+        val successfullyValidatedEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
         val expectedEventSize = successfullyValidatedEvents.size - duplicateEvent.size
 
         val eventsWithoutDuplicates = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvent, Eventtype.BESKJED)
@@ -36,7 +36,7 @@ internal class HandleEventsTest {
     @Test
     fun `Skal kun inneholde duplikat av onsket eventtype`() {
         val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
-        val dummyEvents = InternalEventsObjectMother.giveMeANumberOfInternalEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
+        val dummyEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
 
         val duplicatesWithBeskjedAndOppgaveEvents = listOf(
                 BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
@@ -63,7 +63,7 @@ internal class HandleEventsTest {
     @Test
     fun `Skal returnere en tom liste hvis ikke det finnes noen duplikat av onsket eventtype`() {
         val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
-        val dummyEvents = InternalEventsObjectMother.giveMeANumberOfInternalEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
+        val dummyEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
 
         val duplicatesWithOnlyBeskjedEvents = listOf(
                 BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
