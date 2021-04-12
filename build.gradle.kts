@@ -90,29 +90,16 @@ tasks {
     register("runServer", JavaExec::class) {
         println("Setting default environment variables for running with DittNAV docker-compose")
 
-        environment("KAFKA_BOOTSTRAP_SERVERS", "localhost:29092")
-        environment("KAFKA_SCHEMAREGISTRY_SERVERS", "http://localhost:8081")
-        environment("SERVICEUSER_USERNAME", "username")
-        environment("SERVICEUSER_PASSWORD", "password")
+        DockerComposeDefaults.environomentVariables.forEach { (name, value) ->
+            println("Setting the environment variable $name")
+            environment(name, value)
+        }
+
         environment("GROUP_ID", "dittnav_brukernotifikasjonbestiller")
-
-        environment("CORS_ALLOWED_ORIGINS", "localhost:9002")
-
-        environment("LOGINSERVICE_IDPORTEN_DISCOVERY_URL", "http://localhost:9000/.well-known/openid-configuration")
-        environment("LOGINSERVICE_IDPORTEN_AUDIENCE", "stubOidcClient")
-        environment("OIDC_CLAIM_CONTAINING_THE_IDENTITY", "pid")
-
-        environment("NAIS_CLUSTER_NAME", "dev-sbs")
-        environment("NAIS_NAMESPACE", "personbruker")
-        environment("SENSU_HOST", "stub")
-        environment("SENSU_PORT", "")
-
         environment("DB_HOST", "localhost")
         environment("DB_PORT", "5434")
         environment("DB_DATABASE", "brukernotifikasjonbestiller")
         environment("DB_USERNAME", "dittnav-brukernotifikasjonbestiller-user")
-        environment("DB_PASSWORD", "testpassword")
-
 
         main = application.mainClassName
         classpath = sourceSets["main"].runtimeClasspath

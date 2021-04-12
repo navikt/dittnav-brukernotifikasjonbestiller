@@ -38,11 +38,12 @@ class ApplicationContext {
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
 
+    var feilresponsKafkaProducerWrapper = initializeFeilresponsKafkaProducer()
+
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()
     var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
     var doneConsumer = initializeDoneProcessor()
-    var feilresponsKafkaProducerWrapper = initializeFeilresponsKafkaProducer()
 
     private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
