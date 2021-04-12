@@ -2,9 +2,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
 import io.mockk.coEvery
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -31,53 +28,6 @@ internal class HandleEventsTest {
 
         val eventsWithoutDuplicates = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvent, Eventtype.BESKJED)
         eventsWithoutDuplicates.size.`should be equal to`(expectedEventSize)
-    }
-
-    @Test
-    fun `Skal kun inneholde duplikat av onsket eventtype`() {
-        val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
-        val dummyEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
-
-        val duplicatesWithBeskjedAndOppgaveEvents = listOf(
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.OPPGAVE)
-        )
-        val expectedNumberOfEvents = duplicatesWithBeskjedAndOppgaveEvents.filter { event -> event.eventtype == Eventtype.BESKJED.toString() }.size
-
-        coEvery { brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns duplicatesWithBeskjedAndOppgaveEvents
-
-        runBlocking {
-            val duplicates = handleEvents.getDuplicateEvents(dummyEvents, Eventtype.BESKJED)
-
-            duplicates.size.`should be equal to`(expectedNumberOfEvents)
-
-            duplicates.get(0).eventtype.`should be equal to`(Eventtype.BESKJED.toString())
-            duplicates.get(0).eventId.`should be equal to`("$eventId-0")
-
-            duplicates.get(1).eventtype.`should be equal to`(Eventtype.BESKJED.toString())
-            duplicates.get(1).eventId.`should be equal to`("$eventId-0")
-        }
-    }
-
-    @Test
-    fun `Skal returnere en tom liste hvis ikke det finnes noen duplikat av onsket eventtype`() {
-        val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
-        val dummyEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 1, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
-
-        val duplicatesWithOnlyBeskjedEvents = listOf(
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED)
-        )
-
-        coEvery { brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns duplicatesWithOnlyBeskjedEvents
-
-        runBlocking {
-            val oppgaveDuplicates = handleEvents.getDuplicateEvents(dummyEvents, Eventtype.OPPGAVE)
-
-            oppgaveDuplicates.`should be equal to`(emptyList())
-        }
     }
 
     @Test

@@ -52,6 +52,25 @@ class brukernotifikasjonbestillingQueriesTest {
     }
 
     @Test
+    fun `Finner event med samme eventId, systembruker og eventtype`() {
+        runBlocking {
+            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            val result = database.dbQuery { getEventsByIds(brukernotifikasjonbestilling_1.eventId, brukernotifikasjonbestilling_1.systembruker, Eventtype.BESKJED) }
+            result.size `should be equal to` 1
+            result.first()`should be equal to` brukernotifikasjonbestilling_1
+        }
+    }
+
+    @Test
+    fun `Returnerer tomt resultat hvis event med eventId, systembruker og gitt eventtype ikke finnes`() {
+        runBlocking {
+            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            val result = database.dbQuery { getEventsByIds("noMatch", "noMatch", Eventtype.BESKJED) }
+            result `should be equal to` emptyList()
+        }
+    }
+
+    @Test
     fun `Persister ikke entitet dersom rad med samme eventId, systembruker og eventtype finnes`() {
         runBlocking {
             createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))

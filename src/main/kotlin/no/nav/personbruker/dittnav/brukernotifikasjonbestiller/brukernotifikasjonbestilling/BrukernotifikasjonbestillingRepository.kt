@@ -16,6 +16,19 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         return resultat
     }
 
+    suspend fun fetchDuplicatesOfEventtype(eventtype: Eventtype, isDuplicateEvents: List<Brukernotifikasjonbestilling>): List<Brukernotifikasjonbestilling> {
+        val result = mutableListOf<Brukernotifikasjonbestilling>()
+        database.queryWithExceptionTranslation {
+            isDuplicateEvents.forEach { event ->
+                val duplicates = getEventsByIds(event.eventId, event.systembruker, eventtype)
+                if (duplicates.isNotEmpty()) {
+                    result.add(duplicates.first())
+                }
+            }
+        }
+        return result.distinct()
+    }
+
     suspend fun <T> persistInOneBatch(entities: Map<NokkelIntern, T>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {
         return database.queryWithExceptionTranslation {
             createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(entities, eventtype))

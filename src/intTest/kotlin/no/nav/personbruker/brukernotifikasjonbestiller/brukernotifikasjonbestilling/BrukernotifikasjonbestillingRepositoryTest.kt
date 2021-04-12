@@ -36,11 +36,39 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             val expectedEvents = listOf(eventBeskjed1, eventOppgave1)
             createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
-            val eventAlreadyPersisted = giveMeANumberOfInternalEvents(1, "eventId", "systembruker")
+            val eventsAlreadyPersisted = giveMeANumberOfInternalEvents(1, "eventId", "systembruker")
 
-            val result = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(eventAlreadyPersisted)
+            val result = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(eventsAlreadyPersisted)
             result.size.`should be equal to`(expectedEvents.size)
             result `should contain all` expectedEvents
+        }
+    }
+
+    @Test
+    fun `Skal returnere korrekt antall duplikat innenfor en gitt eventtypen`() {
+        runBlocking {
+            val expectedEvents = listOf(eventBeskjed1, eventBeskjed2)
+            val duplicateEvents = listOf(eventBeskjed1, eventBeskjed2, eventOppgave1)
+            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
+
+            val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
+            duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
+            duplicateBeskjeder `should contain all` expectedEvents
+        }
+    }
+
+    @Test
+    fun `Skal returnere korrekt antall duplikat med samme eventId, systembruker og gitt eventtype`() {
+        val eventBeskjedWithDifferentSystemuser = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "dummy", eventtype = Eventtype.BESKJED)
+
+        runBlocking {
+            val expectedEvents = listOf(eventBeskjed1, eventBeskjed2)
+            val duplicateEvents = listOf(eventBeskjed1, eventBeskjed2, eventOppgave1)
+            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1, eventBeskjedWithDifferentSystemuser))
+
+            val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
+            duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
+            duplicateBeskjeder `should contain all` expectedEvents
         }
     }
 

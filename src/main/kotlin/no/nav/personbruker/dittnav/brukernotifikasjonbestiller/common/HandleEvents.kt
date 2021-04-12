@@ -23,7 +23,7 @@ class HandleEvents(private val brukernotifikasjonbestillingRepository: Brukernot
         val duplicateEventIds = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(successfullyValidatedEvents)
 
         if (duplicateEventIds.isNotEmpty()) {
-            result = duplicateEventIds.filter { event -> event.eventtype == eventtype.toString() }
+            result = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(eventtype, duplicateEventIds)
         }
         return result
     }
