@@ -34,7 +34,7 @@ class brukernotifikasjonbestillingQueriesTest {
     fun `Finner event med samme eventId`() {
         val eventsWithMatchOnEventId = giveMeANumberOfInternalEvents(2, "eventId", "systembruker")
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             val result = database.dbQuery { getEventsByEventId(eventsWithMatchOnEventId) }
             result.size `should be equal to` 2
             result `should contain all` listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2)
@@ -45,7 +45,7 @@ class brukernotifikasjonbestillingQueriesTest {
     fun `Returnerer tom liste hvis event med eventId ikke finnes`() {
         val noEventsMatchEventId = giveMeANumberOfInternalEvents(1, "noMatchEventId", "systembruker")
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             val result = database.dbQuery { getEventsByEventId(noEventsMatchEventId) }
             result.`should be empty`()
         }
@@ -54,7 +54,7 @@ class brukernotifikasjonbestillingQueriesTest {
     @Test
     fun `Finner event med samme eventId, systembruker og eventtype`() {
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             val result = database.dbQuery { getEventsByIds(brukernotifikasjonbestilling_1.eventId, brukernotifikasjonbestilling_1.systembruker, Eventtype.BESKJED) }
             result.size `should be equal to` 1
             result.first()`should be equal to` brukernotifikasjonbestilling_1
@@ -64,7 +64,7 @@ class brukernotifikasjonbestillingQueriesTest {
     @Test
     fun `Returnerer tomt resultat hvis event med eventId, systembruker og gitt eventtype ikke finnes`() {
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             val result = database.dbQuery { getEventsByIds("noMatch", "noMatch", Eventtype.BESKJED) }
             result `should be equal to` emptyList()
         }
@@ -73,7 +73,7 @@ class brukernotifikasjonbestillingQueriesTest {
     @Test
     fun `Persister ikke entitet dersom rad med samme eventId, systembruker og eventtype finnes`() {
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             database.dbQuery {
                 val numberOfEntities = getAllBrukernotifikasjonbestilling().size
                 createBrukernotifikasjonbestilling(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
@@ -86,7 +86,7 @@ class brukernotifikasjonbestillingQueriesTest {
     fun `Skal opprette entitet dersom rad med samme eventId og systembruker finnes, men ikke samme eventtype`() {
         val brukernotifikasjonbestilling_oppgave: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE)
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
+            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             database.dbQuery {
                 val expectedNumberOfEntities = getAllBrukernotifikasjonbestilling().size + 1
                 createBrukernotifikasjonbestilling(listOf(brukernotifikasjonbestilling_oppgave))

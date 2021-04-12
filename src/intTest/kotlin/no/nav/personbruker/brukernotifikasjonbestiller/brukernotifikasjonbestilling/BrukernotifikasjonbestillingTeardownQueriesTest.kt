@@ -21,10 +21,10 @@ class BrukernotifikasjonbestillingTeardownQueriesTest {
     @Test
     fun `Skal slette alle rader i event-tabellen`() {
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(event1, event2, event3))
+            database.createBrukernotifikasjonbestillinger(listOf(event1, event2, event3))
             var result = database.dbQuery { getAllBrukernotifikasjonbestilling() }
             result.size `should be equal to` 3
-            deleteAllBrukernotifikasjonbestillinger(database)
+            database.deleteAllBrukernotifikasjonbestillinger()
             result = database.dbQuery { getAllBrukernotifikasjonbestilling() }
             result.isEmpty() `should be equal to` true
         }

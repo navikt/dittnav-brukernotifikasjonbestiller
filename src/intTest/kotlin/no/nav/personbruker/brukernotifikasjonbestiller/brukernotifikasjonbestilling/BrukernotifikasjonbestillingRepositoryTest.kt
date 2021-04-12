@@ -35,7 +35,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
     fun `Skal returnere korrekt antall eventer med samme eventId uavhengig av eventtype`() {
         runBlocking {
             val expectedEvents = listOf(eventBeskjed1, eventOppgave1)
-            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
+            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
             val eventsAlreadyPersisted = giveMeANumberOfInternalEvents(1, "eventId", "systembruker")
 
             val result = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(eventsAlreadyPersisted)
@@ -49,7 +49,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             val expectedEvents = listOf(eventBeskjed1, eventBeskjed2)
             val duplicateEvents = listOf(eventBeskjed1, eventBeskjed2, eventOppgave1)
-            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
+            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed1, eventBeskjed2, eventOppgave1))
 
             val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
             duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
@@ -64,7 +64,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             val expectedEvents = listOf(eventBeskjed1, eventBeskjed2)
             val duplicateEvents = listOf(eventBeskjed1, eventBeskjed2, eventOppgave1)
-            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1, eventBeskjed2, eventOppgave1, eventBeskjedWithDifferentSystemuser))
+            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed1, eventBeskjed2, eventOppgave1, eventBeskjedWithDifferentSystemuser))
 
             val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
             duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
@@ -84,7 +84,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
     @Test
     fun `Skal returnere korrekt resultat for persistering i batch hvis noen Brukernotifikasjonbestillinger har unique key constraints`() {
         runBlocking {
-            createBrukernotifikasjonbestillinger(database, listOf(eventBeskjed1))
+            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed1))
             val mapToPersistWithOneDuplicateEvent = giveMeANumberOfInternalEvents(3, "eventId", "systembruker")
             val expectedPersistResult = mapToPersistWithOneDuplicateEvent.size - 1
 
