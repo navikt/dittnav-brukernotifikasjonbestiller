@@ -8,6 +8,7 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
@@ -24,7 +25,8 @@ class DoneEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, DoneIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
-        private val handleEvents: HandleEvents
+        private val handleEvents: HandleEvents,
+        private val eventDispatcher: EventDispatcher
 ) : EventBatchProcessorService<Nokkel, Done> {
 
     private val log: Logger = LoggerFactory.getLogger(DoneEventService::class.java)
@@ -66,8 +68,9 @@ class DoneEventService(
                     problematicEvents.addAll(handleEvents.createFeilresponsEvents(duplicateEvents, Eventtype.DONE))
                     handleEvents.countDuplicateEvents(this, duplicateEvents)
                 }
-                handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.DONE)
-            }
+                val remainingValidatedEvents = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvents, Eventtype.DONE)
+                eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
+                eventDispatcher.persistToDB(remainingValidatedEvents)            }
 
             if (problematicEvents.isNotEmpty()) {
                 feilresponsEventProducer.sendEvents(problematicEvents)

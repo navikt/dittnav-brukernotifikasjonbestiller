@@ -11,6 +11,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
@@ -29,6 +30,7 @@ internal class StatusoppdateringEventServiceTest {
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val handleEvents = mockk<HandleEvents>(relaxed = true)
     private val topic = "topic-statusoppdatering-test"
+    private val eventDispatcher = mockk<EventDispatcher>(relaxed = true)
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
@@ -36,11 +38,13 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
         coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) } returns emptyList()
         coEvery { handleEvents.createFeilresponsEvents(any(), any()) } returns mutableListOf()
-        coEvery { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) } returns Unit
+        coEvery { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) } returns emptyMap()
+        coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) } returns Unit
+        coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -53,7 +57,10 @@ internal class StatusoppdateringEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
-        coVerify(exactly = 1) { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) }
+        coVerify(exactly = 1) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) }
+        coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
+        coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) }
+
         coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -64,7 +71,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -76,8 +83,11 @@ internal class StatusoppdateringEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
+
         coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) }
         coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
@@ -88,7 +98,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalStatusoppdateringWithTooLongGrupperingsid = AvroStatusoppdateringObjectMother.createStatusoppdateringWithGrupperingsId("G".repeat(101))
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdateringWithTooLongGrupperingsid, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -100,8 +110,11 @@ internal class StatusoppdateringEventServiceTest {
         }
 
         coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) }
         coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
+
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
@@ -112,7 +125,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalUnexpectedStatusoppdatering = mockk<Statusoppdatering>()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -124,8 +137,11 @@ internal class StatusoppdateringEventServiceTest {
         }
 
         coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) }
         coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
+
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
@@ -138,11 +154,13 @@ internal class StatusoppdateringEventServiceTest {
         val problematicEvents = FeilresponsObjectMother.giveMeANumberOfFeilresponsEvents(1, "eventId", "systembruker", Eventtype.BESKJED)
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
-        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents)
+        val statusoppdateringEventService = StatusoppdateringEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
         coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) } returns duplicateEvents
         coEvery { handleEvents.createFeilresponsEvents(any(), any()) } returns problematicEvents
-        coEvery { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) } returns Unit
+        coEvery { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) } returns emptyMap()
+        coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) } returns Unit
+        coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -155,7 +173,9 @@ internal class StatusoppdateringEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
-        coVerify(exactly = 1) { handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any(), any()) }
+        coVerify(exactly = 1) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any(), any()) }
+        coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>(), any()) }
+        coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, StatusoppdateringIntern>>()) }
         coVerify(exactly = 1) { handleEvents.createFeilresponsEvents(any(), any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
     }

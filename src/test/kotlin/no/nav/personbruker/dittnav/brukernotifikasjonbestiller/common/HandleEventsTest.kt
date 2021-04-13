@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -27,6 +28,17 @@ internal class HandleEventsTest {
         val expectedEventSize = successfullyValidatedEvents.size - duplicateEvent.size
 
         val eventsWithoutDuplicates = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvent, Eventtype.BESKJED)
+        eventsWithoutDuplicates.size.`should be equal to`(expectedEventSize)
+    }
+
+    @Test
+    fun `Skal returnere hele listen med vellykket eventer hvis ikke det finnes duplikat`() {
+        val handleEvents = HandleEvents(brukernotifikasjonbestillingRepository)
+        val emptyListOfduplicateEvents = emptyList<Brukernotifikasjonbestilling>()
+        val successfullyValidatedEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
+        val expectedEventSize = successfullyValidatedEvents.size
+
+        val eventsWithoutDuplicates = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, emptyListOfduplicateEvents, Eventtype.BESKJED)
         eventsWithoutDuplicates.size.`should be equal to`(expectedEventSize)
     }
 

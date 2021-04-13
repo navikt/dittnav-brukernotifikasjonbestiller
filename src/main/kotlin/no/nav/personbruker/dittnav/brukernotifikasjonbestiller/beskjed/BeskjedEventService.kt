@@ -8,6 +8,7 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
@@ -24,7 +25,8 @@ class BeskjedEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, BeskjedIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
-        private val handleEvents: HandleEvents
+        private val handleEvents: HandleEvents,
+        private val eventDispatcher: EventDispatcher
 ) : EventBatchProcessorService<Nokkel, Beskjed> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedEventService::class.java)
@@ -66,7 +68,9 @@ class BeskjedEventService(
                     problematicEvents.addAll(handleEvents.createFeilresponsEvents(duplicateEvents, Eventtype.BESKJED))
                     handleEvents.countDuplicateEvents(this, duplicateEvents)
                 }
-                handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.BESKJED)
+                val remainingValidatedEvents = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvents, Eventtype.BESKJED)
+                eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
+                eventDispatcher.persistToDB(remainingValidatedEvents)
             }
 
             if (problematicEvents.isNotEmpty()) {

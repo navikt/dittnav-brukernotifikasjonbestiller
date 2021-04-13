@@ -6,7 +6,6 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
@@ -46,19 +45,15 @@ class HandleEvents(private val brukernotifikasjonbestillingRepository: Brukernot
         }
     }
 
-    suspend fun <T> sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents: MutableMap<NokkelIntern, T>,
-                                                                              duplicateEvents: List<Brukernotifikasjonbestilling>,
-                                                                              kafkaProducer: KafkaProducerWrapper<NokkelIntern, T>,
-                                                                              eventtype: Eventtype) {
+    fun <T> getRemainingValidatedEvents(successfullyValidatedEvents: MutableMap<NokkelIntern, T>, duplicateEvents: List<Brukernotifikasjonbestilling>, eventtype: Eventtype): Map<NokkelIntern, T> {
         return if (duplicateEvents.isEmpty()) {
-            produce(successfullyValidatedEvents, kafkaProducer, eventtype)
+            successfullyValidatedEvents
         } else {
-            val remainingValidatedEvents = getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvents, eventtype)
-            produce(remainingValidatedEvents, kafkaProducer, eventtype)
+            getRemainingEvents(successfullyValidatedEvents, duplicateEvents, eventtype)
         }
     }
 
-    fun <T> getRemainingValidatedEvents(successfullyValidatedEvents: MutableMap<NokkelIntern, T>, duplicateEvents: List<Brukernotifikasjonbestilling>, eventtype: Eventtype): Map<NokkelIntern, T> {
+    private fun <T> getRemainingEvents(successfullyValidatedEvents: MutableMap<NokkelIntern, T>, duplicateEvents: List<Brukernotifikasjonbestilling>, eventtype: Eventtype): Map<NokkelIntern, T> {
         return successfullyValidatedEvents
                 .filter { successfullyValidatedEvent ->
                     !duplicateEvents.any { duplicateEvent ->
@@ -68,13 +63,4 @@ class HandleEvents(private val brukernotifikasjonbestillingRepository: Brukernot
                     }
                 }
     }
-
-    private suspend fun <T> produce(successfullyValidatedEvents: Map<NokkelIntern, T>,
-                                    kafkaProducer: KafkaProducerWrapper<NokkelIntern, T>,
-                                    eventtype: Eventtype) {
-        val eventsToSendKafka = successfullyValidatedEvents.map { RecordKeyValueWrapper(it.key, it.value) }
-        kafkaProducer.sendEvents(eventsToSendKafka)
-        brukernotifikasjonbestillingRepository.persistInOneBatch(successfullyValidatedEvents, eventtype)
-    }
-
 }

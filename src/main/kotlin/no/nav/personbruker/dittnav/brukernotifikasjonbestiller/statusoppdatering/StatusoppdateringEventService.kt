@@ -8,6 +8,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
@@ -24,7 +25,8 @@ class StatusoppdateringEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
-        private val handleEvents: HandleEvents
+        private val handleEvents: HandleEvents,
+        private val eventDispatcher: EventDispatcher
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
     private val log: Logger = LoggerFactory.getLogger(StatusoppdateringEventService::class.java)
@@ -66,8 +68,9 @@ class StatusoppdateringEventService(
                     problematicEvents.addAll(handleEvents.createFeilresponsEvents(duplicateEvents, Eventtype.STATUSOPPDATERING))
                     handleEvents.countDuplicateEvents(this, duplicateEvents)
                 }
-                handleEvents.sendRemainingValidatedEventsToInternalTopicAndPersistToDB(successfullyValidatedEvents, duplicateEvents, internalEventProducer, Eventtype.STATUSOPPDATERING)
-            }
+                val remainingValidatedEvents = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvents, Eventtype.STATUSOPPDATERING)
+                eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
+                eventDispatcher.persistToDB(remainingValidatedEvents)            }
 
             if (problematicEvents.isNotEmpty()) {
                 feilresponsEventProducer.sendEvents(problematicEvents)

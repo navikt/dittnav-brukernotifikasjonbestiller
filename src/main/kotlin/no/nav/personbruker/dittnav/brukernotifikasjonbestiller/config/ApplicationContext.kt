@@ -4,6 +4,7 @@ import no.nav.brukernotifikasjon.schemas.*
 import no.nav.brukernotifikasjon.schemas.internal.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
@@ -49,7 +50,8 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
         val producerProps = Kafka.producerProps(environment)
         val internalKafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps))
-        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents)
+        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents, beskjedEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventProcessor)
     }
 
@@ -57,7 +59,8 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.oppgaveMainTopicName, KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps))
-        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents)
+        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
+        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents, oppgaveEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventProcessor)
     }
 
@@ -65,7 +68,8 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.statusoppdateringMainTopicName, KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps))
-        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents)
+        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
+        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents, statusoppdateringEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventProcessor)
     }
 
@@ -73,7 +77,8 @@ class ApplicationContext {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, KafkaProducer<NokkelIntern, DoneIntern>(producerProps))
-        val doneEventProcessor = DoneEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents)
+        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val doneEventProcessor = DoneEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleEvents, doneEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventProcessor)
     }
 
