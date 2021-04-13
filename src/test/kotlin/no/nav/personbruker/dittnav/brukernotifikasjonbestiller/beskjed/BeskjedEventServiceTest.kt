@@ -12,7 +12,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -29,7 +29,7 @@ internal class BeskjedEventServiceTest {
     private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-beskjed-test"
-    private val handleEvents = mockk<HandleEvents>(relaxed = true)
+    private val handleEvents = mockk<HandleDuplicateEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher>(relaxed = true)
 
     @Test
@@ -41,9 +41,9 @@ internal class BeskjedEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
-        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns emptyList()
-        coEvery { handleEvents.createFeilresponsEvents(any(), any()) } returns mutableListOf()
-        coEvery { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) } returns emptyMap()
+        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns emptyList()
+        coEvery { handleEvents.createFeilresponsEvents(any()) } returns mutableListOf()
+        coEvery { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns emptyMap()
         coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns Unit
         coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns Unit
 
@@ -57,12 +57,12 @@ internal class BeskjedEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 1) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) }
+        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
+        coVerify(exactly = 1) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
 
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
+        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -85,9 +85,9 @@ internal class BeskjedEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
-        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
+        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
@@ -110,9 +110,9 @@ internal class BeskjedEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
-        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
+        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
 
@@ -137,9 +137,9 @@ internal class BeskjedEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any(), any()) }
-        coVerify(exactly = 0) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) }
+        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
+        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(),) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
 
@@ -157,9 +157,9 @@ internal class BeskjedEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
         val beskjedEventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
 
-        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns duplicateEvents
-        coEvery { handleEvents.createFeilresponsEvents(any(), any()) } returns problematicEvents
-        coEvery { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) } returns emptyMap()
+        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns duplicateEvents
+        coEvery { handleEvents.createFeilresponsEvents(any()) } returns problematicEvents
+        coEvery { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns emptyMap()
         coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) } returns Unit
         coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) } returns Unit
 
@@ -173,9 +173,9 @@ internal class BeskjedEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
-        coVerify(exactly = 1) { handleEvents.createFeilresponsEvents(any(), any()) }
-        coVerify(exactly = 1) { handleEvents.getRemainingValidatedEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(), any()) }
+        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
+        coVerify(exactly = 1) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 1) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }

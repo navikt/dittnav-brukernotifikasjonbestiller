@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
@@ -25,7 +25,7 @@ class StatusoppdateringEventService(
         private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>,
         private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
-        private val handleEvents: HandleEvents,
+        private val handleDuplicateEvents: HandleDuplicateEvents,
         private val eventDispatcher: EventDispatcher
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
@@ -63,12 +63,12 @@ class StatusoppdateringEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                val duplicateEvents = handleEvents.getDuplicateEvents(successfullyValidatedEvents, Eventtype.STATUSOPPDATERING)
+                val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(handleEvents.createFeilresponsEvents(duplicateEvents, Eventtype.STATUSOPPDATERING))
-                    handleEvents.countDuplicateEvents(this, duplicateEvents)
+                    problematicEvents.addAll(handleDuplicateEvents.createFeilresponsEvents(duplicateEvents))
+                    handleDuplicateEvents.countDuplicateEvents(this, duplicateEvents)
                 }
-                val remainingValidatedEvents = handleEvents.getRemainingValidatedEvents(successfullyValidatedEvents, duplicateEvents, Eventtype.STATUSOPPDATERING)
+                val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
                 eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
                 eventDispatcher.persistToDB(remainingValidatedEvents)            }
 
