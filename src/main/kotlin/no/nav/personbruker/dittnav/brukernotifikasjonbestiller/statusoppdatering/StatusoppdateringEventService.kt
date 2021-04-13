@@ -70,7 +70,8 @@ class StatusoppdateringEventService(
                 }
                 val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
                 eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
-                eventDispatcher.persistToDB(remainingValidatedEvents)            }
+                eventDispatcher.persistToDB(remainingValidatedEvents)
+            }
 
             if (problematicEvents.isNotEmpty()) {
                 feilresponsEventProducer.sendEvents(problematicEvents)

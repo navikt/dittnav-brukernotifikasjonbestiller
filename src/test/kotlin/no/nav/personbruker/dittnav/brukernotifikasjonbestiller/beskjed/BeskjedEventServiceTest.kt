@@ -139,7 +139,7 @@ internal class BeskjedEventServiceTest {
 
         coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
         coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
-        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any(),) }
+        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, BeskjedIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, BeskjedIntern>>()) }
 

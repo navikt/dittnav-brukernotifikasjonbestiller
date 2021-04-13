@@ -57,7 +57,7 @@ class brukernotifikasjonbestillingQueriesTest {
             database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
             val result = database.dbQuery { getEventsByIds(brukernotifikasjonbestilling_1.eventId, brukernotifikasjonbestilling_1.systembruker, Eventtype.BESKJED) }
             result.size `should be equal to` 1
-            result.first()`should be equal to` brukernotifikasjonbestilling_1
+            result.first() `should be equal to` brukernotifikasjonbestilling_1
         }
     }
 
