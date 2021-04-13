@@ -1,8 +1,14 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class EventMetricsSession(val eventtype: Eventtype) {
+
+    private val log: Logger = LoggerFactory.getLogger(EventMetricsSession::class.java)
+
     private val countProcessedEventsBySysUser = HashMap<String, Int>()
     private val countFailedEventsBySysUser = HashMap<String, Int>()
     private val countDuplicateKeyBySysUser = HashMap<String, Int>()
@@ -19,6 +25,13 @@ class EventMetricsSession(val eventtype: Eventtype) {
 
     fun countFailedEventForSystemUser(systemUser: String) {
         countFailedEventsBySysUser[systemUser] = countFailedEventsBySysUser.getOrDefault(systemUser, 0).inc()
+    }
+
+    fun countDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>) {
+        duplicateEvents.forEach { duplicateEvent ->
+            countDuplicateEventForSystemUser(duplicateEvent.systembruker)
+            log.info("${duplicateEvent.eventtype} med eventId: ${duplicateEvent.eventId} og systembruker: ${duplicateEvent.eventId} er et duplikat. Legger derfor ikke eventet på topic igjen.")
+        }
     }
 
     fun countDuplicateEventForSystemUser(systemUser: String) {

@@ -1,6 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be`
 import org.junit.jupiter.api.Test
 
@@ -55,7 +57,7 @@ internal class EventMetricsSessionTest {
     }
 
     @Test
-    fun `Skal telle duplikat`() {
+    fun `Skal telle duplikat per systembruker`() {
         val session = EventMetricsSession(Eventtype.BESKJED)
         val systemUser = "dummySystemUser"
 
@@ -63,5 +65,19 @@ internal class EventMetricsSessionTest {
 
         session.getDuplicateKeys().size `should be` 1
         session.getDuplicateKeys(systemUser) `should be` 1
+    }
+
+    @Test
+    fun `Skal telle alle duplikat`() {
+        val session = EventMetricsSession(Eventtype.BESKJED)
+        val duplicate_1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED)
+        val duplicate_2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED)
+        val duplicateEvents = listOf(duplicate_1, duplicate_2)
+
+        session.countDuplicateEvents(duplicateEvents)
+
+        session.getDuplicateKeys().size `should be equal to` duplicateEvents.size
+        session.getDuplicateKeys("systembruker-0") `should be equal to` 1
+        session.getDuplicateKeys("systembruker-1") `should be equal to` 1
     }
 }

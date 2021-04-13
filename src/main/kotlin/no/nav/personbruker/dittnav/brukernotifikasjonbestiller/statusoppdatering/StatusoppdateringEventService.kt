@@ -66,7 +66,7 @@ class StatusoppdateringEventService(
                 val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
                 if (duplicateEvents.isNotEmpty()) {
                     problematicEvents.addAll(handleDuplicateEvents.createFeilresponsEvents(duplicateEvents))
-                    handleDuplicateEvents.countDuplicateEvents(this, duplicateEvents)
+                    this.countDuplicateEvents(duplicateEvents)
                 }
                 val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
                 eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)

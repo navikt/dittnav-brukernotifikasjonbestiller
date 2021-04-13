@@ -9,13 +9,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class HandleDuplicateEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
-
-    private val log: Logger = LoggerFactory.getLogger(HandleDuplicateEvents::class.java)
 
     suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableMap<NokkelIntern, T>): List<Brukernotifikasjonbestilling> {
         var result = emptyList<Brukernotifikasjonbestilling>()
@@ -36,13 +31,6 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
             problematicEvents.add(RecordKeyValueWrapper(feilrespons.key, feilrespons.value))
         }
         return problematicEvents
-    }
-
-    fun countDuplicateEvents(eventMetricsSession: EventMetricsSession, duplicateEvents: List<Brukernotifikasjonbestilling>) {
-        duplicateEvents.forEach { duplicateEvent ->
-            log.info("${duplicateEvent.eventtype} med eventId: ${duplicateEvent.eventId} og systembruker: ${duplicateEvent.eventId} er et duplikat. Legger derfor ikke eventet på topic igjen.")
-            eventMetricsSession.countDuplicateEventForSystemUser(duplicateEvent.systembruker)
-        }
     }
 
     fun <T> getValidatedEventsWithoutDuplicates(successfullyValidatedEvents: MutableMap<NokkelIntern, T>, duplicateEvents: List<Brukernotifikasjonbestilling>): Map<NokkelIntern, T> {

@@ -21,7 +21,7 @@ internal class HandleDuplicateEventsTest {
     private val brukernotifikasjonbestillingRepository = mockk<BrukernotifikasjonbestillingRepository>()
 
     @Test
-    fun `Skal ikke inneholde duplikat i listen som sendes til kafka`() {
+    fun `Skal ikke inneholde duplikat i listen som returneres`() {
         val handleEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val duplicateEvent = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED))
         val successfullyValidatedEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
