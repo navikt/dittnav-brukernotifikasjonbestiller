@@ -22,36 +22,36 @@ internal class HandleDuplicateEventsTest {
 
     @Test
     fun `Skal ikke inneholde duplikat i listen som returneres`() {
-        val handleEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val duplicateEvent = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED))
         val successfullyValidatedEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
         val expectedEventSize = successfullyValidatedEvents.size - duplicateEvent.size
 
-        val eventsWithoutDuplicates = handleEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvent)
+        val eventsWithoutDuplicates = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvent)
         eventsWithoutDuplicates.size.`should be equal to`(expectedEventSize)
     }
 
     @Test
     fun `Skal returnere hele listen med vellykket eventer hvis ikke det finnes duplikat`() {
-        val handleEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val emptyListOfduplicateEvents = emptyList<Brukernotifikasjonbestilling>()
         val successfullyValidatedEvents = AvroBeskjedInternObjectMother.giveMeANumberOfInternalBeskjedEvents(numberOfEvents = 3, eventId = eventId, systembruker = systembruker, fodselsnummer = fodselsnummer)
         val expectedEventSize = successfullyValidatedEvents.size
 
-        val eventsWithoutDuplicates = handleEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, emptyListOfduplicateEvents)
+        val eventsWithoutDuplicates = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, emptyListOfduplicateEvents)
         eventsWithoutDuplicates.size.`should be equal to`(expectedEventSize)
     }
 
     @Test
     fun `Skal transformere duplikat av Brukernotifikasjonbestilling til feilrespons`() {
-        val handleEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val duplicateEvents = listOf(
                 BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("$eventId-1", "$systembruker-1", Eventtype.BESKJED),
                 BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("$eventId-2", "$systembruker-2", Eventtype.BESKJED)
         )
         coEvery { eventMetricsSession.countDuplicateEventForSystemUser(any()) } returns Unit
 
-        val problematicEvents = handleEvents.createFeilresponsEvents(duplicateEvents)
+        val problematicEvents = handleDuplicateEvents.createFeilresponsEvents(duplicateEvents)
 
         problematicEvents.size.`should be equal to`(duplicateEvents.size)
 

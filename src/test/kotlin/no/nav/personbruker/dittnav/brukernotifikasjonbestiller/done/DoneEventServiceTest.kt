@@ -28,7 +28,7 @@ internal class DoneEventServiceTest {
     private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-done-test"
-    private val handleEvents = mockk<HandleDuplicateEvents>(relaxed = true)
+    private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher>(relaxed = true)
 
     @Test
@@ -37,11 +37,11 @@ internal class DoneEventServiceTest {
         val externalDone = AvroDoneObjectMother.createDone()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
+        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns emptyList()
-        coEvery { handleEvents.createFeilresponsEvents(any()) } returns mutableListOf()
-        coEvery { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns emptyMap()
+        coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns emptyList()
+        coEvery { handleDuplicateEvents.createFeilresponsEvents(any()) } returns mutableListOf()
+        coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns emptyMap()
         coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns Unit
         coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns Unit
 
@@ -55,12 +55,12 @@ internal class DoneEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 1) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) }
 
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.createFeilresponsEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -70,7 +70,7 @@ internal class DoneEventServiceTest {
         val externalDone = AvroDoneObjectMother.createDone()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
+        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -83,11 +83,11 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countNokkelWasNull() }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.createFeilresponsEvents(any()) }
         coVerify(exactly = 0) { feilresponsEventProducer.sendEvents(any()) }
     }
 
@@ -97,7 +97,7 @@ internal class DoneEventServiceTest {
         val externalDoneWithTooLongGrupperingsid = AvroDoneObjectMother.createDoneWithGrupperingsId("G".repeat(101))
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDoneWithTooLongGrupperingsid, topic)
-        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
+        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -108,11 +108,11 @@ internal class DoneEventServiceTest {
             doneEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.createFeilresponsEvents(any()) }
 
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
@@ -124,7 +124,7 @@ internal class DoneEventServiceTest {
         val externalUnexpectedDone = mockk<Done>()
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
-        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
+        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -135,11 +135,11 @@ internal class DoneEventServiceTest {
             doneEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 0) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.createFeilresponsEvents(any()) }
 
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
@@ -153,11 +153,11 @@ internal class DoneEventServiceTest {
         val problematicEvents = FeilresponsObjectMother.giveMeANumberOfFeilresponsEvents(1, "eventId", "systembruker", Eventtype.BESKJED)
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleEvents, eventDispatcher)
+        val doneEventService = DoneEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        coEvery { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns duplicateEvents
-        coEvery { handleEvents.createFeilresponsEvents(any()) } returns problematicEvents
-        coEvery { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns emptyMap()
+        coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns duplicateEvents
+        coEvery { handleDuplicateEvents.createFeilresponsEvents(any()) } returns problematicEvents
+        coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns emptyMap()
         coEvery { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) } returns Unit
         coEvery { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) } returns Unit
 
@@ -171,11 +171,11 @@ internal class DoneEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { handleEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 1) { handleEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableMap<NokkelIntern, DoneIntern>>()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.sendEventsToInternalTopic(any<MutableMap<NokkelIntern, DoneIntern>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.persistToDB(any<MutableMap<NokkelIntern, DoneIntern>>()) }
-        coVerify(exactly = 1) { handleEvents.createFeilresponsEvents(any()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.createFeilresponsEvents(any()) }
         coVerify(exactly = 1) { feilresponsEventProducer.sendEvents(any()) }
     }
 }
