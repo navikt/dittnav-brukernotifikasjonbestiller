@@ -33,20 +33,12 @@ spec:
       memory: 580Mi
   gcp:
     sqlInstances:
-      - name: brukernotifikasjonbestiller
-        type: POSTGRES_11
-        tier: db-f1-micro
-        diskType: SSD
-        diskSize: 10
-        diskAutoresize: false
-        autoBackupTime: "03:00"
+      - name: dittnav-brukernotifikasjonbestiller
+        type: POSTGRES_12
         databases:
-          - name: brukernotifikasjonbestiller
+          - name: brukernotifikasjonbestiller-cache
             envVarPrefix: DB
-        maintenanceWindow:
-          day: 1
-          hour: 4
-        cascadingDelete: false
+        cascadingDelete: true
   accessPolicy:
     outbound:
       external:
