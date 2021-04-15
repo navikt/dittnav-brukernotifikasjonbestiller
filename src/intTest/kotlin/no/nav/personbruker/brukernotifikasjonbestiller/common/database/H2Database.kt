@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.database
+package no.nav.personbruker.brukernotifikasjonbestiller.common.database
 
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database

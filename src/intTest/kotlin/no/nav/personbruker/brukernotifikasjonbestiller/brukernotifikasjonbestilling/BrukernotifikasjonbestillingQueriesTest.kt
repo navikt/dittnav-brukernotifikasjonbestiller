@@ -2,8 +2,8 @@ package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestil
 
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling.objectMother.giveMeANumberOfInternalEvents
-import no.nav.personbruker.brukernotifikasjonbestiller.database.H2Database
-import no.nav.personbruker.brukernotifikasjonbestiller.database.createBrukernotifikasjonbestillinger
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.amshove.kluent.`should be empty`

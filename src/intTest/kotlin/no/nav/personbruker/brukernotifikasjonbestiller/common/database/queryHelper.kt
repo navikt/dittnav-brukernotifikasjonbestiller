@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.database
+package no.nav.personbruker.brukernotifikasjonbestiller.common.database
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.createBrukernotifikasjonbestilling

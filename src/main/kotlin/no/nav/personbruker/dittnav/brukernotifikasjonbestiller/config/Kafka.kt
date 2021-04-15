@@ -20,17 +20,17 @@ object Kafka {
 
     private val log: Logger = LoggerFactory.getLogger(Kafka::class.java)
 
-    const val beskjedInputTopicName = "aapen-brukernotifikasjon-nyBeskjed-v1"
-    const val beskjedMainTopicName = "privat-brukernotifikasjon-nyBeskjed-v1"
+    const val beskjedAapenTopicName = "aapen-brukernotifikasjon-nyBeskjed-v1"
+    const val beskjedInternTopicName = "intern-brukernotifikasjon-nyBeskjed-v1"
 
-    const val oppgaveInputTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
-    const val oppgaveMainTopicName = "privat-brukernotifikasjon-nyOppgave-v1"
+    const val oppgaveAapenTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
+    const val oppgaveInternTopicName = "intern-brukernotifikasjon-nyOppgave-v1"
 
-    const val statusoppdateringInputTopicName = "aapen-brukernotifikasjon-nyStatusoppdatering-v1"
-    const val statusoppdateringMainTopicName = "privat-brukernotifikasjon-nyStatusoppdatering-v1"
+    const val statusoppdateringAapenTopicName = "aapen-brukernotifikasjon-nyStatusoppdatering-v1"
+    const val statusoppdateringInternTopicName = "intern-brukernotifikasjon-nyStatusoppdatering-v1"
 
-    const val doneInputTopicName = "aapen-brukernotifikasjon-done-v1"
-    const val doneMainTopicName = "privat-brukernotifikasjon-done-v1"
+    const val doneAapenTopicName = "aapen-brukernotifikasjon-done-v1"
+    const val doneInternTopicName = "intern-brukernotifikasjon-done-v1"
 
     const val feilresponsTopicName = "aapen-brukernotifikasjon-feilrespons-v1"
 
