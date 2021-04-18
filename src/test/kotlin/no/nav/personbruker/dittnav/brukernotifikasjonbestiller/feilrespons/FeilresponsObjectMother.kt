@@ -2,7 +2,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
 import java.time.ZoneOffset
