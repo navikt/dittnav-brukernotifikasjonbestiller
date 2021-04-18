@@ -1,15 +1,15 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
-import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should contain`
+import org.amshove.kluent.`should contain all`
 import org.junit.jupiter.api.Test
 
 internal class HandleDuplicateEventsTest {
@@ -43,25 +43,25 @@ internal class HandleDuplicateEventsTest {
     }
 
     @Test
-    fun `Skal transformere duplikat av Brukernotifikasjonbestilling til feilrespons`() {
+    fun `Skal returnere en liste uten duplikat selvom successfullyValidatedEvents inneholder flere duplikat med samme nokkel`() {
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val duplicateEvents = listOf(
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("$eventId-1", "$systembruker-1", Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("$eventId-2", "$systembruker-2", Eventtype.BESKJED)
-        )
-        coEvery { eventMetricsSession.countDuplicateEventForSystemUser(any()) } returns Unit
 
-        val problematicEvents = handleDuplicateEvents.createFeilresponsEvents(duplicateEvents)
+        val duplicateEvents = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "$eventId-0", systembruker = "$systembruker-0", eventtype = Eventtype.BESKJED))
 
-        problematicEvents.size.`should be equal to`(duplicateEvents.size)
+        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
+        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
 
-        problematicEvents.get(0).key.getEventId().`should be equal to`("$eventId-1")
-        problematicEvents.get(0).key.getSystembruker().`should be equal to`("$systembruker-1")
-        problematicEvents.get(0).value.getFeilmelding().`should contain`("duplikat")
+        val successfullyValidatedEvents =
+                mutableListOf(Pair(nokkelDuplicate, beskjedIntern),
+                        Pair(nokkelDuplicate, beskjedIntern),
+                        Pair(nokkelValid, beskjedIntern))
 
-        problematicEvents.get(1).key.getEventId().`should be equal to`("$eventId-2")
-        problematicEvents.get(1).key.getSystembruker().`should be equal to`("$systembruker-2")
-        problematicEvents.get(1).value.getFeilmelding().`should contain`("duplikat")
+        val expectedEvent = listOf(Pair(nokkelValid, beskjedIntern))
+
+        val eventsWithoutDuplicates = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
+        eventsWithoutDuplicates.size `should be equal to` expectedEvent.size
+        eventsWithoutDuplicates `should contain all` expectedEvent
     }
 
 }

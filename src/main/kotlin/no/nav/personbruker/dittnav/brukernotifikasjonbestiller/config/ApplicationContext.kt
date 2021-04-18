@@ -50,8 +50,8 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment)
         val internalKafkaProducerWrapper = KafkaProducerWrapper(Kafka.beskjedMainTopicName, KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val beskjedEventProcessor = BeskjedEventService(internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
+        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalKafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val beskjedEventProcessor = BeskjedEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventProcessor)
     }
 
@@ -60,8 +60,8 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.oppgaveMainTopicName, KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
-        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
-        val oppgaveEventProcessor = OppgaveEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
+        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val oppgaveEventProcessor = OppgaveEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventProcessor)
     }
 
@@ -70,8 +70,8 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.statusoppdateringMainTopicName, KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
-        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
-        val statusoppdateringEventProcessor = StatusoppdateringEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
+        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val statusoppdateringEventProcessor = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventProcessor)
     }
 
@@ -80,8 +80,8 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment)
         val kafkaProducerWrapper = KafkaProducerWrapper(Kafka.doneMainTopicName, KafkaProducer<NokkelIntern, DoneIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
-        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository)
-        val doneEventProcessor = DoneEventService(kafkaProducerWrapper, feilresponsKafkaProducerWrapper, metricsCollector, handleDuplicateEvents, doneEventDispatcher)
+        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, kafkaProducerWrapper, feilresponsKafkaProducerWrapper)
+        val doneEventProcessor = DoneEventService(metricsCollector, handleDuplicateEvents, doneEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventProcessor)
     }
 

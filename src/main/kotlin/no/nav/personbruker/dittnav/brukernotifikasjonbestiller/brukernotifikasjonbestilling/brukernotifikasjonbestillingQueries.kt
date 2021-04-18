@@ -19,7 +19,7 @@ fun Connection.createBrukernotifikasjonbestilling(events: List<Brukernotifikasjo
         }.toBatchPersistResult(events)
 
 
-fun <T> Connection.getEventsByEventId(events: MutableMap<NokkelIntern, T>): List<Brukernotifikasjonbestilling> =
+fun <T> Connection.getEventsByEventId(events: List<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> =
         prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
                 .use {
                     it.setArray(1, toVarcharArray(events))
@@ -27,31 +27,31 @@ fun <T> Connection.getEventsByEventId(events: MutableMap<NokkelIntern, T>): List
                 }
 
 fun Connection.getEventsByIds(eventId: String, systembruker: String, eventtype: Eventtype): List<Brukernotifikasjonbestilling> =
-    prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
-            .use {
-                it.setString(1, eventId)
-                it.setString(2, systembruker)
-                it.setString(3, eventtype.toString())
-                it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
-            }
+        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
+                .use {
+                    it.setString(1, eventId)
+                    it.setString(2, systembruker)
+                    it.setString(3, eventtype.toString())
+                    it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
+                }
 
 fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
     return Brukernotifikasjonbestilling(
             eventId = getString("eventId"),
             systembruker = getString("systembruker"),
-            eventtype = getString("eventtype"),
+            eventtype = toEventtype(getString("eventtype")),
             prosesserttidspunkt = getUtcDateTime("prosesserttidspunkt")
     )
 }
 
-private fun <T> Connection.toVarcharArray(events: MutableMap<NokkelIntern, T>): Array {
-    val eventIds = events.keys.toList().map { it.getEventId() }
+private fun <T> Connection.toVarcharArray(events: List<Pair<NokkelIntern, T>>): Array {
+    val eventIds = events.map { it.first.getEventId() }
     return createArrayOf("VARCHAR", eventIds.toTypedArray())
 }
 
 private fun PreparedStatement.buildStatementForSingleRow(event: Brukernotifikasjonbestilling) {
     setString(1, event.eventId)
     setString(2, event.systembruker)
-    setString(3, event.eventtype)
+    setString(3, event.eventtype.toString())
     setObject(4, event.prosesserttidspunkt)
 }

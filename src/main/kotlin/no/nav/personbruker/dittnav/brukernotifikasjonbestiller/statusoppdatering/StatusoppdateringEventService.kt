@@ -11,8 +11,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatch
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
@@ -22,18 +20,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class StatusoppdateringEventService(
-        private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, StatusoppdateringIntern>,
-        private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
         private val handleDuplicateEvents: HandleDuplicateEvents,
-        private val eventDispatcher: EventDispatcher
+        private val eventDispatcher: EventDispatcher<StatusoppdateringIntern>
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
     private val log: Logger = LoggerFactory.getLogger(StatusoppdateringEventService::class.java)
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Statusoppdatering>) {
-        val successfullyValidatedEvents = mutableMapOf<NokkelIntern, StatusoppdateringIntern>()
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, StatusoppdateringIntern>>()
+        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.STATUSOPPDATERING) {
             events.forEach { event ->
@@ -42,7 +38,7 @@ class StatusoppdateringEventService(
                     val externalStatusoppdatering = event.value()
                     val internalNokkel = StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
                     val internalStatusoppdatering = StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
-                    successfullyValidatedEvents[internalNokkel] = internalStatusoppdatering
+                    successfullyValidatedEvents.add(Pair(internalNokkel, internalStatusoppdatering))
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
@@ -65,16 +61,15 @@ class StatusoppdateringEventService(
             if (successfullyValidatedEvents.isNotEmpty()) {
                 val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(handleDuplicateEvents.createFeilresponsEvents(duplicateEvents))
+                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
                 }
                 val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
-                eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
-                eventDispatcher.persistToDB(remainingValidatedEvents)
+                eventDispatcher.dispatchSuccessfullyValidatedEvents(remainingValidatedEvents)
             }
 
             if (problematicEvents.isNotEmpty()) {
-                feilresponsEventProducer.sendEvents(problematicEvents)
+                eventDispatcher.dispatchProblematicEvents(problematicEvents)
             }
         }
     }

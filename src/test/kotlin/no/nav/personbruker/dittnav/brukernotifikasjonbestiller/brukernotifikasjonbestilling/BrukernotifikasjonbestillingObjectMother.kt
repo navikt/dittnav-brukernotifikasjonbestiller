@@ -9,7 +9,7 @@ object BrukernotifikasjonbestillingObjectMother {
         return Brukernotifikasjonbestilling(
                 eventId = eventId,
                 systembruker = systembruker,
-                eventtype = eventtype.toString(),
+                eventtype = eventtype,
                 prosesserttidspunkt = LocalDateTime.now()
         )
     }

@@ -16,14 +16,13 @@ object AvroBeskjedInternObjectMother {
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultTidspunkt = Instant.now().toEpochMilli()
 
-    fun giveMeANumberOfInternalBeskjedEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableMap<NokkelIntern, BeskjedIntern> {
-        val events = mutableMapOf<NokkelIntern, BeskjedIntern>()
+    fun giveMeANumberOfInternalBeskjedEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, BeskjedIntern>> {
+        val events = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
 
         for (i in 0 until numberOfEvents) {
-            events.put(
-                    AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-$i", "$eventId-$i", fodselsnummer),
-                    createBeskjedInternWithGrupperingsId("$i")
-            )
+            val nokkelIntern = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-$i", "$eventId-$i", fodselsnummer)
+            val beskjedIntern = createBeskjedInternWithGrupperingsId("$i")
+            events.add(Pair(nokkelIntern, beskjedIntern))
         }
         return events
     }

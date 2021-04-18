@@ -9,14 +9,14 @@ import java.time.ZoneOffset
 
 object FeilresponsObjectMother {
 
-    fun giveMeANumberOfFeilresponsEvents(numberOfEvents: Int, eventId: String, systembruker: String, eventtype: Eventtype): MutableList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>> {
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+    fun giveMeANumberOfFeilresponsEvents(numberOfEvents: Int, eventId: String, systembruker: String, eventtype: Eventtype): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
+        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         for (i in 0 until numberOfEvents) {
             val tidspunkt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
             val nokkelFeilrespons = NokkelFeilrespons("$systembruker-$i", "$eventId-$i", eventtype.toString())
             val feilrespons = Feilrespons(tidspunkt, "Simulert feil i test - $i.")
-            problematicEvents.add(RecordKeyValueWrapper(nokkelFeilrespons, feilrespons))
+            problematicEvents.add(Pair(nokkelFeilrespons, feilrespons))
         }
 
         return problematicEvents

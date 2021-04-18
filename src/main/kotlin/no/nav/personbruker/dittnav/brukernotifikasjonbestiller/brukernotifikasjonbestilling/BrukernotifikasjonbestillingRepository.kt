@@ -7,7 +7,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
 class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
-    suspend fun <T> fetchEventsThatMatchEventId(events: MutableMap<NokkelIntern, T>): List<Brukernotifikasjonbestilling> {
+    suspend fun <T> fetchEventsThatMatchEventId(events: List<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         var resultat = emptyList<Brukernotifikasjonbestilling>()
         database.queryWithExceptionTranslation {
             resultat = getEventsByEventId(events)
@@ -29,20 +29,20 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         return result.distinct()
     }
 
-    suspend fun <T> persistInOneBatch(entities: Map<NokkelIntern, T>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {
+    suspend fun <T> persistInOneBatch(entities: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {
         return database.queryWithExceptionTranslation {
             createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(entities, eventtype))
         }
     }
 
-    private fun <T> toBrukernotifikasjonbestilling(events: Map<NokkelIntern, T>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
+    private fun <T> toBrukernotifikasjonbestilling(events: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
-        events.forEach { nokkel, event ->
+        events.forEach { event ->
             result.add(
                     Brukernotifikasjonbestilling(
-                            eventId = nokkel.getEventId(),
-                            systembruker = nokkel.getSystembruker(),
-                            eventtype = eventtype.toString(),
+                            eventId = event.first.getEventId(),
+                            systembruker = event.first.getSystembruker(),
+                            eventtype = eventtype,
                             prosesserttidspunkt = java.time.LocalDateTime.now()
                     )
             )

@@ -11,8 +11,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatch
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
@@ -22,18 +20,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class OppgaveEventService(
-        private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, OppgaveIntern>,
-        private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
         private val metricsCollector: MetricsCollector,
         private val handleDuplicateEvents: HandleDuplicateEvents,
-        private val eventDispatcher: EventDispatcher
+        private val eventDispatcher: EventDispatcher<OppgaveIntern>
 ) : EventBatchProcessorService<Nokkel, Oppgave> {
 
     private val log: Logger = LoggerFactory.getLogger(OppgaveEventService::class.java)
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Oppgave>) {
-        val successfullyValidatedEvents = mutableMapOf<NokkelIntern, OppgaveIntern>()
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, OppgaveIntern>>()
+        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.OPPGAVE) {
             events.forEach { event ->
@@ -42,7 +38,7 @@ class OppgaveEventService(
                     val externalOppgave = event.value()
                     val internalNokkel = OppgaveTransformer.toNokkelInternal(externalNokkel, externalOppgave)
                     val internalOppgave = OppgaveTransformer.toOppgaveInternal(externalOppgave)
-                    successfullyValidatedEvents[internalNokkel] = internalOppgave
+                    successfullyValidatedEvents.add(Pair(internalNokkel, internalOppgave))
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
@@ -65,16 +61,15 @@ class OppgaveEventService(
             if (successfullyValidatedEvents.isNotEmpty()) {
                 val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(handleDuplicateEvents.createFeilresponsEvents(duplicateEvents))
+                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
                 }
                 val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
-                eventDispatcher.sendEventsToInternalTopic(remainingValidatedEvents, internalEventProducer)
-                eventDispatcher.persistToDB(remainingValidatedEvents)
+                eventDispatcher.dispatchSuccessfullyValidatedEvents(remainingValidatedEvents)
             }
 
             if (problematicEvents.isNotEmpty()) {
-                feilresponsEventProducer.sendEvents(problematicEvents)
+                eventDispatcher.dispatchProblematicEvents(problematicEvents)
             }
         }
     }
