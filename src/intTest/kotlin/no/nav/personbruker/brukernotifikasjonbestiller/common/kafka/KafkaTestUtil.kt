@@ -1,6 +1,5 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
-
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
@@ -34,10 +33,13 @@ object KafkaTestUtil {
                 username = username,
                 password = password,
                 groupId = "groupId-for-tests",
+                applicationName = "dittnav-brukernotifikasjonbestiller",
                 dbHost = "dbHostIkkeIBrukHer",
+                dbPort = "dbPortIkkeIBrukHer",
                 dbName = "dbNameIkkeIBrukHer",
                 dbUrl = "dbUrlIkkeIBrukHer",
                 dbUser = "dbUserIkkeIBrukHer",
+                dbPassword = "dbPWIkkeIBrukHer",
                 clusterName = "clusterNameIkkeIBrukHer",
                 namespace = "namespaceIkkeIBrukHer",
                 sensuHost = "sensuHostIkkeIBrukHer",

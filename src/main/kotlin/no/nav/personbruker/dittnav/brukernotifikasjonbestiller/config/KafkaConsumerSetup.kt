@@ -65,22 +65,22 @@ object KafkaConsumerSetup {
 
     fun setupConsumerForTheBeskjedInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Beskjed>): Consumer<Nokkel, Beskjed> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(kafkaProps)
-        return Consumer(Kafka.beskjedAapenTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheOppgaveInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Oppgave>): Consumer<Nokkel, Oppgave> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(kafkaProps)
-        return Consumer(Kafka.oppgaveAapenTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.oppgaveInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheStatusoppdateringInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Statusoppdatering>): Consumer<Nokkel, Statusoppdatering> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(kafkaProps)
-        return Consumer(Kafka.statusoppdateringAapenTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.statusoppdateringInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheDoneInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Done>): Consumer<Nokkel, Done> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(kafkaProps)
-        return Consumer(Kafka.doneAapenTopicName, kafkaConsumer, eventProcessor)
+        return Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     suspend fun restartPolling(appContext: ApplicationContext) {

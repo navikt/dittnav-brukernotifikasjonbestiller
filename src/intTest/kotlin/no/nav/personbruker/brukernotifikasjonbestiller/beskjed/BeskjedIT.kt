@@ -40,7 +40,7 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BeskjedIT {
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.beskjedAapenTopicName, Kafka.beskjedInternTopicName))
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.beskjedInputTopicName, Kafka.beskjedHovedTopicName))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
@@ -55,6 +55,7 @@ class BeskjedIT {
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+
     @BeforeAll
     fun setup() {
         embeddedEnv.start()
@@ -71,33 +72,36 @@ class BeskjedIT {
     }
 
     @Test
-    fun `Should read Beskjed-events and send to varselbestiller-topic`() {
+    fun `Should read Beskjed-events and send to hoved-topic`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.beskjedAapenTopicName, beskjedEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, Kafka.beskjedInputTopicName, beskjedEvents)
         } shouldBeEqualTo true
 
-        `Read all Beskjed-events from our open-topic and verify that they have been sent to the internal-topic`()
+        `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`()
 
         beskjedEvents.all {
             capturedInternalRecords.contains(RecordKeyValueWrapper(it.key, it.value))
         }
+
     }
 
-    fun `Read all Beskjed-events from our open-topic and verify that they have been sent to the internal-topic`() {
+    fun `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED, true)
         val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(consumerProps)
 
-        val producerProps = Kafka.producerProps(testEnvironment, enableSecurity = true)
-        val kafkaProducerInternal = KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps)
-        val kafkaProducerFeilrespons = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
-        val internalEventProducer = KafkaProducerWrapper(Kafka.beskjedInternTopicName, kafkaProducerInternal)
+        val producerPropsBeskjedIntern = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN, enableSecurity = true)
+        val producerPropsFeilrespons = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = true)
+        val kafkaProducerInternal = KafkaProducer<NokkelIntern, BeskjedIntern>(producerPropsBeskjedIntern)
+        val kafkaProducerFeilrespons = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerPropsFeilrespons)
+        val internalEventProducer = KafkaProducerWrapper(Kafka.beskjedHovedTopicName, kafkaProducerInternal)
         val feilresponsEventProducer = KafkaProducerWrapper(Kafka.feilresponsTopicName, kafkaProducerFeilrespons)
+
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
 
         val eventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.beskjedAapenTopicName, kafkaConsumer, eventService)
+        val consumer = Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventService)
 
         kafkaProducerInternal.initTransactions()
         runBlocking {
@@ -110,11 +114,11 @@ class BeskjedIT {
     }
 
     private fun `Wait until all beskjed events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED, true)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJEDINTERN, true)
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, BeskjedIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, BeskjedIntern>()
 
-        val targetConsumer = Consumer(Kafka.beskjedInternTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(Kafka.beskjedHovedTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
