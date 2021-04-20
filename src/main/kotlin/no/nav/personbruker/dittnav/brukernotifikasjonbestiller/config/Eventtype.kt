@@ -6,6 +6,9 @@ enum class Eventtype(val eventtype: String) {
     STATUSOPPDATERING("statusoppdatering"),
     DONE("done"),
     FEILRESPONS("feilrespons"),
-    BESKJEDINTERN("beskjedintern")
+    BESKJEDINTERN("beskjedintern"),
+    OPPGAVEINTERN("oppgaveintern"),
+    STATUSOPPDATERINGINTERN("statusoppdateringintern"),
+    DONEINTERN("doneintern")
 }
 

@@ -20,7 +20,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
@@ -93,14 +93,14 @@ class BeskjedIT {
         val producerPropsFeilrespons = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = true)
         val kafkaProducerInternal = KafkaProducer<NokkelIntern, BeskjedIntern>(producerPropsBeskjedIntern)
         val kafkaProducerFeilrespons = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerPropsFeilrespons)
-        val internalEventProducer = KafkaProducerWrapper(Kafka.beskjedHovedTopicName, kafkaProducerInternal)
-        val feilresponsEventProducer = KafkaProducerWrapper(Kafka.feilresponsTopicName, kafkaProducerFeilrespons)
+        val internalEventProducer = Producer(Kafka.beskjedHovedTopicName, kafkaProducerInternal)
+        val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, kafkaProducerFeilrespons)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = BeskjedEventService(internalEventProducer, feilresponsEventProducer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val eventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
         val consumer = Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventService)
 
         kafkaProducerInternal.initTransactions()
