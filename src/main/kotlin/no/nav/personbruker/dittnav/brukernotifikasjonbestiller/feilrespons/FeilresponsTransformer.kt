@@ -1,26 +1,37 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 object FeilresponsTransformer {
 
-    fun createFeilrespons(externalNokkel: Nokkel, exception: Exception, type: Eventtype): RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons> {
-        val nokkelFeilrespons = toNokkelFeilrespons(externalNokkel, type)
-        val feilrespons = toFeilrespons(exception)
-        return RecordKeyValueWrapper(nokkelFeilrespons, feilrespons)
+    fun createFeilresponsFromDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
+        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
+
+        duplicateEvents.forEach { duplicateEvent ->
+            val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
+            val feilrespons = createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, duplicateEvent.eventtype)
+            problematicEvents.add(feilrespons)
+        }
+        return problematicEvents
     }
 
-    fun toNokkelFeilrespons(externalNokkel: Nokkel, type: Eventtype): NokkelFeilrespons {
+    fun createFeilrespons(eventId: String, systembruker: String, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
+        val nokkelFeilrespons = toNokkelFeilrespons(eventId, systembruker, eventtype)
+        val feilrespons = toFeilrespons(exception)
+        return Pair(nokkelFeilrespons, feilrespons)
+    }
+
+    fun toNokkelFeilrespons(eventId: String, systembruker: String, eventtype: Eventtype): NokkelFeilrespons {
         return NokkelFeilrespons.newBuilder()
-                .setSystembruker(externalNokkel.getSystembruker())
-                .setEventId(externalNokkel.getEventId())
-                .setBrukernotifikasjonstype(type.toString())
+                .setSystembruker(systembruker)
+                .setEventId(eventId)
+                .setBrukernotifikasjonstype(eventtype.toString())
                 .build()
     }
 

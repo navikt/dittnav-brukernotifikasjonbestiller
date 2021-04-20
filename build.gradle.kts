@@ -24,11 +24,25 @@ repositories {
     mavenLocal()
 }
 
+sourceSets {
+    create("intTest") {
+        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
+    }
+}
+
+val intTestImplementation by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
+
 dependencies {
     implementation(Brukernotifikasjon.schemas)
     implementation(Brukernotifikasjon.schemas_internal)
     implementation(DittNAV.Common.influx)
     implementation(DittNAV.Common.utils)
+    implementation(Flyway.core)
+    implementation(Hikari.cp)
     implementation(Kafka.Apache.clients)
     implementation(Kafka.Confluent.avroSerializer)
     implementation(Ktor.htmlBuilder)
@@ -39,20 +53,25 @@ dependencies {
     implementation(Prometheus.common)
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
+    implementation(Postgresql.postgresql)
     implementation(ULID.sulkyUlid)
     implementation(Ktor.clientApache)
     implementation(Ktor.clientJson)
     implementation(Ktor.clientJackson)
     implementation(Jackson.dataTypeJsr310)
 
+    testImplementation(H2Database.h2)
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
     testImplementation(Kluent.kluent)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
+    testImplementation(Kotlinx.atomicfu)
 
     testRuntimeOnly(Junit.engine)
+
+    intTestImplementation(Junit.engine)
 }
 
 application {
@@ -71,20 +90,31 @@ tasks {
     register("runServer", JavaExec::class) {
         println("Setting default environment variables for running with DittNAV docker-compose")
 
-        environment("CORS_ALLOWED_ORIGINS", "localhost:9002")
+        DockerComposeDefaults.environomentVariables.forEach { (name, value) ->
+            println("Setting the environment variable $name")
+            environment(name, value)
+        }
 
-        environment("LOGINSERVICE_IDPORTEN_DISCOVERY_URL", "http://localhost:9000/.well-known/openid-configuration")
-        environment("LOGINSERVICE_IDPORTEN_AUDIENCE", "stubOidcClient")
-        environment("OIDC_CLAIM_CONTAINING_THE_IDENTITY", "pid")
-
-        environment("NAIS_CLUSTER_NAME", "dev-sbs")
-        environment("NAIS_NAMESPACE", "personbruker")
-        environment("SENSU_HOST", "stub")
-        environment("SENSU_PORT", "")
+        environment("GROUP_ID", "dittnav_brukernotifikasjonbestiller")
+        environment("DB_HOST", "localhost")
+        environment("DB_PORT", "5434")
+        environment("DB_DATABASE", "brukernotifikasjonbestiller")
+        environment("DB_USERNAME", "dittnav-brukernotifikasjonbestiller-user")
 
         main = application.mainClassName
         classpath = sourceSets["main"].runtimeClasspath
     }
 }
+
+val integrationTest = task<Test>("integrationTest") {
+    description = "Runs integration tests."
+    group = "verification"
+
+    testClassesDirs = sourceSets["intTest"].output.classesDirs
+    classpath = sourceSets["intTest"].runtimeClasspath
+    shouldRunAfter("test")
+}
+
+tasks.check { dependsOn(integrationTest) }
 
 apply(plugin = Shadow.pluginId)

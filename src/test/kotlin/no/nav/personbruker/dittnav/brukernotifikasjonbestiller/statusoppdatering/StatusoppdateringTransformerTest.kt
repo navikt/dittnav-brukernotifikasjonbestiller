@@ -73,7 +73,7 @@ internal class StatusoppdateringTransformerTest {
     }
 
     @Test
-    fun `do not allow too long eventid`() {
+    fun `do not allow too long eventId`() {
         val tooLongEventId = "1".repeat(51)
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId(tooLongEventId)
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()

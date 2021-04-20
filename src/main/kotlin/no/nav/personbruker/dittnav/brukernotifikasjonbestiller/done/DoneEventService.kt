@@ -8,9 +8,9 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
@@ -20,16 +20,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class DoneEventService(
-        private val internalEventProducer: KafkaProducerWrapper<NokkelIntern, DoneIntern>,
-        private val feilresponsEventProducer: KafkaProducerWrapper<NokkelFeilrespons, Feilrespons>,
-        private val metricsCollector: MetricsCollector
+        private val metricsCollector: MetricsCollector,
+        private val handleDuplicateEvents: HandleDuplicateEvents,
+        private val eventDispatcher: EventDispatcher<DoneIntern>
 ) : EventBatchProcessorService<Nokkel, Done> {
 
     private val log: Logger = LoggerFactory.getLogger(DoneEventService::class.java)
 
     override suspend fun processEvents(events: ConsumerRecords<Nokkel, Done>) {
-        val successfullyValidatedEvents = mutableListOf<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
-        val problematicEvents = mutableListOf<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
+        val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, DoneIntern>>()
+        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.DONE) {
             events.forEach { event ->
@@ -38,30 +38,38 @@ class DoneEventService(
                     val externalDone = event.value()
                     val internalNokkel = DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
                     val internalDone = DoneTransformer.toDoneInternal(externalDone)
-                    successfullyValidatedEvents.add(RecordKeyValueWrapper(internalNokkel, internalDone))
+                    successfullyValidatedEvents.add(Pair(internalNokkel, internalDone))
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
                     log.warn("Done-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
                 } catch (fve: FieldValidationException) {
-                    countFailedEventForSystemUser(event.systembruker ?: "NoProducerSpecified")
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), fve, Eventtype.DONE)
+                    val systembruker = event.systembruker ?: "NoProducerSpecified"
+                    countFailedEventForSystemUser(systembruker)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.DONE)
                     problematicEvents.add(feilrespons)
                     log.warn("Validering av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (e: Exception) {
-                    countFailedEventForSystemUser(event.systembruker ?: "NoProducerSpecified")
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key(), e, Eventtype.DONE)
+                    val systembruker = event.systembruker ?: "NoProducerSpecified"
+                    countFailedEventForSystemUser(systembruker)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.DONE)
                     problematicEvents.add(feilrespons)
                     log.warn("Transformasjon av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
                 }
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                internalEventProducer.sendEvents(successfullyValidatedEvents)
+                val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
+                if (duplicateEvents.isNotEmpty()) {
+                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents))
+                    this.countDuplicateEvents(duplicateEvents)
+                }
+                val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
+                eventDispatcher.dispatchSuccessfullyValidatedEvents(remainingValidatedEvents)
             }
 
             if (problematicEvents.isNotEmpty()) {
-                feilresponsEventProducer.sendEvents(problematicEvents)
+                eventDispatcher.dispatchProblematicEvents(problematicEvents)
             }
         }
     }

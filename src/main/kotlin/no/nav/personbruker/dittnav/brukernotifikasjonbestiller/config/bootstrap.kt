@@ -25,6 +25,7 @@ fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()
 
 private fun Application.configureStartupHook(appContext: ApplicationContext) {
     environment.monitor.subscribe(ApplicationStarted) {
+        Flyway.runFlywayMigrations(appContext.environment)
         KafkaConsumerSetup.startAllKafkaPollers(appContext)
     }
 }
@@ -34,5 +35,6 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
         runBlocking {
             KafkaConsumerSetup.stopAllKafkaConsumers(appContext)
         }
+        appContext.database.dataSource.close()
     }
 }

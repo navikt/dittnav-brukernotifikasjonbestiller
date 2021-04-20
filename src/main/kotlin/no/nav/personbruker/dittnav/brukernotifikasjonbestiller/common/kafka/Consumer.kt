@@ -2,8 +2,10 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.RetriableKafkaException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnretriableKafkaException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.RetriableDatabaseException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
@@ -72,6 +74,14 @@ class Consumer<K, V>(
         } catch (ure: UnretriableKafkaException) {
             log.warn("Alvorlig feil ved post mot kafka. Stopper polling. Topic: $topic", ure)
             stopPolling()
+
+        } catch (rde: RetriableDatabaseException) {
+            log.warn("Klarte ikke å skrive til databasen, prøver igjen senrere. Topic: $topic", rde)
+
+        } catch (ude: UnretriableDatabaseException) {
+            log.error("Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic", ude)
+            stopPolling()
+
         }  catch (re: RetriableException) {
             log.warn("Polling mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
 

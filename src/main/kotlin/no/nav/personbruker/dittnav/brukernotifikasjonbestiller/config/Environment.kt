@@ -18,8 +18,14 @@ data class Environment(
         val sensuHost: String = getEnvVar("SENSU_HOST"),
         val sensuPort: Int = IntEnvVar.getEnvVarAsInt("SENSU_PORT"),
         val sensuBatchingEnabled: Boolean = getEnvVar("SENSU_BATCHING_ENABLED", "true").toBoolean(),
-        val sensuBatchesPerSecond: Int = getEnvVar("SENSU_BATCHING_ENABLED", "3").toInt()
-        )
+        val sensuBatchesPerSecond: Int = getEnvVar("SENSU_BATCHING_ENABLED", "3").toInt(),
+        val dbUser: String = getEnvVar("DB_USERNAME"),
+        val dbPassword: String = getEnvVar("DB_PASSWORD"),
+        val dbHost: String = getEnvVar("DB_HOST"),
+        val dbPort: String = getEnvVar("DB_PORT"),
+        val dbName: String = getEnvVar("DB_DATABASE"),
+        val dbUrl: String ="jdbc:postgresql://${dbHost}:${dbPort}/${dbName}"
+)
 
 fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null
