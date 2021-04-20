@@ -5,17 +5,20 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exce
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
+import org.slf4j.LoggerFactory
 
 class Producer<K, V>(
         private val destinationTopicName: String,
         private val kafkaProducer: KafkaProducer<K, V>
 ) {
 
-    fun sendEvents(events: List<RecordKeyValueWrapper<K, V>>) {
+    val log = LoggerFactory.getLogger(Producer::class.java)
+
+    fun sendEventsTransactionally(events: List<RecordKeyValueWrapper<K, V>>) {
         try {
             kafkaProducer.beginTransaction()
             events.forEach { event ->
-                sendEvent(event)
+                sendSingleEvent(event)
             }
             kafkaProducer.commitTransaction()
         } catch (e: KafkaException) {
@@ -27,8 +30,18 @@ class Producer<K, V>(
         }
     }
 
-    private fun sendEvent(event: RecordKeyValueWrapper<K, V>) {
+    private fun sendSingleEvent(event: RecordKeyValueWrapper<K, V>) {
         val producerRecord = ProducerRecord(destinationTopicName, event.key, event.value)
         kafkaProducer.send(producerRecord)
+    }
+
+    fun flushAndClose() {
+        try {
+            kafkaProducer.flush()
+            kafkaProducer.close()
+            log.info("Produsent for kafka-eventer er flushet og lukket.")
+        } catch (e: Exception) {
+            log.warn("Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert.")
+        }
     }
 }

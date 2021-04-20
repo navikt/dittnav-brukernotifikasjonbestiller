@@ -1,4 +1,4 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer
 
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
