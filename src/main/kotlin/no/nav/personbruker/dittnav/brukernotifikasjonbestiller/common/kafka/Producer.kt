@@ -6,7 +6,7 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
 
-class KafkaProducerWrapper<K, V>(
+class Producer<K, V>(
         private val destinationTopicName: String,
         private val kafkaProducer: KafkaProducer<K, V>
 ) {

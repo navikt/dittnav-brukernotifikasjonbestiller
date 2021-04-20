@@ -1,20 +1,28 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
+import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
+import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaProducerWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
-class EventDispatcher(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
+class EventDispatcher<T>(
+        private val eventtype: Eventtype,
+        private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository,
+        private val internalEventProducer: Producer<NokkelIntern, T>,
+        private val feilresponsEventProducer: Producer<NokkelFeilrespons, Feilrespons>
+) {
 
-    fun <T> sendEventsToInternalTopic(successfullyValidatedEvents: Map<NokkelIntern, T>, kafkaProducer: KafkaProducerWrapper<NokkelIntern, T>) {
-        val eventsToSendKafka = successfullyValidatedEvents.map { RecordKeyValueWrapper(it.key, it.value) }
-        kafkaProducer.sendEvents(eventsToSendKafka)
-    }
-
-    suspend fun <T> persistToDB(successfullyValidatedEvents: Map<NokkelIntern, T>) {
+    suspend fun dispatchSuccessfullyValidatedEvents(successfullyValidatedEvents: List<Pair<NokkelIntern, T>>) {
+        val eventsToSendKafka = successfullyValidatedEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+        internalEventProducer.sendEvents(eventsToSendKafka)
         brukernotifikasjonbestillingRepository.persistInOneBatch(successfullyValidatedEvents, eventtype)
     }
 
+    fun dispatchProblematicEvents(problematicEvents: List<Pair<NokkelFeilrespons, Feilrespons>>) {
+        val eventsToSendKafka = problematicEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+        feilresponsEventProducer.sendEvents(eventsToSendKafka)
+    }
 }
