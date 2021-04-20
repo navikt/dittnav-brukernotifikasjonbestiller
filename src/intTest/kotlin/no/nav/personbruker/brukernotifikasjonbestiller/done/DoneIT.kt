@@ -1,10 +1,10 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.beskjed
+package no.nav.personbruker.brukernotifikasjonbestiller.done
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Beskjed
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
+import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
@@ -14,8 +14,6 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Databas
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -24,6 +22,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Prod
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
@@ -39,15 +39,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BeskjedIT {
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.beskjedInputTopicName, Kafka.beskjedHovedTopicName))
+class DoneIT {
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.doneInputTopicName, Kafka.doneHovedTopicName))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
 
-    private val beskjedEvents = (1..10).map { AvroNokkelObjectMother.createNokkelWithEventId(it.toString()) to AvroBeskjedObjectMother.createBeskjedWithGrupperingsId(it.toString()) }.toMap()
+    private val doneEvents = (1..10).map { AvroNokkelObjectMother.createNokkelWithEventId(it.toString()) to AvroDoneObjectMother.createDoneWithGrupperingsId(it.toString()) }.toMap()
 
-    private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, BeskjedIntern>>()
+    private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
 
     private val producerNameAlias = "dittnav"
     private val client = getClient(producerNameAlias)
@@ -72,58 +72,58 @@ class BeskjedIT {
     }
 
     @Test
-    fun `Should read Beskjed-events and send to hoved-topic`() {
+    fun `Should read Done-events and send to hoved-topic`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.beskjedInputTopicName, beskjedEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, Kafka.doneInputTopicName, doneEvents)
         } shouldBeEqualTo true
 
-        `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`()
+        `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`()
 
-        beskjedEvents.size `should be equal to` capturedInternalRecords.size
+        doneEvents.size `should be equal to` capturedInternalRecords.size
 
     }
 
-    fun `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED, true)
-        val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(consumerProps)
-
-        val internBeskjedproducerProps = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN, enableSecurity = true)
-        val internalKafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(internBeskjedproducerProps)
-        val internalEventProducer = Producer(Kafka.beskjedHovedTopicName, internalKafkaProducer)
+    fun `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`() {
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE, true)
+        val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
 
         val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = true)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
-        val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
+        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = true)
+        val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
+        val internalEventProducer = Producer(Kafka.doneHovedTopicName, internalKafkaProducer)
 
-        val eventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventService)
+        val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
+
+        val eventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         runBlocking {
             consumer.startPolling()
 
-            `Wait until all beskjed events have been received by target topic`()
+            `Wait until all done events have been received by target topic`()
 
             consumer.stopPolling()
         }
     }
 
-    private fun `Wait until all beskjed events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJEDINTERN, true)
-        val targetKafkaConsumer = KafkaConsumer<NokkelIntern, BeskjedIntern>(targetConsumerProps)
-        val capturingProcessor = CapturingEventProcessor<NokkelIntern, BeskjedIntern>()
+    private fun `Wait until all done events have been received by target topic`() {
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN, true)
+        val targetKafkaConsumer = KafkaConsumer<NokkelIntern, DoneIntern>(targetConsumerProps)
+        val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
 
-        val targetConsumer = Consumer(Kafka.beskjedHovedTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(Kafka.doneHovedTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
         targetConsumer.startPolling()
 
-        while (currentNumberOfRecords < beskjedEvents.size) {
+        while (currentNumberOfRecords < doneEvents.size) {
             runBlocking {
                 currentNumberOfRecords = capturingProcessor.getEvents().size
                 delay(100)
