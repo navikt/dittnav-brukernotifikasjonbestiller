@@ -85,7 +85,7 @@ class StatusoppdateringIT {
         `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`()
 
         capturedInternalRecords.size `should be equal to` goodEvents.size
-        capturedErrorResponseRecords `should be equal to` badEvents.size
+        capturedErrorResponseRecords.size `should be equal to` badEvents.size
     }
 
 
