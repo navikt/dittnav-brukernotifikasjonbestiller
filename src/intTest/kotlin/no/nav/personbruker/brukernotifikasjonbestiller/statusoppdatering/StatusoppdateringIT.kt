@@ -46,9 +46,9 @@ class StatusoppdateringIT {
     private val database = H2Database()
 
     private val goodEvents = createEvents(10)
-    private val badEvent = createEventWithTooLongGroupId("bad")
+    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
     private val statusoppdateringEvents = goodEvents.toMutableList().apply {
-        add(badEvent)
+        addAll(badEvents)
     }.toMap()
 
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, StatusoppdateringIntern>>()
@@ -85,7 +85,7 @@ class StatusoppdateringIT {
         `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`()
 
         capturedInternalRecords.size `should be equal to` goodEvents.size
-        capturedErrorResponseRecords.size `should be equal to` 1
+        capturedErrorResponseRecords `should be equal to` badEvents.size
     }
 
 
