@@ -38,6 +38,10 @@ class Consumer<K, V>(
         return job.isCompleted
     }
 
+    fun isStopped(): Boolean {
+        return !job.isActive
+    }
+
     override suspend fun status(): HealthStatus {
         val serviceName = topic + "consumer"
         return if (job.isActive) {
