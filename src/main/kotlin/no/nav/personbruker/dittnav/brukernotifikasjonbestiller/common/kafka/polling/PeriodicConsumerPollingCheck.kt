@@ -68,6 +68,10 @@ class PeriodicConsumerPollingCheck(
         job.cancelAndJoin()
     }
 
+    fun isCompleted(): Boolean {
+        return job.isCompleted
+    }
+
     fun status(): HealthStatus {
         return when (job.isActive) {
             true -> HealthStatus("PeriodicConsumerPollingCheck", Status.OK, "Checker is running", false)

@@ -177,4 +177,13 @@ class ApplicationContext {
             InfluxMetricsReporter(sensuConfig)
         }
     }
+
+    fun reinitializePeriodicConsumerPollingCheck() {
+        if (periodicConsumerPollingCheck.isCompleted()) {
+            periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
+            log.info("periodicConsumerPollingCheck har blitt reinstansiert.")
+        } else {
+            log.warn("periodicConsumerPollingCheck kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+    }
 }
