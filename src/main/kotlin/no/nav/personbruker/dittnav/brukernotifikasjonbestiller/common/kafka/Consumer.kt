@@ -101,4 +101,11 @@ class Consumer<K, V>(
             kafkaConsumer.rollbackToLastCommitted()
         }
     }
+
+    fun <K, V> KafkaConsumer<K, V>.rollbackToLastCommitted() {
+        committed(assignment()).forEach { (partition, metadata) ->
+            seek(partition, metadata.offset())
+        }
+    }
+
 }

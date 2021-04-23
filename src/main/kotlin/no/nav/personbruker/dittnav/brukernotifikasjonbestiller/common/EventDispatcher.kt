@@ -17,12 +17,12 @@ class EventDispatcher<T>(
 
     suspend fun dispatchSuccessfullyValidatedEvents(successfullyValidatedEvents: List<Pair<NokkelIntern, T>>) {
         val eventsToSendKafka = successfullyValidatedEvents.map { RecordKeyValueWrapper(it.first, it.second) }
-        internalEventProducer.sendEvents(eventsToSendKafka)
+        internalEventProducer.sendEventsTransactionally(eventsToSendKafka)
         brukernotifikasjonbestillingRepository.persistInOneBatch(successfullyValidatedEvents, eventtype)
     }
 
     fun dispatchProblematicEvents(problematicEvents: List<Pair<NokkelFeilrespons, Feilrespons>>) {
         val eventsToSendKafka = problematicEvents.map { RecordKeyValueWrapper(it.first, it.second) }
-        feilresponsEventProducer.sendEvents(eventsToSendKafka)
+        feilresponsEventProducer.sendEventsTransactionally(eventsToSendKafka)
     }
 }

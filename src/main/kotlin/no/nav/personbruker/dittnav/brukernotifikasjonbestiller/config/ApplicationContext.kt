@@ -38,7 +38,12 @@ class ApplicationContext {
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
 
-    var feilresponsKafkaProducer = initializeFeilresponsKafkaProducer()
+    var feilresponsKafkaProducer = initializeFeilresponsProducer()
+
+    var internBeskjedKafkaProducer = initializeInternBeskjedProducer()
+    var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
+    var internDoneKafkaProducer = initializeInternDoneProducer()
+    var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer()
 
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()
@@ -47,47 +52,74 @@ class ApplicationContext {
 
     private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val producerProps = Kafka.producerProps(environment)
-        val internalKafkaProducer = Producer(Kafka.beskjedMainTopicName, KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalKafkaProducer, feilresponsKafkaProducer)
+        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
         val beskjedEventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventService)
     }
 
     private fun initializeOppgaveProcessor(): Consumer<Nokkel, Oppgave> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = Producer(Kafka.oppgaveMainTopicName, KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
-        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, kafkaProducer, feilresponsKafkaProducer)
+        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
         val oppgaveEventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventService)
     }
 
     private fun initializeStatusoppdateringProcessor(): Consumer<Nokkel, Statusoppdatering> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = Producer(Kafka.statusoppdateringMainTopicName, KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
-        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, kafkaProducer, feilresponsKafkaProducer)
+        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
         val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventService)
     }
 
     private fun initializeDoneProcessor(): Consumer<Nokkel, Done> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
-        val producerProps = Kafka.producerProps(environment)
-        val kafkaProducer = Producer(Kafka.doneMainTopicName, KafkaProducer<NokkelIntern, DoneIntern>(producerProps))
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
-        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, kafkaProducer, feilresponsKafkaProducer)
+        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
         val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, doneEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventService)
     }
 
-    private fun initializeFeilresponsKafkaProducer(): Producer<NokkelFeilrespons, Feilrespons> {
-        val feilresponsProducerProps = Kafka.producerProps(environment)
-        return Producer(Kafka.feilresponsTopicName, KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps))
+    private fun initializeInternBeskjedProducer(): Producer<NokkelIntern, BeskjedIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.BESKJEDINTERN)
+        val kafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.beskjedHovedTopicName, kafkaProducer)
+        return producer
+    }
+
+    private fun initializeInternOppgaveProducer(): Producer<NokkelIntern, OppgaveIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.OPPGAVEINTERN)
+        val kafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.oppgaveHovedTopicName, kafkaProducer)
+        return producer
+    }
+
+    private fun initializeInternDoneProducer(): Producer<NokkelIntern, DoneIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.DONEINTERN)
+        val kafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.doneHovedTopicName, kafkaProducer)
+        return producer
+    }
+
+    private fun initializeInternStatusoppdateringProducer(): Producer<NokkelIntern, StatusoppdateringIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.STATUSOPPDATERINGINTERN)
+        val kafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.statusoppdateringHovedTopicName, kafkaProducer)
+        return producer
+    }
+
+    private fun initializeFeilresponsProducer(): Producer<NokkelFeilrespons, Feilrespons> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.FEILRESPONS)
+        val kafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.feilresponsTopicName, kafkaProducer)
+        return producer
     }
 
     fun reinitializeConsumers() {
@@ -118,8 +150,6 @@ class ApplicationContext {
         } else {
             log.warn("doneConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
-
-        feilresponsKafkaProducer = initializeFeilresponsKafkaProducer()
     }
 
     private fun resolveMetricsReporter(environment: Environment): MetricsReporter {
