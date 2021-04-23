@@ -24,9 +24,7 @@ spec:
     max: 4
   webproxy: true
   ingresses:
-{{#each ingresses}}
-  - "{{this}}"
-{{/each}}
+    - {{ingress}}
   vault:
     enabled: true
     paths:
