@@ -9,6 +9,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDupl
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -49,6 +50,8 @@ class ApplicationContext {
     var oppgaveConsumer = initializeOppgaveProcessor()
     var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
     var doneConsumer = initializeDoneProcessor()
+
+    var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
 
     private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
@@ -122,6 +125,10 @@ class ApplicationContext {
         return producer
     }
 
+    private fun initializePeriodicConsumerPollingCheck(): PeriodicConsumerPollingCheck {
+        return PeriodicConsumerPollingCheck(this)
+    }
+
     fun reinitializeConsumers() {
         if (beskjedConsumer.isCompleted()) {
             beskjedConsumer = initializeBeskjedProcessor()
@@ -168,6 +175,15 @@ class ApplicationContext {
             )
 
             InfluxMetricsReporter(sensuConfig)
+        }
+    }
+
+    fun reinitializePeriodicConsumerPollingCheck() {
+        if (periodicConsumerPollingCheck.isCompleted()) {
+            periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
+            log.info("periodicConsumerPollingCheck har blitt reinstansiert.")
+        } else {
+            log.warn("periodicConsumerPollingCheck kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
     }
 }
