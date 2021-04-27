@@ -15,20 +15,46 @@ class EventDispatcher<T>(
         private val feilresponsEventProducer: Producer<NokkelFeilrespons, Feilrespons>
 ) {
 
-    suspend fun dispatchSuccessfullyValidatedEvents(successfullyValidatedEvents: List<Pair<NokkelIntern, T>>) {
-        val eventsToSendKafka = successfullyValidatedEvents.map { RecordKeyValueWrapper(it.first, it.second) }
-        internalEventProducer.sendEventsTransactionally(
-                eventsToSendKafka,
-                dependentTransaction = { peristValidatedEvents(successfullyValidatedEvents) }
-        )
+    suspend fun dispatchValidAndProblematicEvents(
+            validatedEvents: List<Pair<NokkelIntern, T>>,
+            problematicEvents: List<Pair<NokkelFeilrespons, Feilrespons>>
+    ) {
+        val validatedEventsToSend = validatedEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+        val problematicEventsToSend = problematicEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+
+        try {
+            internalEventProducer.sendEventsAndLeaveTransactionOpen(validatedEventsToSend)
+            feilresponsEventProducer.sendEventsAndLeaveTransactionOpen(problematicEventsToSend)
+
+            brukernotifikasjonbestillingRepository.persistInOneBatch(validatedEvents, eventtype)
+
+            internalEventProducer.commitCurrentTransaction()
+            feilresponsEventProducer.commitCurrentTransaction()
+        } catch (e: Exception) {
+            internalEventProducer.abortCurrentTransaction()
+            feilresponsEventProducer.abortCurrentTransaction()
+            throw e
+        }
     }
 
-    suspend fun dispatchProblematicEvents(problematicEvents: List<Pair<NokkelFeilrespons, Feilrespons>>) {
-        val eventsToSendKafka = problematicEvents.map { RecordKeyValueWrapper(it.first, it.second) }
-        feilresponsEventProducer.sendEventsTransactionally(eventsToSendKafka)
+    suspend fun dispatchValidEventsOnly(validatedEvents: List<Pair<NokkelIntern, T>>) {
+        val validatedEventsToSend = validatedEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+
+        try {
+            internalEventProducer.sendEventsAndLeaveTransactionOpen(validatedEventsToSend)
+
+            brukernotifikasjonbestillingRepository.persistInOneBatch(validatedEvents, eventtype)
+
+            internalEventProducer.commitCurrentTransaction()
+        } catch (e: Exception) {
+            internalEventProducer.abortCurrentTransaction()
+            throw e
+        }
     }
 
-    private suspend fun peristValidatedEvents(successfullyValidatedEvents: List<Pair<NokkelIntern, T>>) {
-        brukernotifikasjonbestillingRepository.persistInOneBatch(successfullyValidatedEvents, eventtype)
+    fun dispatchProblematicEventsOnly(problematicEvents: List<Pair<NokkelFeilrespons, Feilrespons>>) {
+        val problematicEventsToSend = problematicEvents.map { RecordKeyValueWrapper(it.first, it.second) }
+
+        feilresponsEventProducer.sendEventsTransactionally(problematicEventsToSend)
     }
 }

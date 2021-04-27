@@ -35,7 +35,7 @@ internal class ProducerTest {
         every { kafkaProducer.commitTransaction() } returns Unit
 
         runBlocking {
-            producer.sendEventsTransactionally(records, dependentTransaction = { /* No-op */ })
+            producer.sendEventsTransactionally(records)
         }
 
         verify(exactly = records.size) { kafkaProducer.send(any()) }
@@ -51,28 +51,11 @@ internal class ProducerTest {
 
         invoking {
             runBlocking {
-                producer.sendEventsTransactionally(records, dependentTransaction = { /* No-op */ })
+                producer.sendEventsTransactionally(records)
             }
         } `should throw` RetriableKafkaException::class
 
 
-        verify(exactly = 1) { kafkaProducer.beginTransaction() }
-        verify(exactly = 1) { kafkaProducer.abortTransaction() }
-    }
-
-    @Test
-    fun `Should abort transaction if error occurred when executing dependentTransaction`() {
-        every { kafkaProducer.send(any()) } returns null
-        every { kafkaProducer.beginTransaction() } returns Unit
-        every { kafkaProducer.abortTransaction() } returns Unit
-
-        invoking {
-            runBlocking {
-                producer.sendEventsTransactionally(records, dependentTransaction = { throw Exception() })
-            }
-        } `should throw` RetriableKafkaException::class
-
-        verify(exactly = records.size) { kafkaProducer.send(any()) }
         verify(exactly = 1) { kafkaProducer.beginTransaction() }
         verify(exactly = 1) { kafkaProducer.abortTransaction() }
     }
@@ -85,7 +68,7 @@ internal class ProducerTest {
 
         invoking {
             runBlocking {
-                producer.sendEventsTransactionally(records, dependentTransaction = { /* No-op */ })
+                producer.sendEventsTransactionally(records)
             }
         } `should throw` UnretriableKafkaException::class
 
