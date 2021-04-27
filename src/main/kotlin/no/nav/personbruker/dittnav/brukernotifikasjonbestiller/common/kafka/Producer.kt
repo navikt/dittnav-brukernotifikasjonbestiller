@@ -6,6 +6,7 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
 import org.slf4j.LoggerFactory
+import java.lang.IllegalStateException
 
 class Producer<K, V>(
         private val destinationTopicName: String,
@@ -13,6 +14,21 @@ class Producer<K, V>(
 ) {
 
     val log = LoggerFactory.getLogger(Producer::class.java)
+
+    fun sendEventsAndLeaveTransactionOpen(events: List<RecordKeyValueWrapper<K, V>>) {
+        try {
+            kafkaProducer.beginTransaction()
+            events.forEach { event ->
+                sendSingleEvent(event)
+            }
+        } catch (e: KafkaException) {
+            kafkaProducer.abortTransaction()
+            throw RetriableKafkaException("Et eller flere eventer feilet med en periodisk feil ved sending til kafka", e)
+        } catch (e: Exception) {
+            kafkaProducer.close()
+            throw UnretriableKafkaException("Fant en uventet feil ved sending av eventer til kafka", e)
+        }
+    }
 
     fun sendEventsTransactionally(events: List<RecordKeyValueWrapper<K, V>>) {
         try {
@@ -28,6 +44,18 @@ class Producer<K, V>(
             kafkaProducer.close()
             throw UnretriableKafkaException("Fant en uventet feil ved sending av eventer til kafka", e)
         }
+    }
+
+    fun abortCurrentTransaction() {
+        try {
+            kafkaProducer.abortTransaction()
+        } catch (e: IllegalStateException) {
+            /**/
+        }
+    }
+
+    fun commitCurrentTransaction() {
+        kafkaProducer.commitTransaction()
     }
 
     private fun sendSingleEvent(event: RecordKeyValueWrapper<K, V>) {
