@@ -65,11 +65,14 @@ class OppgaveEventService(
                     this.countDuplicateEvents(duplicateEvents)
                 }
                 val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
-                eventDispatcher.dispatchSuccessfullyValidatedEvents(remainingValidatedEvents)
-            }
 
-            if (problematicEvents.isNotEmpty()) {
-                eventDispatcher.dispatchProblematicEvents(problematicEvents)
+                if (problematicEvents.isNotEmpty()) {
+                    eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)
+                } else {
+                    eventDispatcher.dispatchValidEventsOnly(remainingValidatedEvents)
+                }
+            } else if (problematicEvents.isNotEmpty()) {
+                eventDispatcher.dispatchProblematicEventsOnly(problematicEvents)
             }
         }
     }

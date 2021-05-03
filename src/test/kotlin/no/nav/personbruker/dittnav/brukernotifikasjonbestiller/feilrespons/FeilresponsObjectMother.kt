@@ -20,4 +20,10 @@ object FeilresponsObjectMother {
 
         return problematicEvents
     }
+
+    fun createANumberOfProblematicEvents(numberOfEvents: Int): List<Pair<NokkelFeilrespons, Feilrespons>> {
+        return (1..numberOfEvents).map {
+            NokkelFeilrespons("systembruker", it.toString(),"type") to Feilrespons()
+        }
+    }
 }

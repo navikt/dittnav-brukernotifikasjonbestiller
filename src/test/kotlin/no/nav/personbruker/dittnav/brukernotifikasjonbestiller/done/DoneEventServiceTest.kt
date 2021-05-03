@@ -36,8 +36,9 @@ internal class DoneEventServiceTest {
 
         coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns emptyList()
         coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns internalEvents
-        coEvery { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns Unit
-        coEvery { eventDispatcher.dispatchProblematicEvents(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
+        coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -51,9 +52,9 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 1) { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
-
-        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEvents(any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
     }
 
     @Test
@@ -77,8 +78,9 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 0) { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
-        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEvents(any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
     }
 
     @Test
@@ -100,9 +102,10 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 0) { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
 
-        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEvents(any()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
@@ -125,9 +128,10 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 0) { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
 
-        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEvents(any()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 
@@ -142,8 +146,9 @@ internal class DoneEventServiceTest {
 
         coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns duplicateEvents
         coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns internalEvents
-        coEvery { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns Unit
-        coEvery { eventDispatcher.dispatchProblematicEvents(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -158,7 +163,8 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 1) { metricsSession.countDuplicateEvents(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 1) { eventDispatcher.dispatchSuccessfullyValidatedEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
-        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEvents(any()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
     }
 }
