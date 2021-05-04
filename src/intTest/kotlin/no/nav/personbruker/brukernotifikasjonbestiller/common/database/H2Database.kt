@@ -3,7 +3,6 @@ package no.nav.personbruker.brukernotifikasjonbestiller.common.database
 import com.zaxxer.hikari.HikariDataSource
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import org.flywaydb.core.Flyway
-import org.testcontainers.containers.PostgreSQLContainer
 
 class H2Database : Database {
 
@@ -24,6 +23,7 @@ class H2Database : Database {
             jdbcUrl = container.jdbcUrl
             username = container.username
             password = container.password
+            isAutoCommit = false
             validate()
         }
     }
