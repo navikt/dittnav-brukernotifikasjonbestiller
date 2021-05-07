@@ -23,7 +23,7 @@ object Kafka {
     private const val transactionIdName = "dittnav-brukernotifikasjonbestiller-transaction"
 
     const val beskjedInputTopicName = "aapen-brukernotifikasjon-nyBeskjed-v1"
-    const val beskjedHovedTopicName = "privat-brukernotifikasjon-beskjed-v1"
+    const val beskjedHovedTopicName = "min-side.privat-brukernotifikasjon-beskjed-v1"
 
     const val oppgaveInputTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
     const val oppgaveHovedTopicName = "min-side.privat-brukernotifikasjon-oppgave-v1"
