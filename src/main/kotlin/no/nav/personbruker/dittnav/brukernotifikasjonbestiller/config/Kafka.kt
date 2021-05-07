@@ -49,7 +49,7 @@ object Kafka {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
-            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdName(type))
