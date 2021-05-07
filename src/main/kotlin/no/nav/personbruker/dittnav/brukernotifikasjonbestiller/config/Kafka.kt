@@ -39,41 +39,37 @@ object Kafka {
     fun consumerProps(env: Environment, eventtypeToConsume: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
         val groupIdAndEventType = buildGroupIdIncludingEventType(env, eventtypeToConsume)
         return Properties().apply {
+            put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
+            put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
             put(ConsumerConfig.GROUP_ID_CONFIG, groupIdAndEventType)
             put(ConsumerConfig.CLIENT_ID_CONFIG, groupIdAndEventType + NetUtil.getHostname(InetSocketAddress(0)))
             put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-            commonProps(env, enableSecurity)
+            put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
+            put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
+            if (enableSecurity) {
+                putAll(credentialPropsOnPrem(env))
+            }
         }
     }
 
     fun producerProps(env: Environment, type: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
         return Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
-            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
+            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
             put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdName(type))
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             if (enableSecurity) {
-                putAll(credentialProps(env))
+                putAll(credentialPropsAiven(env))
             }
         }
     }
 
-    private fun Properties.commonProps(env: Environment, enableSecurity: Boolean) {
-        put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
-        put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
-        put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
-        put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
-        put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
-        put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
-        if (enableSecurity) {
-            putAll(credentialProps(env))
-        }
-    }
-
-    private fun credentialProps(env: Environment): Properties {
+    private fun credentialPropsOnPrem(env: Environment): Properties {
         return Properties().apply {
             put(SaslConfigs.SASL_MECHANISM, "PLAIN")
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
@@ -85,6 +81,22 @@ object Kafka {
                 put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, System.getenv("NAV_TRUSTSTORE_PASSWORD"))
                 log.info("Configured ${SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG} location")
             }
+        }
+    }
+    private fun credentialPropsAiven(env: Environment): Properties {
+        return Properties().apply {
+            put(SaslConfigs.SASL_MECHANISM, "PLAIN")
+            put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL")
+            put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "jks")
+            put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12")
+            put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, env.aivenTruststorePath)
+            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, env.aivenKeystorePath)
+            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
+            put(ProducerConfig.ACKS_CONFIG, "all")
+            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
         }
     }
 
