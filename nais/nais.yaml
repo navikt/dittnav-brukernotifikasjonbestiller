@@ -46,6 +46,8 @@ spec:
           day: 1
           hour: 4
         cascadingDelete: false
+  kafka:
+    pool: nav-dev
   accessPolicy:
     outbound:
       external:

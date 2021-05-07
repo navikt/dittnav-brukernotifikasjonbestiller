@@ -34,7 +34,7 @@ object Kafka {
     const val doneInputTopicName = "aapen-brukernotifikasjon-done-v1"
     const val doneHovedTopicName = "intern-brukernotifikasjon-done-v1"
 
-    const val feilresponsTopicName = "aapen-brukernotifikasjon-feilrespons-v1"
+    const val feilresponsTopicName = "min-side.aapen-brukernotifikasjon-feilrespons-v1"
 
     fun consumerProps(env: Environment, eventtypeToConsume: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
         val groupIdAndEventType = buildGroupIdIncludingEventType(env, eventtypeToConsume)
