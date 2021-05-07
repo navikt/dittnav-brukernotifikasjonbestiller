@@ -11,14 +11,14 @@ spec:
   image: {{version}}
   port: 8080
   liveness:
-    path: /person/dittnav-brukernotifikasjonbestiller/internal/isAlive
+    path: /internal/isAlive
     initialDelay: 10
   readiness:
-    path: /person/dittnav-brukernotifikasjonbestiller/internal/isReady
+    path: /internal/isReady
     initialDelay: 10
   prometheus:
     enabled: true
-    path: /person/dittnav-brukernotifikasjonbestiller/metrics
+    path: /metrics
   replicas:
     min: 1
     max: 1
