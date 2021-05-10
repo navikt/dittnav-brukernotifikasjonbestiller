@@ -59,6 +59,7 @@ object Kafka {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
             put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
+            put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
             put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
