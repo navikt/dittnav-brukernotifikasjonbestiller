@@ -41,7 +41,6 @@ object Kafka {
         return Properties().apply {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
             put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
-            put(KafkaAvroDeserializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
             put(ConsumerConfig.GROUP_ID_CONFIG, groupIdAndEventType)
             put(ConsumerConfig.CLIENT_ID_CONFIG, groupIdAndEventType + NetUtil.getHostname(InetSocketAddress(0)))
             put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
@@ -59,6 +58,7 @@ object Kafka {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
+            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
             put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
