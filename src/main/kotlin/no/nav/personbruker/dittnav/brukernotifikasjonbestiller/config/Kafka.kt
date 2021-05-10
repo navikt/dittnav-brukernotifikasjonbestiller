@@ -41,6 +41,7 @@ object Kafka {
         return Properties().apply {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
             put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
+            put(KafkaAvroDeserializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
             put(ConsumerConfig.GROUP_ID_CONFIG, groupIdAndEventType)
             put(ConsumerConfig.CLIENT_ID_CONFIG, groupIdAndEventType + NetUtil.getHostname(InetSocketAddress(0)))
             put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
