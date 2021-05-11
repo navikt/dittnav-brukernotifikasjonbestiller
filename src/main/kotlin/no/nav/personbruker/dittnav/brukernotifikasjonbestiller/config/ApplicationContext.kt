@@ -19,8 +19,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveEv
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
+import no.nav.personbruker.dittnav.common.metrics.influx.InfluxConfig
 import no.nav.personbruker.dittnav.common.metrics.influx.InfluxMetricsReporter
-import no.nav.personbruker.dittnav.common.metrics.influx.SensuConfig
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
 
@@ -160,18 +160,17 @@ class ApplicationContext {
     }
 
     private fun resolveMetricsReporter(environment: Environment): MetricsReporter {
-        return if (environment.sensuHost == "" || environment.sensuHost == "stub") {
+        return if (environment.influxdbHost == "" || environment.influxdbHost == "stub") {
             StubMetricsReporter()
         } else {
-            val sensuConfig = SensuConfig(
+            val sensuConfig = InfluxConfig(
                     applicationName = environment.applicationName,
-                    hostName = environment.sensuHost,
-                    hostPort = environment.sensuPort,
+                    hostName = environment.influxdbHost,
+                    hostPort = environment.influxdbPort,
                     clusterName = environment.clusterName,
                     namespace = environment.namespace,
-                    eventsTopLevelName = "dittnav-brukernotifikasjonbestiller",
-                    enableEventBatching = environment.sensuBatchingEnabled,
-                    eventBatchesPerSecond = environment.sensuBatchesPerSecond
+                    userName = environment.influxdbUser,
+                    password = environment.influxdbPassword
             )
 
             InfluxMetricsReporter(sensuConfig)
