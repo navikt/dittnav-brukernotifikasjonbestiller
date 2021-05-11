@@ -4,8 +4,13 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.influx.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.prometheus.PrometheusMetricsCollector
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
+import org.slf4j.LoggerFactory
 
 class MetricsCollector(private val metricsReporter: MetricsReporter, private val nameScrubber: ProducerNameScrubber) {
+
+    private val log = LoggerFactory.getLogger(MetricsCollector::class.java)
+
+    private var reported = 0
 
     suspend fun recordMetrics(eventType: Eventtype, block: suspend EventMetricsSession.() -> Unit) {
         val session = EventMetricsSession(eventType)
@@ -100,6 +105,10 @@ class MetricsCollector(private val metricsReporter: MetricsReporter, private val
 
     private suspend fun reportMetrics(metricName: String, count: Int, eventType: String, producerAlias: String) {
         metricsReporter.registerDataPoint(metricName, createCounterField(count), createTagMap(eventType, producerAlias))
+
+        if (++reported % 100 == 0) {
+            log.info("Has reported another 100 metrics to influxdb")
+        }
     }
 
     private fun createCounterField(events: Int): Map<String, Int> = listOf("counter" to events).toMap()

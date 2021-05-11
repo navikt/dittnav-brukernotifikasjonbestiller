@@ -30,7 +30,6 @@ class EventMetricsSession(val eventtype: Eventtype) {
     fun countDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>) {
         duplicateEvents.forEach { duplicateEvent ->
             countDuplicateEventForSystemUser(duplicateEvent.systembruker)
-            log.info("${duplicateEvent.eventtype} med eventId: ${duplicateEvent.eventId} og systembruker: ${duplicateEvent.eventId} er et duplikat. Legger derfor ikke eventet på topic igjen.")
         }
     }
 
