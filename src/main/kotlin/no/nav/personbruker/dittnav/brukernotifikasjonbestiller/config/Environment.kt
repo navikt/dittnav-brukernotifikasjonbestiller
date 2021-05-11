@@ -17,6 +17,7 @@ data class Environment(
         val namespace: String = getEnvVar("NAIS_NAMESPACE"),
         val influxdbHost: String = getEnvVar("INFLUXDB_HOST"),
         val influxdbPort: Int = IntEnvVar.getEnvVarAsInt("INFLUXDB_PORT"),
+        val influxdbName: String = getEnvVar("INFLUXDB_DATABASE_NAME"),
         val influxdbUser: String = getEnvVar("INFLUXDB_USER"),
         val influxdbPassword: String = getEnvVar("INFLUXDB_PASSWORD"),
         val aivenBrokers: String = getEnvVar("KAFKA_BROKERS"),

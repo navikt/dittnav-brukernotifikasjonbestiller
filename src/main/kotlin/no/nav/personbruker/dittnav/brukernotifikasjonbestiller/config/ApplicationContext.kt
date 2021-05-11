@@ -167,6 +167,7 @@ class ApplicationContext {
                     applicationName = environment.applicationName,
                     hostName = environment.influxdbHost,
                     hostPort = environment.influxdbPort,
+                    databaseName = environment.influxdbName,
                     clusterName = environment.clusterName,
                     namespace = environment.namespace,
                     userName = environment.influxdbUser,
