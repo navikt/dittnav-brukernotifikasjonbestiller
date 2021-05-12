@@ -20,6 +20,7 @@ data class Environment(
         val influxdbName: String = getEnvVar("INFLUXDB_DATABASE_NAME"),
         val influxdbUser: String = getEnvVar("INFLUXDB_USER"),
         val influxdbPassword: String = getEnvVar("INFLUXDB_PASSWORD"),
+        val influxdbRetentionPolicy: String = getEnvVar("INFLUXDB_RETENTION_POLICY"),
         val aivenBrokers: String = getEnvVar("KAFKA_BROKERS"),
         val aivenTruststorePath: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
         val aivenKeystorePath: String = getEnvVar("KAFKA_KEYSTORE_PATH"),

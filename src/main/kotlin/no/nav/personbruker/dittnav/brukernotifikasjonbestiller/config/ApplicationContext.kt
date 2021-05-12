@@ -168,6 +168,7 @@ class ApplicationContext {
                     hostName = environment.influxdbHost,
                     hostPort = environment.influxdbPort,
                     databaseName = environment.influxdbName,
+                    retentionPolicyName = environment.influxdbRetentionPolicy,
                     clusterName = environment.clusterName,
                     namespace = environment.namespace,
                     userName = environment.influxdbUser,
