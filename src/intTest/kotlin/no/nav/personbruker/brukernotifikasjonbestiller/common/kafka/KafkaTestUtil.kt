@@ -42,9 +42,20 @@ object KafkaTestUtil {
                 dbPassword = "dbPWIkkeIBrukHer",
                 clusterName = "clusterNameIkkeIBrukHer",
                 namespace = "namespaceIkkeIBrukHer",
-                sensuHost = "sensuHostIkkeIBrukHer",
-                sensuPort = 0,
-                eventHandlerURL = URL("http://event-handler")
+                eventHandlerURL = URL("http://event-handler"),
+                influxdbHost = "INFLUXDB_HOST_IkkeIBrukHer",
+                influxdbPort = 0,
+                influxdbName = "INFLUXDB_DATABASE_NAME_IkkeIBrukHer",
+                influxdbUser = "INFLUXDB_USER_IkkeIBrukHer",
+                influxdbPassword = "INFLUXDB_PASSWORD_IkkeIBrukHer",
+                influxdbRetentionPolicy = "INFLUXDB_RETENTION_POLICY_IkkeIBrukHer",
+                aivenBrokers = embeddedEnv.brokersURL.substringAfterLast("/"),
+                aivenTruststorePath = "KAFKA_TRUSTSTORE_PATH",
+                aivenKeystorePath = "KAFKA_KEYSTORE_PATH",
+                aivenCredstorePassword = "KAFKA_CREDSTORE_PASSWORD",
+                aivenSchemaRegistry = embeddedEnv.schemaRegistry!!.url,
+                aivenSchemaRegistryUser = username,
+                aivenSchemaRegistryPassword = password
         )
     }
 
