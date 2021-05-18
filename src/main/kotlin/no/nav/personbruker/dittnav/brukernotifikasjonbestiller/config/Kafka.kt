@@ -71,6 +71,23 @@ object Kafka {
         }
     }
 
+    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
+        return Properties().apply {
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
+            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
+            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
+            put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + Eventtype.FEILRESPONS + eventtype + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdNameFeilrespons(eventtype))
+            put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+            if (enableSecurity) {
+                putAll(credentialPropsAiven(env))
+            }
+        }
+    }
+
     private fun credentialPropsOnPrem(env: Environment): Properties {
         return Properties().apply {
             put(SaslConfigs.SASL_MECHANISM, "PLAIN")
@@ -107,4 +124,7 @@ object Kafka {
 
     private fun buildTransactionIdName(eventtype: Eventtype) =
             "$transactionIdName-${eventtype.eventtype}"
+
+    private fun buildTransactionIdNameFeilrespons(eventtype: Eventtype) =
+            "$transactionIdName-${Eventtype.FEILRESPONS}-${eventtype.eventtype}"
 }
