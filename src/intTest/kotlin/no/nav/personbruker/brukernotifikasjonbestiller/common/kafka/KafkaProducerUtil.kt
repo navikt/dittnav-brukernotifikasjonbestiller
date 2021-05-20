@@ -35,9 +35,6 @@ object KafkaProducerUtil {
                             set(ProducerConfig.ACKS_CONFIG, "all")
                             set(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1)
                             set(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 500)
-                            set(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
-                            set(SaslConfigs.SASL_MECHANISM, "PLAIN")
-                            set(SaslConfigs.SASL_JAAS_CONFIG, "$JAAS_PLAIN_LOGIN $JAAS_REQUIRED username=\"$user\" password=\"$pwd\";")
                         }
                 ).use { p ->
                     withTimeoutOrNull(10_000) {

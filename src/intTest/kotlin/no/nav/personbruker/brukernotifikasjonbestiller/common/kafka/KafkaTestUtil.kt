@@ -16,7 +16,7 @@ object KafkaTestUtil {
     fun createDefaultKafkaEmbeddedInstance(topics: List<String>): KafkaEnvironment {
         return KafkaEnvironment(
                 topicNames = topics,
-                withSecurity = true,
+                withSecurity = false,
                 withSchemaRegistry = true,
                 users = listOf(JAASCredential(username, password)),
                 brokerConfigOverrides = Properties().apply {
