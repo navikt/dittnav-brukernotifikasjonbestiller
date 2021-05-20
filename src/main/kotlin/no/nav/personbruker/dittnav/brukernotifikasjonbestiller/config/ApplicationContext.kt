@@ -19,8 +19,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveEv
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
-import no.nav.personbruker.dittnav.common.metrics.influx.InfluxConfig
-import no.nav.personbruker.dittnav.common.metrics.influx.InfluxMetricsReporter
+import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
+import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxMetricsReporter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.slf4j.LoggerFactory
 
