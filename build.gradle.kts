@@ -69,7 +69,7 @@ dependencies {
     testImplementation(NAV.kafkaEmbedded)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
-    testImplementation("org.testcontainers:postgresql:1.15.1")
+    testImplementation(TestContainers.postgresql)
 
 
     testRuntimeOnly(Junit.engine)
