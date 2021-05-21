@@ -71,7 +71,6 @@ dependencies {
     testImplementation(Kotlinx.atomicfu)
     testImplementation(TestContainers.postgresql)
 
-
     testRuntimeOnly(Junit.engine)
 
     intTestImplementation(Junit.engine)

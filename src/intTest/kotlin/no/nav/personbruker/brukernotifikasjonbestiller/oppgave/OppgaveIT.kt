@@ -90,7 +90,7 @@ class OppgaveIT {
 
 
     fun `Read all Oppgave-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVE, false)
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVE, enableSecurity = false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(consumerProps)
 
         val oppgaveInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.OPPGAVEINTERN, enableSecurity = false)
@@ -121,7 +121,7 @@ class OppgaveIT {
     }
 
     private fun `Wait until all oppgave events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVEINTERN, false)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVEINTERN, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, OppgaveIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, OppgaveIntern>()
 
@@ -147,7 +147,7 @@ class OppgaveIT {
 
 
     private fun `Wait until bad event has been received by error topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, false)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
