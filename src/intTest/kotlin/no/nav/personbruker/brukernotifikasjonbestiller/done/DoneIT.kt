@@ -90,14 +90,14 @@ class DoneIT {
 
 
     fun `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE, true)
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE, enableSecurity = false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
 
-        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = true)
+        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = false)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
         val internalEventProducer = Producer(Kafka.doneHovedTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = true)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
@@ -121,7 +121,7 @@ class DoneIT {
     }
 
     private fun `Wait until all done events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN, true)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, DoneIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
 
@@ -147,7 +147,7 @@ class DoneIT {
 
 
     private fun `Wait until bad event has been received by error topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, true)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 

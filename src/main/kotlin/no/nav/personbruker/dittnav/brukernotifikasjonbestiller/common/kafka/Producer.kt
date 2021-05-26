@@ -49,7 +49,7 @@ class Producer<K, V>(
     fun abortCurrentTransaction() {
         try {
             kafkaProducer.abortTransaction()
-        } catch (e: IllegalStateException) {
+        } catch (e: Exception) {
             /**/
         }
     }

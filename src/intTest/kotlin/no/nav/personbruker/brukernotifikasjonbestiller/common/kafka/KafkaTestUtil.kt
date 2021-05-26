@@ -16,7 +16,7 @@ object KafkaTestUtil {
     fun createDefaultKafkaEmbeddedInstance(topics: List<String>): KafkaEnvironment {
         return KafkaEnvironment(
                 topicNames = topics,
-                withSecurity = true,
+                withSecurity = false,
                 withSchemaRegistry = true,
                 users = listOf(JAASCredential(username, password)),
                 brokerConfigOverrides = Properties().apply {
@@ -42,9 +42,20 @@ object KafkaTestUtil {
                 dbPassword = "dbPWIkkeIBrukHer",
                 clusterName = "clusterNameIkkeIBrukHer",
                 namespace = "namespaceIkkeIBrukHer",
-                sensuHost = "sensuHostIkkeIBrukHer",
-                sensuPort = 0,
-                eventHandlerURL = URL("http://event-handler")
+                eventHandlerURL = URL("http://event-handler"),
+                influxdbHost = "influxdbHostIkkeIBrukHer",
+                influxdbPort = 0,
+                influxdbName = "influxdbDatabaseNameIkkeIBrukHer",
+                influxdbUser = "influxdbUserIkkeIBrukHer",
+                influxdbPassword = "influxdbPasswordIkkeIBrukHer",
+                influxdbRetentionPolicy = "influxdbRetentionPolicyIkkeIBrukHer",
+                aivenBrokers = embeddedEnv.brokersURL.substringAfterLast("/"),
+                aivenTruststorePath = "kafkaTruststorePathIkkeIBrukHer",
+                aivenKeystorePath = "kafkaKeystorePathIkkeIBrukerHer",
+                aivenCredstorePassword = "kafkaCredstorePasswordIkkeIBrukHer",
+                aivenSchemaRegistry = embeddedEnv.schemaRegistry!!.url,
+                aivenSchemaRegistryUser = username,
+                aivenSchemaRegistryPassword = password
         )
     }
 

@@ -23,56 +23,72 @@ object Kafka {
     private const val transactionIdName = "dittnav-brukernotifikasjonbestiller-transaction"
 
     const val beskjedInputTopicName = "aapen-brukernotifikasjon-nyBeskjed-v1"
-    const val beskjedHovedTopicName = "intern-brukernotifikasjon-nyBeskjed-v1"
+    const val beskjedHovedTopicName = "min-side.privat-brukernotifikasjon-beskjed-v1"
 
     const val oppgaveInputTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
-    const val oppgaveHovedTopicName = "intern-brukernotifikasjon-nyOppgave-v1"
+    const val oppgaveHovedTopicName = "min-side.privat-brukernotifikasjon-oppgave-v1"
 
     const val statusoppdateringInputTopicName = "aapen-brukernotifikasjon-nyStatusoppdatering-v1"
-    const val statusoppdateringHovedTopicName = "intern-brukernotifikasjon-nyStatusoppdatering-v1"
+    const val statusoppdateringHovedTopicName = "min-side.privat-brukernotifikasjon-statusoppdatering-v1"
 
     const val doneInputTopicName = "aapen-brukernotifikasjon-done-v1"
-    const val doneHovedTopicName = "intern-brukernotifikasjon-done-v1"
+    const val doneHovedTopicName = "min-side.privat-brukernotifikasjon-done-v1"
 
-    const val feilresponsTopicName = "aapen-brukernotifikasjon-feilrespons-v1"
+    const val feilresponsTopicName = "min-side.aapen-brukernotifikasjon-feilrespons-v1"
 
     fun consumerProps(env: Environment, eventtypeToConsume: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
         val groupIdAndEventType = buildGroupIdIncludingEventType(env, eventtypeToConsume)
         return Properties().apply {
+            put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
+            put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
             put(ConsumerConfig.GROUP_ID_CONFIG, groupIdAndEventType)
             put(ConsumerConfig.CLIENT_ID_CONFIG, groupIdAndEventType + NetUtil.getHostname(InetSocketAddress(0)))
-            commonProps(env, enableSecurity)
+            put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+            put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
+            put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
+            if (enableSecurity) {
+                putAll(credentialPropsOnPrem(env))
+            }
         }
     }
 
     fun producerProps(env: Environment, type: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
         return Properties().apply {
-            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
-            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
-            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
+            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdName(type))
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+            put(ProducerConfig.ACKS_CONFIG, "all")
+            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
             if (enableSecurity) {
-                putAll(credentialProps(env))
+                putAll(credentialPropsAiven(env))
             }
         }
     }
 
-    private fun Properties.commonProps(env: Environment, enableSecurity: Boolean) {
-        put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
-        put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.schemaRegistryUrl)
-        put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
-        put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
-        put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
-        put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
-        if (enableSecurity) {
-            putAll(credentialProps(env))
+    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
+        return Properties().apply {
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
+            put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + Eventtype.FEILRESPONS + eventtype + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
+            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdNameFeilrespons(eventtype))
+            put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+            put(ProducerConfig.ACKS_CONFIG, "all")
+            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+            if (enableSecurity) {
+                putAll(credentialPropsAiven(env))
+            }
         }
     }
 
-    private fun credentialProps(env: Environment): Properties {
+    private fun credentialPropsOnPrem(env: Environment): Properties {
         return Properties().apply {
             put(SaslConfigs.SASL_MECHANISM, "PLAIN")
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT")
@@ -86,10 +102,29 @@ object Kafka {
             }
         }
     }
+    private fun credentialPropsAiven(env: Environment): Properties {
+        return Properties().apply {
+            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
+            put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
+            put(SaslConfigs.SASL_MECHANISM, "PLAIN")
+            put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL")
+            put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "jks")
+            put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12")
+            put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, env.aivenTruststorePath)
+            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, env.aivenKeystorePath)
+            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
+        }
+    }
 
     private fun buildGroupIdIncludingEventType(env: Environment, eventtypeToConsume: Eventtype) =
             env.groupId + eventtypeToConsume.eventtype
 
     private fun buildTransactionIdName(eventtype: Eventtype) =
             "$transactionIdName-${eventtype.eventtype}"
+
+    private fun buildTransactionIdNameFeilrespons(eventtype: Eventtype) =
+            "$transactionIdName-${Eventtype.FEILRESPONS}-${eventtype.eventtype}"
 }

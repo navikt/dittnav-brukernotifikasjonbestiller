@@ -39,7 +39,7 @@ configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.
 dependencies {
     implementation(Brukernotifikasjon.schemas)
     implementation(Brukernotifikasjon.schemas_internal)
-    implementation(DittNAV.Common.influx)
+    implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)
     implementation(Flyway.core)
     implementation(Hikari.cp)
@@ -69,6 +69,7 @@ dependencies {
     testImplementation(NAV.kafkaEmbedded)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
+    testImplementation(TestContainers.postgresql)
 
     testRuntimeOnly(Junit.engine)
 

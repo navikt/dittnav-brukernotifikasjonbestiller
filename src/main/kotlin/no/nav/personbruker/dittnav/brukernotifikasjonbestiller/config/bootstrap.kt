@@ -14,13 +14,9 @@ fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()
     install(DefaultHeaders)
     routing {
         healthApi(appContext.healthService)
-
-        get("/usikret") {
-            call.respondText(text = "Usikret API.", contentType = ContentType.Text.Plain)
-        }
-        configureStartupHook(appContext)
-        configureShutdownHook(appContext)
     }
+    configureStartupHook(appContext)
+    configureShutdownHook(appContext)
 }
 
 private fun Application.configureStartupHook(appContext: ApplicationContext) {

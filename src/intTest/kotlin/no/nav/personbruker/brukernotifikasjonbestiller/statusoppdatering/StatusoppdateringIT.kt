@@ -90,14 +90,14 @@ class StatusoppdateringIT {
 
 
     fun `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERING, true)
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERING, enableSecurity = false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(consumerProps)
 
-        val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, enableSecurity = true)
+        val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, enableSecurity = false)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(statusoppdateringInternProducerProps)
         val internalEventProducer = Producer(Kafka.statusoppdateringHovedTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = true)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
@@ -121,7 +121,7 @@ class StatusoppdateringIT {
     }
 
     private fun `Wait until all statusoppdatering events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, true)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, StatusoppdateringIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, StatusoppdateringIntern>()
 
@@ -147,7 +147,7 @@ class StatusoppdateringIT {
 
 
     private fun `Wait until bad event has been received by error topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, true)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
