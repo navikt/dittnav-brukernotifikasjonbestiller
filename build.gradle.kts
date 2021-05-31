@@ -38,7 +38,7 @@ configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.
 
 dependencies {
     implementation(Brukernotifikasjon.schemas)
-    implementation(Brukernotifikasjon.schemas_internal)
+    implementation("com.github.navikt:brukernotifikasjon-schemas-internal:feilrespons-status-SNAPSHOT")
     implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)
     implementation(Flyway.core)

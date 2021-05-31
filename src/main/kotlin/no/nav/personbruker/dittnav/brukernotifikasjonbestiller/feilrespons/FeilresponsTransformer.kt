@@ -1,7 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
+import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -38,8 +40,16 @@ object FeilresponsTransformer {
     fun toFeilrespons(exception: Exception): Feilrespons {
         return Feilrespons.newBuilder()
                 .setTidspunkt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
+                .setBegrunnelse(getFeilresponsBegrunnelse(exception).toString())
                 .setFeilmelding(exception.toString())
                 .build()
     }
 
+    private fun getFeilresponsBegrunnelse(exception: Exception): FeilresponsBegrunnelse {
+        return when(exception) {
+            is FieldValidationException -> FeilresponsBegrunnelse.VALIDERINGSFEIL
+            is DuplicateEventException -> FeilresponsBegrunnelse.DUPLIKAT
+            else -> FeilresponsBegrunnelse.UKJENT
+        }
+    }
 }
