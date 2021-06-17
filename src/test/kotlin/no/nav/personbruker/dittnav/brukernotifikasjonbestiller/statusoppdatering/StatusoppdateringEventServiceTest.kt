@@ -5,9 +5,11 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -16,6 +18,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.Test
 
 internal class StatusoppdateringEventServiceTest {
@@ -164,5 +167,32 @@ internal class StatusoppdateringEventServiceTest {
         coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+    }
+
+    @Test
+    fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjed()
+
+        val externalMalplacedEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalBeskjed, topic)
+
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Statusoppdatering>
+        val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
+
+        runBlocking {
+            statusoppdateringEventService.processEvents(externalEvents)
+        }
+
+        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 }
