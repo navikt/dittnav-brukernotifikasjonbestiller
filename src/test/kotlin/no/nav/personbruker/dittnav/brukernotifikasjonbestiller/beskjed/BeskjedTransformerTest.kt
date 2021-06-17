@@ -1,7 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be null`
@@ -31,6 +33,7 @@ internal class BeskjedTransformerTest {
         transformedBeskjed.getSikkerhetsnivaa() `should be equal to` externalBeskjed.getSikkerhetsnivaa()
         transformedBeskjed.getTidspunkt() `should be equal to` externalBeskjed.getTidspunkt()
         transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjed.getEksternVarsling()
+        transformedBeskjed.getPrefererteKanaler() `should be equal to` externalBeskjed.getPrefererteKanaler()
     }
 
     @Test
@@ -43,7 +46,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -56,7 +59,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -78,7 +81,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "systembruker"
     }
 
     @Test
@@ -91,7 +94,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "eventId"
     }
 
     @Test
@@ -103,7 +106,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
     }
 
     @Test
@@ -125,7 +128,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "tekst"
     }
 
     @Test
@@ -137,7 +140,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "tekst"
     }
 
     @Test
@@ -149,7 +152,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "link"
     }
 
     @Test
@@ -161,7 +164,7 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "link"
     }
 
     @Test
@@ -182,7 +185,34 @@ internal class BeskjedTransformerTest {
             runBlocking {
                 BeskjedTransformer.toBeskjedInternal(externalBeskjed)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "Sikkerhetsnivaa"
     }
 
+    @Test
+    fun `do not allow prefererteKanaler if eksternVarsling is false`() {
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithEksternVarslingAndPrefererteKanaler(eksternVarsling = false, prefererteKanaler = listOf(PreferertKanal.SMS.toString()))
+        invoking {
+            runBlocking {
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+    }
+
+    @Test
+    fun `do not allow unknown preferert kanal`() {
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = listOf("unknown"))
+        invoking {
+            runBlocking {
+                BeskjedTransformer.toBeskjedInternal(externalBeskjed)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+    }
+
+    @Test
+    fun `should allow empty prefererteKanaler`() {
+        val externalBeskjed = AvroBeskjedObjectMother.createBeskjedWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = emptyList())
+        val transformed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
+
+        externalBeskjed.getPrefererteKanaler() `should be equal to` transformed.getPrefererteKanaler()
+    }
 }

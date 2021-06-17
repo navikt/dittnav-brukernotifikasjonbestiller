@@ -7,6 +7,7 @@ import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 
 object BeskjedTransformer {
 
@@ -20,6 +21,7 @@ object BeskjedTransformer {
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalBeskjed.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.BESKJED)))
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalBeskjed.getSikkerhetsnivaa()))
                 .setEksternVarsling(externalBeskjed.getEksternVarsling())
+                .setPrefererteKanaler(validatePrefererteKanaler(externalBeskjed.getEksternVarsling(), externalBeskjed.getPrefererteKanaler()))
                 .build()
     }
 
@@ -30,5 +32,4 @@ object BeskjedTransformer {
                 .setFodselsnummer(validateNonNullFieldMaxLength(externalBeskjed.getFodselsnummer(), "fodselsnummer", MAX_LENGTH_FODSELSNUMMER))
                 .build()
     }
-
 }

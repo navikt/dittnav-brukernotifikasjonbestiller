@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should throw`
@@ -39,7 +40,7 @@ internal class DoneTransformerTest {
             runBlocking {
                 DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -52,7 +53,7 @@ internal class DoneTransformerTest {
             runBlocking {
                 DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -65,7 +66,7 @@ internal class DoneTransformerTest {
             runBlocking {
                 DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "systembruker"
     }
 
     @Test
@@ -78,7 +79,7 @@ internal class DoneTransformerTest {
             runBlocking {
                 DoneTransformer.toNokkelInternal(externalNokkel, externalDone)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "eventId"
     }
 
     @Test
@@ -90,7 +91,7 @@ internal class DoneTransformerTest {
             runBlocking {
                 DoneTransformer.toDoneInternal(externalDone)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
     }
 
 }
