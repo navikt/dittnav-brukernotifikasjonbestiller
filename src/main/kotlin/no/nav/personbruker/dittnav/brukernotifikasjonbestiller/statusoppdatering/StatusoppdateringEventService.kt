@@ -54,7 +54,7 @@ class StatusoppdateringEventService(
                     countFailedEventForSystemUser(systembruker)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.BESKJED)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.STATUSOPPDATERING)
                     problematicEvents.add(feilrespons)
                     log.warn("Feil eventtype funnet på statusoppdatering-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
                 } catch (e: Exception) {

@@ -54,7 +54,7 @@ class OppgaveEventService(
                     countFailedEventForSystemUser(systembruker)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.BESKJED)
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.OPPGAVE)
                     problematicEvents.add(feilrespons)
                     log.warn("Feil eventtype funnet på oppgave-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
                 } catch (e: Exception) {
