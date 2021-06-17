@@ -49,6 +49,14 @@ class DoneEventService(
                     val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.DONE)
                     problematicEvents.add(feilrespons)
                     log.warn("Validering av done-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
+                } catch (cce: ClassCastException) {
+                    val systembruker = event.systembruker ?: "NoProducerSpecified"
+                    countFailedEventForSystemUser(systembruker)
+                    val funnetType = event.javaClass.name
+                    val eventId = event.key().getEventId()
+                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.DONE)
+                    problematicEvents.add(feilrespons)
+                    log.warn("Feil eventtype funnet på done-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
                 } catch (e: Exception) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
                     countFailedEventForSystemUser(systembruker)
