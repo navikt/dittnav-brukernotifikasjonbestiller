@@ -1,7 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.amshove.kluent.`should be equal to`
@@ -23,6 +25,7 @@ internal class FeilresponsTransformerTest {
         nokkelFeilrespons.getEventId() `should be equal to` nokkelExternal.getEventId()
         nokkelFeilrespons.getBrukernotifikasjonstype() `should be equal to` eventtype.toString()
         feilrespons.getFeilmelding() `should be equal to` exception.toString()
+        feilrespons.getBegrunnelse() `should be equal to` FeilresponsBegrunnelse.VALIDERINGSFEIL.toString()
     }
 
     @Test
@@ -47,4 +50,30 @@ internal class FeilresponsTransformerTest {
         feilrespons.size.`should be equal to`(duplicateEventsWithExactlyTheSameKey.size)
     }
 
+    @Test
+    fun `Skal sette duplikat som begrunnelse ved DuplicateEventException`() {
+        val exception = DuplicateEventException("Simulert feil i test.")
+
+        val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
+        feilrespons.getFeilmelding() `should be equal to` exception.toString()
+        feilrespons.getBegrunnelse() `should be equal to` FeilresponsBegrunnelse.DUPLIKAT.toString()
+    }
+
+    @Test
+    fun `Skal sette valideringsfeil som begrunnelse ved FieldValidationException`() {
+        val exception = FieldValidationException("Simulert feil i test.")
+
+        val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
+        feilrespons.getFeilmelding() `should be equal to` exception.toString()
+        feilrespons.getBegrunnelse() `should be equal to` FeilresponsBegrunnelse.VALIDERINGSFEIL.toString()
+    }
+
+    @Test
+    fun `Skal sette annet som begrunnelse ved generell exception`() {
+        val exception = Exception("Simulert feil i test.")
+
+        val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
+        feilrespons.getFeilmelding() `should be equal to` exception.toString()
+        feilrespons.getBegrunnelse() `should be equal to` FeilresponsBegrunnelse.UKJENT.toString()
+    }
 }

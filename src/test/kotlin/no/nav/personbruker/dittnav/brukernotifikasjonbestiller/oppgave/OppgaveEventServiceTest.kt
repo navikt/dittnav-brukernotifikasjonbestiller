@@ -5,7 +5,10 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Done
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Oppgave
+import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
@@ -13,9 +16,12 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.AvroStatusoppdateringObjectMother
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.Test
 
 internal class OppgaveEventServiceTest {
@@ -164,5 +170,32 @@ internal class OppgaveEventServiceTest {
         coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+    }
+
+    @Test
+    fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
+        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
+        val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
+
+        val externalMalplacedEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
+
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Oppgave>
+        val oppgaveEventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
+
+        runBlocking {
+            oppgaveEventService.processEvents(externalEvents)
+        }
+
+        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>()) }
+        coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
     }
 }
