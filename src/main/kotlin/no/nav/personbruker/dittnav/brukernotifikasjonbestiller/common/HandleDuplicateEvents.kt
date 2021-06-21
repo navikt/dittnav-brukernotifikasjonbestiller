@@ -8,12 +8,42 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 class HandleDuplicateEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
 
     suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+        val result = mutableListOf<Brukernotifikasjonbestilling>()
+        result.addAll(getDuplicatesFromBatch(successfullyValidatedEvents))
+        result.addAll(getDuplicatesFromDB(successfullyValidatedEvents))
+        return result
+    }
+
+    private suspend fun <T> getDuplicatesFromDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         var result = emptyList<Brukernotifikasjonbestilling>()
         val duplicateEventIds = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(successfullyValidatedEvents)
 
         if (duplicateEventIds.isNotEmpty()) {
             result = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(eventtype, duplicateEventIds)
         }
+        return result
+    }
+
+    private fun <T> getDuplicatesFromBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+        val result = mutableListOf<Brukernotifikasjonbestilling>()
+
+        val duplicatesInBatch = successfullyValidatedEvents
+                .groupingBy { listOf(it.first.getEventId(), it.first.getSystembruker(), eventtype) }
+                .eachCount()
+                .filter { it.value > 1 }
+
+        if (duplicatesInBatch.isNotEmpty()) {
+            duplicatesInBatch.forEach { event ->
+                result.add(
+                        Brukernotifikasjonbestilling(
+                                event.key[0].toString(),
+                                event.key[1].toString(),
+                                Eventtype.valueOf(event.key[2].toString()),
+                                java.time.LocalDateTime.now())
+                )
+            }
+        }
+
         return result
     }
 
