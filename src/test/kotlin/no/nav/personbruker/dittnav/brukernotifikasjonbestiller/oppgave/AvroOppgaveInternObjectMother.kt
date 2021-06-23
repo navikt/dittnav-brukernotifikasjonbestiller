@@ -14,6 +14,7 @@ object AvroOppgaveInternObjectMother {
     private val defaultLink = "http://gyldig.url"
     private val defaultGrupperingsid = "123"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultPrefererteKanaler = emptyList<String>()
 
     fun giveMeANumberOfInternalOppgaveEvents(numberOfEvents: Int, eventId: String, systembruker: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, OppgaveIntern>> {
         val events = mutableListOf<Pair<NokkelIntern, OppgaveIntern>>()
@@ -38,7 +39,8 @@ object AvroOppgaveInternObjectMother {
                 tekst,
                 link,
                 sikkerhetsnivaa,
-                eksternvarsling
+                eksternvarsling,
+                defaultPrefererteKanaler
         )
     }
 }

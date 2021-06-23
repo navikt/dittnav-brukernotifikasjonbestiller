@@ -15,6 +15,7 @@ object AvroBeskjedInternObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultPrefererteKanaler = emptyList<String>()
 
     fun giveMeANumberOfInternalBeskjedEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, BeskjedIntern>> {
         val events = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
@@ -28,10 +29,10 @@ object AvroBeskjedInternObjectMother {
     }
 
     fun createBeskjedInternWithGrupperingsId(grupperingsid: String): BeskjedIntern {
-        return createBeskjedIntern(defaultUlid, defaultTidspunkt, defaultSynligFremTil, grupperingsid, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling)
+        return createBeskjedIntern(defaultUlid, defaultTidspunkt, defaultSynligFremTil, grupperingsid, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createBeskjedIntern(ulid: String, tidspunkt: Long, synligFremTil: Long, grupperingsid: String, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean): BeskjedIntern {
+    fun createBeskjedIntern(ulid: String, tidspunkt: Long, synligFremTil: Long, grupperingsid: String, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>): BeskjedIntern {
         return BeskjedIntern(
                 ulid,
                 tidspunkt,
@@ -40,7 +41,8 @@ object AvroBeskjedInternObjectMother {
                 tekst,
                 link,
                 sikkerhetsnivaa,
-                eksternvarsling
+                eksternvarsling,
+                prefererteKanaler
         )
     }
 }
