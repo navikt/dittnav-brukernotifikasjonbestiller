@@ -9,8 +9,12 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object FeilresponsTransformer {
+
+    private val log: Logger = LoggerFactory.getLogger(FeilresponsTransformer::class.java)
 
     fun createFeilresponsFromDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
@@ -19,6 +23,9 @@ object FeilresponsTransformer {
             val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
             val feilrespons = createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, duplicateEvent.eventtype)
             problematicEvents.add(feilrespons)
+
+            //TODO FJERN DENNE
+            log.warn("Feilrespons: eventid: ${duplicateEvent.eventId}, systembruker: ${duplicateEvent.systembruker}, eventtype: ${duplicateEvent.eventtype}")
         }
         return problematicEvents
     }
