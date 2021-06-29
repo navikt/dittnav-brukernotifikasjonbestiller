@@ -25,7 +25,7 @@ object FeilresponsTransformer {
             problematicEvents.add(feilrespons)
 
             //TODO FJERN DENNE
-            log.warn("Feilrespons: eventid: ${duplicateEvent.eventId}, systembruker: ${duplicateEvent.systembruker}, eventtype: ${duplicateEvent.eventtype}")
+            log.warn("Feilrespons av duplikat: eventid: ${duplicateEvent.eventId}, systembruker: ${duplicateEvent.systembruker}, eventtype: ${duplicateEvent.eventtype}")
         }
         return problematicEvents
     }
@@ -33,6 +33,14 @@ object FeilresponsTransformer {
     fun createFeilrespons(eventId: String, systembruker: String, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
         val nokkelFeilrespons = toNokkelFeilrespons(eventId, systembruker, eventtype)
         val feilrespons = toFeilrespons(exception)
+
+        //TODO FJERN DENNE
+        log.warn("Feilrespons: eventid: ${nokkelFeilrespons.getEventId()}, " +
+                "systembruker: ${nokkelFeilrespons.getSystembruker()}, " +
+                "eventtype: ${nokkelFeilrespons.getBrukernotifikasjonstype()}, " +
+                "begrunnelse: ${feilrespons.getBegrunnelse()}, " +
+                "feilmelding: ${feilrespons.getFeilmelding()}")
+
         return Pair(nokkelFeilrespons, feilrespons)
     }
 
