@@ -9,12 +9,12 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
 
     suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
-        result.addAll(getDuplicatesFromBatch(successfullyValidatedEvents))
-        result.addAll(getDuplicatesFromDB(successfullyValidatedEvents))
+        result.addAll(getDuplicatesThatMatchEventsInKafkaBatch(successfullyValidatedEvents))
+        result.addAll(getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents))
         return result
     }
 
-    private suspend fun <T> getDuplicatesFromDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+    private suspend fun <T> getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         var result = emptyList<Brukernotifikasjonbestilling>()
         val duplicateEventIds = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(successfullyValidatedEvents)
 
@@ -24,7 +24,7 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
         return result
     }
 
-    private fun <T> getDuplicatesFromBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+    private fun <T> getDuplicatesThatMatchEventsInKafkaBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
 
         val duplicatesInBatch = successfullyValidatedEvents
@@ -36,10 +36,10 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
             duplicatesInBatch.forEach { event ->
                 result.add(
                         Brukernotifikasjonbestilling(
-                                event.key[0].toString(),
-                                event.key[1].toString(),
-                                Eventtype.valueOf(event.key[2].toString()),
-                                java.time.LocalDateTime.now())
+                                eventId = event.key[0].toString(),
+                                systembruker = event.key[1].toString(),
+                                eventtype = Eventtype.valueOf(event.key[2].toString()),
+                                prosesserttidspunkt =  java.time.LocalDateTime.now())
                 )
             }
         }
