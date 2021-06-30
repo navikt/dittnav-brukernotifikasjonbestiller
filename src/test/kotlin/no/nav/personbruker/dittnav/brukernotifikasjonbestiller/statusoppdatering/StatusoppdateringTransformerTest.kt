@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdaterin
 
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should throw`
@@ -43,7 +44,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -56,7 +57,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
     }
 
     @Test
@@ -69,7 +70,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "systembruker"
     }
 
     @Test
@@ -82,7 +83,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "eventId"
     }
 
     @Test
@@ -94,7 +95,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
     }
 
     @Test
@@ -106,7 +107,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "link"
     }
 
     @Test
@@ -118,7 +119,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "link"
     }
 
     @Test
@@ -139,7 +140,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "Sikkerhetsnivaa"
     }
 
     @Test
@@ -151,7 +152,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "StatusGlobal"
     }
 
     @Test
@@ -179,7 +180,7 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "statusIntern"
     }
 
     @Test
@@ -199,6 +200,6 @@ internal class StatusoppdateringTransformerTest {
             runBlocking {
                 StatusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
             }
-        } `should throw` FieldValidationException::class
+        } `should throw` FieldValidationException::class `with message containing` "sakstema"
     }
 }

@@ -7,6 +7,7 @@ import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 
 object OppgaveTransformer {
 
@@ -19,6 +20,7 @@ object OppgaveTransformer {
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalOppgave.getSikkerhetsnivaa()))
                 .setEksternVarsling(externalOppgave.getEksternVarsling())
+                .setPrefererteKanaler(validatePrefererteKanaler(externalOppgave.getEksternVarsling(), externalOppgave.getPrefererteKanaler()))
                 .build()
     }
 
