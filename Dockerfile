@@ -8,5 +8,5 @@ ENV PORT=8080
 EXPOSE $PORT
 
 USER root
-RUN apt-get install curl
+RUN apt-get install -y curl
 USER apprunner
