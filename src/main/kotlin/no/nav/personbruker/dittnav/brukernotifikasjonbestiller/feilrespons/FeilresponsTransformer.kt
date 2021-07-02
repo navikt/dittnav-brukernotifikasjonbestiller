@@ -7,10 +7,10 @@ import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 object FeilresponsTransformer {
 
@@ -23,9 +23,6 @@ object FeilresponsTransformer {
             val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
             val feilrespons = createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, duplicateEvent.eventtype)
             problematicEvents.add(feilrespons)
-
-            //TODO FJERN DENNE
-            log.warn("Feilrespons av duplikat: eventid: ${duplicateEvent.eventId}, systembruker: ${duplicateEvent.systembruker}, eventtype: ${duplicateEvent.eventtype}")
         }
         return problematicEvents
     }
@@ -61,7 +58,7 @@ object FeilresponsTransformer {
     }
 
     private fun getFeilresponsBegrunnelse(exception: Exception): FeilresponsBegrunnelse {
-        return when(exception) {
+        return when (exception) {
             is FieldValidationException -> FeilresponsBegrunnelse.VALIDERINGSFEIL
             is DuplicateEventException -> FeilresponsBegrunnelse.DUPLIKAT
             else -> FeilresponsBegrunnelse.UKJENT
