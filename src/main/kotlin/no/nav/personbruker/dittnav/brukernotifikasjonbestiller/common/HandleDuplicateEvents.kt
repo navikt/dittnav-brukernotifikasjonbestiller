@@ -9,9 +9,20 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
 
     suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
-        result.addAll(getDuplicatesThatMatchEventsInKafkaBatch(successfullyValidatedEvents))
-        result.addAll(getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents))
-        return result
+
+        val duplicatesFromKafkaBatch = getDuplicatesFromKafkaBatchThatAreAlreadyInDB(successfullyValidatedEvents)
+        val duplicatesThatAlreadyAreInDB = getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents)
+
+        result.addAll(duplicatesFromKafkaBatch)
+        result.addAll(duplicatesThatAlreadyAreInDB)
+        return result.distinct()
+    }
+
+    suspend fun <T> getDuplicatesFromKafkaBatchThatAreAlreadyInDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+        val allDuplicatesInKafkaBatch = getDuplicatesFromBatch(successfullyValidatedEvents)
+
+        val duplicatesFromKafkaBatchThatAlredyAreInDB = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(eventtype, allDuplicatesInKafkaBatch)
+        return duplicatesFromKafkaBatchThatAlredyAreInDB
     }
 
     private suspend fun <T> getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
@@ -24,7 +35,7 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
         return result
     }
 
-    private fun <T> getDuplicatesThatMatchEventsInKafkaBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
+    private fun <T> getDuplicatesFromBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
 
         val duplicatesInBatch = successfullyValidatedEvents
@@ -49,7 +60,7 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
 
     fun <T> getValidatedEventsWithoutDuplicates(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>, duplicateEvents: List<Brukernotifikasjonbestilling>): List<Pair<NokkelIntern, T>> {
         return if (duplicateEvents.isEmpty()) {
-            successfullyValidatedEvents
+            successfullyValidatedEvents.distinct()
         } else {
             getRemainingEvents(successfullyValidatedEvents, duplicateEvents)
         }
@@ -63,6 +74,6 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
                                 && duplicateEvent.systembruker == successfullyValidatedEvent.first.getSystembruker()
                                 && duplicateEvent.eventtype == eventtype
                     }
-                }
+                }.distinct()
     }
 }

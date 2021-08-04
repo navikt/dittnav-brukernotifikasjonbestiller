@@ -100,7 +100,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
     }
 
     @Test
-    fun `Skal returnere en liste av duplikat naar successfullyValidatedEvents inneholder duplikat, som ikke finnes i basen enda`() {
+    fun `Skal returnere en tom liste av duplikat naar successfullyValidatedEvents inneholder duplikat, men eventene finnes ikke i basen saa ett av eventene er ikke et duplikat`() {
         val fodselsnummer = "123"
         val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-0", "eventId-0", fodselsnummer)
         val nokkel_3 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-3", "eventId-3", fodselsnummer)
@@ -113,15 +113,13 @@ class BrukernotifikasjonbestillingRepositoryTest {
                         Pair(nokkel_3, beskjedIntern)
                 )
 
-        val expectedEvent = listOf(Pair(nokkel_0, beskjedIntern))
+        val expectedEvent = emptyList<Brukernotifikasjonbestilling>()
 
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_1))
 
             val duplicates = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
             duplicates.size `should be equal to` expectedEvent.size
-            duplicates[0].eventId `should be equal to` expectedEvent[0].first.getEventId()
-            duplicates[0].systembruker `should be equal to` expectedEvent[0].first.getSystembruker()
         }
     }
 

@@ -64,4 +64,26 @@ internal class HandleDuplicateEventsTest {
         eventsWithoutDuplicates `should contain all` expectedEvent
     }
 
+    @Test
+    fun `Skal returnere en liste uten duplikat naar successfullyValidatedEvents inneholder duplikat, men duplikat listen er tom, det vil si duplikatene i batch-en finnes ikke i basen og derfor er ikke et av de duplikat`() {
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+
+        val emptyDuplicateList = emptyList<Brukernotifikasjonbestilling>()
+
+        val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
+        val nokkel_1 = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-1", "$eventId-1", fodselsnummer)
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
+
+        val successfullyValidatedEventsWithDuplicates =
+                mutableListOf(Pair(nokkel_0, beskjedIntern),
+                        Pair(nokkel_0, beskjedIntern),
+                        Pair(nokkel_1, beskjedIntern))
+
+        val expectedEvents = listOf(Pair(nokkel_0, beskjedIntern), Pair(nokkel_1, beskjedIntern))
+
+        val eventsWithoutDuplicates = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEventsWithDuplicates, emptyDuplicateList)
+        eventsWithoutDuplicates.size `should be equal to` expectedEvents.size
+        eventsWithoutDuplicates `should contain all` expectedEvents
+    }
+
 }
