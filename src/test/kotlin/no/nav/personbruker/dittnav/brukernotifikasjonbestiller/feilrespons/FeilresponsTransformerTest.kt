@@ -4,6 +4,7 @@ import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationExcep
 import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.NokkelEventPairObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
 import org.amshove.kluent.`should be equal to`
@@ -31,10 +32,10 @@ internal class FeilresponsTransformerTest {
     @Test
     fun `Skal transformere alle duplikat til feilrespons`() {
         val duplicateEvents = listOf(
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId-1", "systembruker-1", Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId-2", "systembruker-2", Eventtype.BESKJED)
+                NokkelEventPairObjectMother.createEventPair("eventId-1", "systembruker-1"),
+                NokkelEventPairObjectMother.createEventPair("eventId-2", "systembruker-2")
         )
-        val feilrespons = FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents)
+        val feilrespons = FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.BESKJED, duplicateEvents)
 
         feilrespons.size.`should be equal to`(duplicateEvents.size)
     }
@@ -42,10 +43,10 @@ internal class FeilresponsTransformerTest {
     @Test
     fun `Skal transformere duplikat til feilrespons og returnere alle selvom nokkel er helt lik`() {
         val duplicateEventsWithExactlyTheSameKey = listOf(
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId", "systembruker", Eventtype.BESKJED),
-                BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId", "systembruker", Eventtype.BESKJED)
+                NokkelEventPairObjectMother.createEventPair("eventId", "systembruker"),
+                NokkelEventPairObjectMother.createEventPair("eventId", "systembruker")
         )
-        val feilrespons = FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEventsWithExactlyTheSameKey)
+        val feilrespons = FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.BESKJED, duplicateEventsWithExactlyTheSameKey)
 
         feilrespons.size.`should be equal to`(duplicateEventsWithExactlyTheSameKey.size)
     }

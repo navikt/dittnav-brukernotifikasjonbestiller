@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.NokkelEventPairObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be`
@@ -70,8 +71,8 @@ internal class EventMetricsSessionTest {
     @Test
     fun `Skal telle alle duplikat`() {
         val session = EventMetricsSession(Eventtype.BESKJED)
-        val duplicate_1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED)
-        val duplicate_2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED)
+        val duplicate_1 = NokkelEventPairObjectMother.createEventPair(eventId = "eventId-0", systembruker = "systembruker-0")
+        val duplicate_2 = NokkelEventPairObjectMother.createEventPair(eventId = "eventId-1", systembruker = "systembruker-1")
         val duplicateEvents = listOf(duplicate_1, duplicate_2)
 
         session.countDuplicateEvents(duplicateEvents)

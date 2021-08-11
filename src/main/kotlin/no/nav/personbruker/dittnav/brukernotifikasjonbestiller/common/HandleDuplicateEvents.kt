@@ -4,76 +4,61 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import java.time.LocalDateTime
 
 class HandleDuplicateEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
 
-    suspend fun <T> getDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
-        val result = mutableListOf<Brukernotifikasjonbestilling>()
+    suspend fun <T> checkForDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
+        val checkDuplicatesInDbResult = getDuplicatesFromDb(eventtype, successfullyValidatedEvents)
+        val checkDuplicatesWithinBatchResult = getDuplicatesWithinBatch(eventtype, checkDuplicatesInDbResult.validEvents)
 
-        val duplicatesFromKafkaBatch = getDuplicatesFromKafkaBatchThatAreAlreadyInDB(successfullyValidatedEvents)
-        val duplicatesThatAlreadyAreInDB = getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents)
+        val validEvents = checkDuplicatesWithinBatchResult.validEvents
+        val allDuplicates = checkDuplicatesInDbResult.duplicateEvents + checkDuplicatesWithinBatchResult.duplicateEvents
 
-        result.addAll(duplicatesFromKafkaBatch)
-        result.addAll(duplicatesThatAlreadyAreInDB)
-        return result.distinct()
+        return DuplicateCheckResult(
+                validEvents = validEvents,
+                duplicateEvents = allDuplicates
+        )
     }
 
-    suspend fun <T> getDuplicatesFromKafkaBatchThatAreAlreadyInDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
-        val allDuplicatesInKafkaBatch = getDuplicatesFromBatch(successfullyValidatedEvents)
+    private suspend fun <T> getDuplicatesFromDb(eventtype: Eventtype, events: List<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
+        val eventIds = events.map { it.first.getEventId() }
 
-        val duplicatesFromKafkaBatchThatAlredyAreInDB = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(eventtype, allDuplicatesInKafkaBatch)
-        return duplicatesFromKafkaBatchThatAlredyAreInDB
-    }
+        val possibleDuplicates = brukernotifikasjonbestillingRepository.fetchBrukernotifikasjonKeysThatMatchEventIds(eventIds).toSet()
 
-    private suspend fun <T> getDuplicatesThatMatchEventsInDB(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
-        var result = emptyList<Brukernotifikasjonbestilling>()
-        val duplicateEventIds = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(successfullyValidatedEvents)
-
-        if (duplicateEventIds.isNotEmpty()) {
-            result = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(eventtype, duplicateEventIds)
+        return events.partition {
+            possibleDuplicates.doesNotContain(it.toBrukernotifikasjonKey(eventtype))
+        }.let {
+            DuplicateCheckResult(validEvents = it.first, duplicateEvents = it.second)
         }
-        return result
     }
 
-    private fun <T> getDuplicatesFromBatch(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
-        val result = mutableListOf<Brukernotifikasjonbestilling>()
+    private fun <T> getDuplicatesWithinBatch(eventtype: Eventtype, events: List<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
+        val validEvents = mutableListOf<Pair<NokkelIntern, T>>()
+        val validEventKeys = mutableSetOf<BrukernotifikasjonKey>()
+        val duplicateEvents = mutableListOf<Pair<NokkelIntern, T>>()
 
-        val duplicatesInBatch = successfullyValidatedEvents
-                .groupingBy { listOf(it.first.getEventId(), it.first.getSystembruker(), eventtype) }
-                .eachCount()
-                .filter { it.value > 1 }
+        events.forEach { event ->
+            val key = event.toBrukernotifikasjonKey(eventtype)
 
-        if (duplicatesInBatch.isNotEmpty()) {
-            duplicatesInBatch.forEach { event ->
-                result.add(
-                        Brukernotifikasjonbestilling(
-                                eventId = event.key[0].toString(),
-                                systembruker = event.key[1].toString(),
-                                eventtype = Eventtype.valueOf(event.key[2].toString()),
-                                prosesserttidspunkt =  java.time.LocalDateTime.now())
-                )
+            if (validEventKeys.doesNotContain(key)) {
+                validEvents.add(event)
+                validEventKeys.add(key)
+            } else {
+                duplicateEvents.add(event)
             }
         }
 
-        return result
+        return DuplicateCheckResult(validEvents, duplicateEvents)
     }
 
-    fun <T> getValidatedEventsWithoutDuplicates(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>, duplicateEvents: List<Brukernotifikasjonbestilling>): List<Pair<NokkelIntern, T>> {
-        return if (duplicateEvents.isEmpty()) {
-            successfullyValidatedEvents.distinct()
-        } else {
-            getRemainingEvents(successfullyValidatedEvents, duplicateEvents)
-        }
+    private fun <T> Pair<NokkelIntern, T>.toBrukernotifikasjonKey(eventtype: Eventtype): BrukernotifikasjonKey {
+        return BrukernotifikasjonKey(
+                first.getEventId(),
+                first.getSystembruker(),
+                eventtype
+        )
     }
 
-    private fun <T> getRemainingEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>, duplicateEvents: List<Brukernotifikasjonbestilling>): List<Pair<NokkelIntern, T>> {
-        return successfullyValidatedEvents
-                .filter { successfullyValidatedEvent ->
-                    !duplicateEvents.any { duplicateEvent ->
-                        duplicateEvent.eventId == successfullyValidatedEvent.first.getEventId()
-                                && duplicateEvent.systembruker == successfullyValidatedEvent.first.getSystembruker()
-                                && duplicateEvent.eventtype == eventtype
-                    }
-                }.distinct()
-    }
+    private fun <T> Set<T>.doesNotContain(entry: T) = !contains(entry)
 }

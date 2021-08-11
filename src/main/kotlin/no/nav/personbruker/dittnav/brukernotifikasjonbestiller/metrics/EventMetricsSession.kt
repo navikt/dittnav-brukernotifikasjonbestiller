@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
@@ -27,9 +28,11 @@ class EventMetricsSession(val eventtype: Eventtype) {
         countFailedEventsBySysUser[systemUser] = countFailedEventsBySysUser.getOrDefault(systemUser, 0).inc()
     }
 
-    fun countDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>) {
-        duplicateEvents.forEach { duplicateEvent ->
-            countDuplicateEventForSystemUser(duplicateEvent.systembruker)
+    fun countDuplicateEvents(duplicateEvents: List<Pair<NokkelIntern, *>>) {
+        duplicateEvents.map {
+            it.first
+        }.forEach { duplicateEvent ->
+            countDuplicateEventForSystemUser(duplicateEvent.getSystembruker())
         }
     }
 

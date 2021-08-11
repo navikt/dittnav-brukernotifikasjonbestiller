@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
@@ -16,12 +17,14 @@ object FeilresponsTransformer {
 
     private val log: Logger = LoggerFactory.getLogger(FeilresponsTransformer::class.java)
 
-    fun createFeilresponsFromDuplicateEvents(duplicateEvents: List<Brukernotifikasjonbestilling>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
+    fun <T> createFeilresponsFromDuplicateEvents(eventtype: Eventtype, duplicateEvents: List<Pair<NokkelIntern, T>>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
-        duplicateEvents.forEach { duplicateEvent ->
+        duplicateEvents.map {
+            it.first
+        }.forEach { duplicateEvent ->
             val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
-            val feilrespons = createFeilrespons(duplicateEvent.eventId, duplicateEvent.systembruker, duplicateEventException, duplicateEvent.eventtype)
+            val feilrespons = createFeilrespons(duplicateEvent.getEventId(), duplicateEvent.getSystembruker(), duplicateEventException, eventtype)
             problematicEvents.add(feilrespons)
         }
         return problematicEvents

@@ -37,47 +37,6 @@ class BrukernotifikasjonbestillingRepositoryTest {
     }
 
     @Test
-    fun `Skal returnere korrekt antall eventer med samme eventId uavhengig av eventtype`() {
-        runBlocking {
-            val expectedEvents = listOf(eventBeskjed_0, eventOppgave_0)
-            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0, eventBeskjed_1, eventOppgave_0))
-            val eventsAlreadyPersisted = giveMeANumberOfInternalEvents(1, "eventId", "systembruker")
-
-            val result = brukernotifikasjonbestillingRepository.fetchEventsThatMatchEventId(eventsAlreadyPersisted)
-            result.size.`should be equal to`(expectedEvents.size)
-            result `should contain all` expectedEvents
-        }
-    }
-
-    @Test
-    fun `Skal returnere korrekt antall duplikat innenfor en gitt eventtypen`() {
-        runBlocking {
-            val expectedEvents = listOf(eventBeskjed_0, eventBeskjed_1)
-            val duplicateEvents = listOf(eventBeskjed_0, eventBeskjed_1, eventOppgave_0)
-            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0, eventBeskjed_1, eventOppgave_0))
-
-            val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
-            duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
-            duplicateBeskjeder `should contain all` expectedEvents
-        }
-    }
-
-    @Test
-    fun `Skal returnere korrekt antall duplikat med samme eventId, systembruker og gitt eventtype`() {
-        val eventBeskjedWithDifferentSystemuser = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "dummy", eventtype = Eventtype.BESKJED)
-
-        runBlocking {
-            val expectedEvents = listOf(eventBeskjed_0, eventBeskjed_1)
-            val duplicateEvents = listOf(eventBeskjed_0, eventBeskjed_1, eventOppgave_0)
-            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0, eventBeskjed_1, eventOppgave_0, eventBeskjedWithDifferentSystemuser))
-
-            val duplicateBeskjeder = brukernotifikasjonbestillingRepository.fetchDuplicatesOfEventtype(Eventtype.BESKJED, duplicateEvents)
-            duplicateBeskjeder.size.`should be equal to`(expectedEvents.size)
-            duplicateBeskjeder `should contain all` expectedEvents
-        }
-    }
-
-    @Test
     fun `Skal returnere korrekt resultat for vellykket persistering av Brukernotifikasjonbestillinger i batch`() {
         runBlocking {
             val toPersist = giveMeANumberOfInternalEvents(3, "eventId", "systembruker")
@@ -100,30 +59,6 @@ class BrukernotifikasjonbestillingRepositoryTest {
     }
 
     @Test
-    fun `Skal returnere en tom liste av duplikat naar successfullyValidatedEvents inneholder duplikat, men eventene finnes ikke i basen saa ett av eventene er ikke et duplikat`() {
-        val fodselsnummer = "123"
-        val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-0", "eventId-0", fodselsnummer)
-        val nokkel_3 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-3", "eventId-3", fodselsnummer)
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
-
-        val successfullyValidatedEvents =
-                mutableListOf(
-                        Pair(nokkel_0, beskjedIntern),
-                        Pair(nokkel_0, beskjedIntern),
-                        Pair(nokkel_3, beskjedIntern)
-                )
-
-        val expectedEvent = emptyList<Brukernotifikasjonbestilling>()
-
-        runBlocking {
-            database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_1))
-
-            val duplicates = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
-            duplicates.size `should be equal to` expectedEvent.size
-        }
-    }
-
-    @Test
     fun `Skal returnere en liste av duplikat naar successfullyValidatedEvents inneholder duplikat som finnes i basen`() {
         val fodselsnummer = "123"
         val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-0", "eventId-0", fodselsnummer)
@@ -137,10 +72,10 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0))
 
-            val duplicates = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
+            val duplicates = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents).duplicateEvents
             duplicates.size `should be equal to` expectedEvent.size
-            duplicates[0].eventId `should be equal to` expectedEvent[0].first.getEventId()
-            duplicates[0].systembruker `should be equal to` expectedEvent[0].first.getSystembruker()
+            duplicates[0].first.getEventId() `should be equal to` expectedEvent[0].first.getEventId()
+            duplicates[0].first.getSystembruker() `should be equal to` expectedEvent[0].first.getSystembruker()
         }
     }
 
@@ -162,7 +97,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0))
 
-            val duplicates = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
+            val duplicates = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents).duplicateEvents
             duplicates.size `should be equal to` expectedEvent.size
         }
     }

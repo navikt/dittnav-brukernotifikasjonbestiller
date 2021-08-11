@@ -1,32 +1,17 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
 class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
-    suspend fun <T> fetchEventsThatMatchEventId(events: List<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> {
-        var resultat = emptyList<Brukernotifikasjonbestilling>()
-        database.queryWithExceptionTranslation {
-            resultat = getEventsByEventId(events)
+    suspend fun fetchBrukernotifikasjonKeysThatMatchEventIds(eventIds: List<String>): List<BrukernotifikasjonKey> {
+        return database.queryWithExceptionTranslation {
+            getEventKeysByEventIds(eventIds)
         }
-
-        return resultat
-    }
-
-    suspend fun fetchDuplicatesOfEventtype(eventtype: Eventtype, isDuplicateEvents: List<Brukernotifikasjonbestilling>): List<Brukernotifikasjonbestilling> {
-        val result = mutableListOf<Brukernotifikasjonbestilling>()
-        database.queryWithExceptionTranslation {
-            isDuplicateEvents.forEach { event ->
-                val duplicates = getEventsByIds(event.eventId, event.systembruker, eventtype)
-                if (duplicates.isNotEmpty()) {
-                    result.add(duplicates.first())
-                }
-            }
-        }
-        return result.distinct()
     }
 
     suspend fun <T> persistInOneBatch(entities: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {

@@ -11,6 +11,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
@@ -37,8 +38,7 @@ internal class StatusoppdateringEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) } returns emptyList()
-        coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) } returns internalEvents
+        coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) } returns Unit
         coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
@@ -53,8 +53,7 @@ internal class StatusoppdateringEventServiceTest {
         }
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
-        coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
@@ -82,8 +81,7 @@ internal class StatusoppdateringEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
     }
 
     @Test
@@ -103,8 +101,7 @@ internal class StatusoppdateringEventServiceTest {
             statusoppdateringEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
@@ -128,8 +125,7 @@ internal class StatusoppdateringEventServiceTest {
             statusoppdateringEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
@@ -140,13 +136,14 @@ internal class StatusoppdateringEventServiceTest {
     fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
         val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
         val externalStatusoppdatering = AvroStatusoppdateringObjectMother.createStatusoppdatering()
-        val duplicateEvents = listOf(BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling("eventId", "systembruker", Eventtype.BESKJED))
+
+        val validEvents = listOf(internalEvents[0])
+        val duplicateEvents = listOf(internalEvents[1])
 
         val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        coEvery { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) } returns duplicateEvents
-        coEvery { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) } returns internalEvents
+        coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) } returns Unit
         coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
@@ -162,8 +159,7 @@ internal class StatusoppdateringEventServiceTest {
 
         coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
         coVerify(exactly = 1) { metricsSession.countDuplicateEvents(any()) }
-        coVerify(exactly = 1) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 1) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
@@ -188,8 +184,7 @@ internal class StatusoppdateringEventServiceTest {
             statusoppdateringEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 0) { handleDuplicateEvents.getDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
-        coVerify(exactly = 0) { handleDuplicateEvents.getValidatedEventsWithoutDuplicates(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, StatusoppdateringIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }

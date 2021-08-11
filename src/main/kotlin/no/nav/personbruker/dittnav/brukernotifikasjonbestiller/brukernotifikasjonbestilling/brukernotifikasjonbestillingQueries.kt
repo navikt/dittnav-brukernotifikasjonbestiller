@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Array
@@ -26,6 +27,13 @@ fun <T> Connection.getEventsByEventId(events: List<Pair<NokkelIntern, T>>): List
                     it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
                 }
 
+fun Connection.getEventKeysByEventIds(eventIds: List<String>): List<BrukernotifikasjonKey> =
+        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
+                .use {
+                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
+                    it.executeQuery().mapList { toBrukernotifikasjonKey() }
+                }
+
 fun Connection.getEventsByIds(eventId: String, systembruker: String, eventtype: Eventtype): List<Brukernotifikasjonbestilling> =
         prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
                 .use {
@@ -41,6 +49,14 @@ fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
             systembruker = getString("systembruker"),
             eventtype = toEventtype(getString("eventtype")),
             prosesserttidspunkt = getUtcDateTime("prosesserttidspunkt")
+    )
+}
+
+fun ResultSet.toBrukernotifikasjonKey(): BrukernotifikasjonKey {
+    return BrukernotifikasjonKey(
+            eventId = getString("eventId"),
+            systembruker = getString("systembruker"),
+            eventtype = toEventtype(getString("eventtype"))
     )
 }
 
