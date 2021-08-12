@@ -67,7 +67,6 @@ internal class HandleDuplicateDoneEventsTest {
         result.duplicateEvents `should contain` eventWithDuplicate
     }
 
-
     @Test
     fun `Skal plassere duplikater innen samme batch i validEvents og duplicateEvents dersom de ikke allerede fantes i basen`() {
         val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
