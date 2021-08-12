@@ -22,7 +22,7 @@ class HandleDuplicateDoneEvents(private val eventtype: Eventtype, private val br
     private suspend fun <T> getDuplicatesFromDb(eventtype: Eventtype, events: List<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
         val eventIds = events.map { it.first.getEventId() }
 
-        val possibleDuplicates = brukernotifikasjonbestillingRepository.fetchBrukernotifikasjonKeysThatMatchEventIds(eventIds).toSet()
+        val possibleDuplicates = brukernotifikasjonbestillingRepository.fetchDoneKeysThatMatchEventIds(eventIds).toSet()
 
         return events.partition {
             possibleDuplicates.doesNotContain(it.toDoneKey(eventtype))

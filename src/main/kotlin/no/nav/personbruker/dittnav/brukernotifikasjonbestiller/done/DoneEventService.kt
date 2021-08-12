@@ -9,6 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory
 
 class DoneEventService(
         private val metricsCollector: MetricsCollector,
-        private val handleDuplicateEvents: HandleDuplicateEvents,
+        private val handleDuplicateEvents: HandleDuplicateDoneEvents,
         private val eventDispatcher: EventDispatcher<DoneIntern>
 ) : EventBatchProcessorService<Nokkel, Done> {
 

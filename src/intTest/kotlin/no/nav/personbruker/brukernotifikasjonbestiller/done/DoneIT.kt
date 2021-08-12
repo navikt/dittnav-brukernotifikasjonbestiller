@@ -16,6 +16,7 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
@@ -102,7 +103,7 @@ class DoneIT {
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
         val eventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)

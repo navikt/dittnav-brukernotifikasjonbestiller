@@ -5,12 +5,13 @@ import java.time.LocalDateTime
 
 object BrukernotifikasjonbestillingObjectMother {
 
-    fun createBrukernotifikasjonbestilling(eventId: String, systembruker: String, eventtype: Eventtype): Brukernotifikasjonbestilling {
+    fun createBrukernotifikasjonbestilling(eventId: String, systembruker: String, eventtype: Eventtype, fodselsnummer: String): Brukernotifikasjonbestilling {
         return Brukernotifikasjonbestilling(
                 eventId = eventId,
                 systembruker = systembruker,
                 eventtype = eventtype,
-                prosesserttidspunkt = LocalDateTime.now()
+                prosesserttidspunkt = LocalDateTime.now(),
+                fodselsnummer = fodselsnummer
         )
     }
 }

@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasj
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DoneKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Array
@@ -9,7 +10,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
-private val createQuery = """INSERT INTO brukernotifikasjonbestilling (eventId, systembruker, eventtype, prosesserttidspunkt) VALUES (?, ?, ?, ?)"""
+private val createQuery = """INSERT INTO brukernotifikasjonbestilling (eventId, systembruker, eventtype, prosesserttidspunkt, fodselsnummer) VALUES (?, ?, ?, ?, ?)"""
 
 fun Connection.createBrukernotifikasjonbestilling(events: List<Brukernotifikasjonbestilling>): ListPersistActionResult<Brukernotifikasjonbestilling> =
         executeBatchPersistQuery(createQuery) {
@@ -25,6 +26,13 @@ fun <T> Connection.getEventsByEventId(events: List<Pair<NokkelIntern, T>>): List
                 .use {
                     it.setArray(1, toVarcharArray(events))
                     it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
+                }
+
+fun Connection.getDoneKeysByEventIds(eventIds: List<String>): List<DoneKey> =
+        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
+                .use {
+                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
+                    it.executeQuery().mapList { toDoneKey() }
                 }
 
 fun Connection.getEventKeysByEventIds(eventIds: List<String>): List<BrukernotifikasjonKey> =
@@ -48,7 +56,8 @@ fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
             eventId = getString("eventId"),
             systembruker = getString("systembruker"),
             eventtype = toEventtype(getString("eventtype")),
-            prosesserttidspunkt = getUtcDateTime("prosesserttidspunkt")
+            prosesserttidspunkt = getUtcDateTime("prosesserttidspunkt"),
+            fodselsnummer = getString("fodselsnummer")
     )
 }
 
@@ -57,6 +66,15 @@ fun ResultSet.toBrukernotifikasjonKey(): BrukernotifikasjonKey {
             eventId = getString("eventId"),
             systembruker = getString("systembruker"),
             eventtype = toEventtype(getString("eventtype"))
+    )
+}
+
+fun ResultSet.toDoneKey(): DoneKey {
+    return DoneKey(
+            eventId = getString("eventId"),
+            systembruker = getString("systembruker"),
+            eventtype = toEventtype(getString("eventtype")),
+            fodselsnummer = getString("fodselsnummer")
     )
 }
 
@@ -70,4 +88,5 @@ private fun PreparedStatement.buildStatementForSingleRow(event: Brukernotifikasj
     setString(2, event.systembruker)
     setString(3, event.eventtype.toString())
     setObject(4, event.prosesserttidspunkt)
+    setString(5, event.fodselsnummer)
 }

@@ -7,5 +7,6 @@ data class Brukernotifikasjonbestilling(
         val eventId: String,
         val systembruker: String,
         val eventtype: Eventtype,
-        val prosesserttidspunkt: LocalDateTime
+        val prosesserttidspunkt: LocalDateTime,
+        val fodselsnummer: String
 )

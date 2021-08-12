@@ -1,10 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import java.time.LocalDateTime
 
 class HandleDuplicateEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
 

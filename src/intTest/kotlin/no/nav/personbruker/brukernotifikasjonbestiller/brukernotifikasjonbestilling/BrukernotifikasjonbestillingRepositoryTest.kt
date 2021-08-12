@@ -23,9 +23,9 @@ class BrukernotifikasjonbestillingRepositoryTest {
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
 
-    private val eventBeskjed_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED)
-    private val eventBeskjed_1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED)
-    private val eventOppgave_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE)
+    private val eventBeskjed_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val eventBeskjed_1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val eventOppgave_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE, fodselsnummer = "123")
 
     @AfterEach
     fun tearDown() {
