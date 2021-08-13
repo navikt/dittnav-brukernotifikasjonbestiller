@@ -40,13 +40,3 @@ jobs:
         uses: navikt/pb-common-gh-actions/docker-publish@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 'Deploy-er til ${{ env.NAMESPACE }} i ${{ env.CLUSTER }}'
-        uses: 'nais/deploy/actions/deploy@v1'
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: ${{ env.CLUSTER }}
-          RESOURCE: ./nais/${{ env.CLUSTER }}/nais.yaml
-          VAR: version=${{ env.IMAGE }}
-          PRINT_PAYLOAD: true
-          REF: ${{ env.CURRENT_REF }}
