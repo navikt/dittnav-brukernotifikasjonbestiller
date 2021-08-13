@@ -93,11 +93,11 @@ class OppgaveIT {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVE, enableSecurity = false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(consumerProps)
 
-        val oppgaveInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.OPPGAVEINTERN, enableSecurity = false)
+        val oppgaveInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.OPPGAVEINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(oppgaveInternProducerProps)
         val internalEventProducer = Producer(Kafka.oppgaveHovedTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
