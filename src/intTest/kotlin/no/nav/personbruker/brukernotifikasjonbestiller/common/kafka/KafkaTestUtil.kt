@@ -4,6 +4,7 @@ import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Environment
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.SecurityConfig
 import org.apache.avro.generic.GenericRecord
 import java.net.URL
 import java.util.*
@@ -50,12 +51,8 @@ object KafkaTestUtil {
                 influxdbPassword = "influxdbPasswordIkkeIBrukHer",
                 influxdbRetentionPolicy = "influxdbRetentionPolicyIkkeIBrukHer",
                 aivenBrokers = embeddedEnv.brokersURL.substringAfterLast("/"),
-                aivenTruststorePath = "kafkaTruststorePathIkkeIBrukHer",
-                aivenKeystorePath = "kafkaKeystorePathIkkeIBrukerHer",
-                aivenCredstorePassword = "kafkaCredstorePasswordIkkeIBrukHer",
                 aivenSchemaRegistry = embeddedEnv.schemaRegistry!!.url,
-                aivenSchemaRegistryUser = username,
-                aivenSchemaRegistryPassword = password
+                securityConfig = SecurityConfig(enabled = false)
         )
     }
 

@@ -93,11 +93,11 @@ class BeskjedIT {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED, false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(consumerProps)
 
-        val beskjedInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN, enableSecurity = false)
+        val beskjedInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(beskjedInternProducerProps)
         val internalEventProducer = Producer(Kafka.beskjedHovedTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerFeilresponsProps(testEnvironment, Eventtype.BESKJED, enableSecurity = false)
+        val feilresponsProducerProps = Kafka.producerFeilresponsProps(testEnvironment, Eventtype.BESKJED)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
