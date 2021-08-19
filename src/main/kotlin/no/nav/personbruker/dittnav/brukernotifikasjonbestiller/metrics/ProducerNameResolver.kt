@@ -49,7 +49,12 @@ class ProducerNameResolver(private val client: HttpClient, eventHandlerBaseURL: 
     }
 
     private suspend fun getProducerNameAliasFromHandler(systembruker: String): String {
-        return client.get(pathToEndpoint, systembruker)
+        try {
+            return client.get(pathToEndpoint, systembruker)
+        } catch (e: Exception) {
+            return "alias_unavailable"
+        }
+
     }
 
 }

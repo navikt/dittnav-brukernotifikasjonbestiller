@@ -9,6 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
@@ -21,7 +22,7 @@ import org.slf4j.LoggerFactory
 
 class DoneEventService(
         private val metricsCollector: MetricsCollector,
-        private val handleDuplicateEvents: HandleDuplicateEvents,
+        private val handleDuplicateEvents: HandleDuplicateDoneEvents,
         private val eventDispatcher: EventDispatcher<DoneIntern>
 ) : EventBatchProcessorService<Nokkel, Done> {
 
@@ -67,12 +68,15 @@ class DoneEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
+
+                val duplicateCheckResult = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents)
+                val duplicateEvents = duplicateCheckResult.duplicateEvents
+                val remainingValidatedEvents = duplicateCheckResult.validEvents
+
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents))
+                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.DONE, duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
                 }
-                val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
 
                 if (problematicEvents.isNotEmpty()) {
                     eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)

@@ -1,12 +1,10 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import java.time.LocalDateTime
 
-data class Brukernotifikasjonbestilling(
+data class DoneKey(
         val eventId: String,
         val systembruker: String,
         val eventtype: Eventtype,
-        val prosesserttidspunkt: LocalDateTime,
         val fodselsnummer: String
 )

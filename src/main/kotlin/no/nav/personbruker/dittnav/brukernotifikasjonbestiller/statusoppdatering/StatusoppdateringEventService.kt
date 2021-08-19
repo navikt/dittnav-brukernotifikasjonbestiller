@@ -67,12 +67,15 @@ class StatusoppdateringEventService(
             }
 
             if (successfullyValidatedEvents.isNotEmpty()) {
-                val duplicateEvents = handleDuplicateEvents.getDuplicateEvents(successfullyValidatedEvents)
+
+                val duplicateCheckResult = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents)
+                val duplicateEvents = duplicateCheckResult.duplicateEvents
+                val remainingValidatedEvents = duplicateCheckResult.validEvents
+
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(duplicateEvents))
+                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.STATUSOPPDATERING, duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
                 }
-                val remainingValidatedEvents = handleDuplicateEvents.getValidatedEventsWithoutDuplicates(successfullyValidatedEvents, duplicateEvents)
 
                 if (problematicEvents.isNotEmpty()) {
                     eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)

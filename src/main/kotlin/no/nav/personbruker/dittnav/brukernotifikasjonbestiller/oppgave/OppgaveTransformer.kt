@@ -16,7 +16,7 @@ object OppgaveTransformer {
                 .setUlid(createULID())
                 .setTidspunkt(externalOppgave.getTidspunkt())
                 .setGrupperingsId(validateNonNullFieldMaxLength(externalOppgave.getGrupperingsId(), "grupperingsId", MAX_LENGTH_GRUPPERINGSID))
-                .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_BESKJED))
+                .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_OPPGAVE))
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalOppgave.getSikkerhetsnivaa()))
                 .setEksternVarsling(externalOppgave.getEksternVarsling())

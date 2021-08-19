@@ -4,7 +4,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
-class HandleDuplicateEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
+class HandleDuplicateDoneEvents(private val eventtype: Eventtype, private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
 
     suspend fun <T> checkForDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
         val checkDuplicatesInDbResult = getDuplicatesFromDb(eventtype, successfullyValidatedEvents)
@@ -22,10 +22,10 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
     private suspend fun <T> getDuplicatesFromDb(eventtype: Eventtype, events: List<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
         val eventIds = events.map { it.first.getEventId() }
 
-        val possibleDuplicates = brukernotifikasjonbestillingRepository.fetchBrukernotifikasjonKeysThatMatchEventIds(eventIds).toSet()
+        val possibleDuplicates = brukernotifikasjonbestillingRepository.fetchDoneKeysThatMatchEventIds(eventIds).toSet()
 
         return events.partition {
-            possibleDuplicates.doesNotContain(it.toBrukernotifikasjonKey(eventtype))
+            possibleDuplicates.doesNotContain(it.toDoneKey(eventtype))
         }.let {
             DuplicateCheckResult(validEvents = it.first, duplicateEvents = it.second)
         }
@@ -33,11 +33,11 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
 
     private fun <T> getDuplicatesWithinBatch(eventtype: Eventtype, events: List<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
         val validEvents = mutableListOf<Pair<NokkelIntern, T>>()
-        val validEventKeys = mutableSetOf<BrukernotifikasjonKey>()
+        val validEventKeys = mutableSetOf<DoneKey>()
         val duplicateEvents = mutableListOf<Pair<NokkelIntern, T>>()
 
         events.forEach { event ->
-            val key = event.toBrukernotifikasjonKey(eventtype)
+            val key = event.toDoneKey(eventtype)
 
             if (validEventKeys.doesNotContain(key)) {
                 validEvents.add(event)
@@ -50,11 +50,12 @@ class HandleDuplicateEvents(private val eventtype: Eventtype, private val bruker
         return DuplicateCheckResult(validEvents, duplicateEvents)
     }
 
-    private fun <T> Pair<NokkelIntern, T>.toBrukernotifikasjonKey(eventtype: Eventtype): BrukernotifikasjonKey {
-        return BrukernotifikasjonKey(
+    private fun <T> Pair<NokkelIntern, T>.toDoneKey(eventtype: Eventtype): DoneKey {
+        return DoneKey(
                 first.getEventId(),
                 first.getSystembruker(),
-                eventtype
+                eventtype,
+                first.getFodselsnummer()
         )
     }
 

@@ -14,9 +14,9 @@ class BrukernotifikasjonbestillingTeardownQueriesTest {
 
     private val database = H2Database()
 
-    private val event1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-001", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED)
-    private val event2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-002", systembruker = "systembruker-2", eventtype = Eventtype.BESKJED)
-    private val event3 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-003", systembruker = "systembruker-3", eventtype = Eventtype.BESKJED)
+    private val event1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-001", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val event2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-002", systembruker = "systembruker-2", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val event3 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-003", systembruker = "systembruker-3", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
 
     @Test
     fun `Skal slette alle rader i event-tabellen`() {

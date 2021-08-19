@@ -2,9 +2,9 @@ apiVersion: "nais.io/v1alpha1"
 kind: "Application"
 metadata:
   name: dittnav-brukernotifikasjonbestiller
-  namespace: personbruker
+  namespace: min-side
   labels:
-    team: personbruker
+    team: min-side
 spec:
   envFrom:
     - secret: dittnav-brukernotifikasjonbestiller-secrets
@@ -39,8 +39,9 @@ spec:
         type: POSTGRES_11
         tier: db-f1-micro
         diskType: SSD
-        diskSize: 10
-        diskAutoresize: false
+        highAvailability: true
+        diskSize: 100
+        diskAutoresize: true
         autoBackupTime: "03:00"
         databases:
           - name: brukernotifikasjonbestiller
@@ -50,11 +51,10 @@ spec:
           hour: 4
         cascadingDelete: false
   kafka:
-    pool: nav-dev
+    pool: nav-prod
   accessPolicy:
     outbound:
       external:
-        - host: kafka-schema-registry.nais-q.adeo.no
-        - host: dittnav-event-handler.dev.nav.no
-        - host: sensu.nais
+        - host: kafka-schema-registry.nais.adeo.no
+        - host: dittnav-event-handler.nais.oera.no
 
