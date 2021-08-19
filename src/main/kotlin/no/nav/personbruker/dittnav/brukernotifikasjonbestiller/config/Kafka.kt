@@ -54,7 +54,7 @@ object Kafka {
         }
     }
 
-    fun producerProps(env: Environment, type: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
+    fun producerProps(env: Environment, type: Eventtype): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
@@ -65,13 +65,13 @@ object Kafka {
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-            if (enableSecurity) {
-                putAll(credentialPropsAiven(env))
+            if (env.securityConfig.enabled) {
+                putAll(credentialPropsAiven(env.securityConfig.variables!!))
             }
         }
     }
 
-    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
+    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
@@ -82,8 +82,8 @@ object Kafka {
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-            if (enableSecurity) {
-                putAll(credentialPropsAiven(env))
+            if (env.securityConfig.enabled) {
+                putAll(credentialPropsAiven(env.securityConfig.variables!!))
             }
         }
     }
@@ -102,19 +102,19 @@ object Kafka {
             }
         }
     }
-    private fun credentialPropsAiven(env: Environment): Properties {
+    private fun credentialPropsAiven(securityVars: SecurityVars): Properties {
         return Properties().apply {
-            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${env.aivenSchemaRegistryUser}:${env.aivenSchemaRegistryPassword}")
+            put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${securityVars.aivenSchemaRegistryUser}:${securityVars.aivenSchemaRegistryPassword}")
             put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
             put(SaslConfigs.SASL_MECHANISM, "PLAIN")
             put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL")
             put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, "jks")
             put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12")
-            put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, env.aivenTruststorePath)
-            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
-            put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, env.aivenKeystorePath)
-            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, env.aivenCredstorePassword)
-            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, env.aivenCredstorePassword)
+            put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, securityVars.aivenTruststorePath)
+            put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, securityVars.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, securityVars.aivenKeystorePath)
+            put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, securityVars.aivenCredstorePassword)
+            put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, securityVars.aivenCredstorePassword)
             put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "")
         }
     }

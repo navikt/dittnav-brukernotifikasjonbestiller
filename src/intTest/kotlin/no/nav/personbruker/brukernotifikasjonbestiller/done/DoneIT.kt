@@ -94,11 +94,11 @@ class DoneIT {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE, enableSecurity = false)
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
 
-        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = false)
+        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
         val internalEventProducer = Producer(Kafka.doneHovedTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
 
