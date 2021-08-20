@@ -25,6 +25,12 @@ object KafkaConsumerSetup {
             log.info("Unnlater å starte polling av oppgave")
         }
 
+        if(shouldPollInnboks()) {
+            appContext.innboksConsumer.startPolling()
+        } else {
+            log.info("Unnlater å starte polling av innboks")
+        }
+
         if(shouldPollStatusoppdatering()) {
             appContext.statusoppdateringConsumer.startPolling()
         } else {
@@ -36,7 +42,6 @@ object KafkaConsumerSetup {
         } else {
             log.info("Unnlater å starte polling av done")
         }
-
     }
 
     suspend fun stopAllKafkaConsumers(appContext: ApplicationContext) {
@@ -49,8 +54,8 @@ object KafkaConsumerSetup {
             appContext.oppgaveConsumer.stopPolling()
         }
 
-        if(!appContext.oppgaveConsumer.isCompleted()) {
-            appContext.oppgaveConsumer.stopPolling()
+        if(!appContext.innboksConsumer.isCompleted()) {
+            appContext.innboksConsumer.stopPolling()
         }
 
         if(!appContext.statusoppdateringConsumer.isCompleted()) {
@@ -71,6 +76,11 @@ object KafkaConsumerSetup {
     fun setupConsumerForTheOppgaveInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Oppgave>): Consumer<Nokkel, Oppgave> {
         val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(kafkaProps)
         return Consumer(Kafka.oppgaveInputTopicName, kafkaConsumer, eventProcessor)
+    }
+
+    fun setupConsumerForTheInnboksInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Innboks>): Consumer<Nokkel, Innboks> {
+        val kafkaConsumer = KafkaConsumer<Nokkel, Innboks>(kafkaProps)
+        return Consumer(Kafka.innboksInputTopicName, kafkaConsumer, eventProcessor)
     }
 
     fun setupConsumerForTheStatusoppdateringInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Statusoppdatering>): Consumer<Nokkel, Statusoppdatering> {

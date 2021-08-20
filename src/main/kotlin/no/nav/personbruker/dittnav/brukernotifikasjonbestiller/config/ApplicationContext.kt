@@ -13,6 +13,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Prod
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
@@ -42,11 +43,13 @@ class ApplicationContext {
 
     var internBeskjedKafkaProducer = initializeInternBeskjedProducer()
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
+    var internInnboksKafkaProducer = initializeInternInnboksProducer()
     var internDoneKafkaProducer = initializeInternDoneProducer()
     var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer()
 
     var beskjedConsumer = initializeBeskjedProcessor()
     var oppgaveConsumer = initializeOppgaveProcessor()
+    var innboksConsumer = initializeInnboksProcessor()
     var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
     var doneConsumer = initializeDoneProcessor()
 
@@ -68,6 +71,15 @@ class ApplicationContext {
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
         val oppgaveEventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
         return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventService)
+    }
+
+    private fun initializeInnboksProcessor(): Consumer<Nokkel, Innboks> {
+        val consumerProps = Kafka.consumerProps(environment, Eventtype.INNBOKS)
+        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
+        val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
+        val innboksEventService = InnboksEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
+        return KafkaConsumerSetup.setupConsumerForTheInnboksInputTopic(consumerProps, innboksEventService)
     }
 
     private fun initializeStatusoppdateringProcessor(): Consumer<Nokkel, Statusoppdatering> {
@@ -101,6 +113,14 @@ class ApplicationContext {
         val kafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps)
         kafkaProducer.initTransactions()
         val producer = Producer(Kafka.oppgaveHovedTopicName, kafkaProducer)
+        return producer
+    }
+
+    private fun initializeInternInnboksProducer(): Producer<NokkelIntern, InnboksIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.INNBOKSINTERN)
+        val kafkaProducer = KafkaProducer<NokkelIntern, InnboksIntern>(producerProps)
+        kafkaProducer.initTransactions()
+        val producer = Producer(Kafka.innboksHovedTopicName, kafkaProducer)
         return producer
     }
 
@@ -145,6 +165,13 @@ class ApplicationContext {
             log.info("oppgaveConsumer har blitt reinstansiert.")
         } else {
             log.warn("oppgaveConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (innboksConsumer.isCompleted()) {
+            innboksConsumer = initializeInnboksProcessor()
+            log.info("innboksConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("innboksConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
         if (statusoppdateringConsumer.isCompleted()) {

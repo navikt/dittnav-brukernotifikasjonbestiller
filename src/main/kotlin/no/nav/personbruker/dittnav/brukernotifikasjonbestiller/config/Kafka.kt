@@ -28,6 +28,9 @@ object Kafka {
     const val oppgaveInputTopicName = "aapen-brukernotifikasjon-nyOppgave-v1"
     const val oppgaveHovedTopicName = "min-side.privat-brukernotifikasjon-oppgave-v1"
 
+    const val innboksInputTopicName = "aapen-brukernotifikasjon-nyInnboks-v1"
+    const val innboksHovedTopicName = "min-side.privat-brukernotifikasjon-innboks-v1"
+
     const val statusoppdateringInputTopicName = "aapen-brukernotifikasjon-nyStatusoppdatering-v1"
     const val statusoppdateringHovedTopicName = "min-side.privat-brukernotifikasjon-statusoppdatering-v1"
 
