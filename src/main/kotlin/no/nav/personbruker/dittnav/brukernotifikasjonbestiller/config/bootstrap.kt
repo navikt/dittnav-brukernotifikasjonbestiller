@@ -33,6 +33,7 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
             KafkaConsumerSetup.stopAllKafkaConsumers(appContext)
             appContext.internBeskjedKafkaProducer.flushAndClose()
             appContext.internOppgaveKafkaProducer.flushAndClose()
+            appContext.internInnboksKafkaProducer.flushAndClose()
             appContext.internDoneKafkaProducer.flushAndClose()
             appContext.internStatusoppdateringKafkaProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()
