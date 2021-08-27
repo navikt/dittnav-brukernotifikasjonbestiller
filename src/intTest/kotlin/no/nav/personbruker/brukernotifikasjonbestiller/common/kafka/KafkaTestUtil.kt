@@ -52,7 +52,18 @@ object KafkaTestUtil {
                 influxdbRetentionPolicy = "influxdbRetentionPolicyIkkeIBrukHer",
                 aivenBrokers = embeddedEnv.brokersURL.substringAfterLast("/"),
                 aivenSchemaRegistry = embeddedEnv.schemaRegistry!!.url,
-                securityConfig = SecurityConfig(enabled = false)
+                securityConfig = SecurityConfig(enabled = false),
+                beskjedInternTopicName = KafkaTestTopics.beskjedInternTopicName,
+                oppgaveInternTopicName = KafkaTestTopics.oppgaveInternTopicName,
+                innboksInternTopicName = KafkaTestTopics.innboksInternTopicName,
+                statusoppdateringInternTopicName = KafkaTestTopics.statusoppdateringInternTopicName,
+                doneInternTopicName = KafkaTestTopics.doneInternTopicName,
+                beskjedInputTopicName = KafkaTestTopics.beskjedInputTopicName,
+                oppgaveInputTopicName = KafkaTestTopics.oppgaveInputTopicName,
+                innboksInputTopicName = KafkaTestTopics.innboksInputTopicName,
+                statusoppdateringInputTopicName = KafkaTestTopics.statusoppdateringInputTopicName,
+                doneInputTopicName = KafkaTestTopics.doneInputTopicName,
+                feilresponsTopicName = KafkaTestTopics.feilresponsTopicName
         )
     }
 
