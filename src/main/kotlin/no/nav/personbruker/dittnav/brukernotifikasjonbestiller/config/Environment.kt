@@ -29,7 +29,18 @@ data class Environment(
         val dbHost: String = getEnvVar("DB_HOST"),
         val dbPort: String = getEnvVar("DB_PORT"),
         val dbName: String = getEnvVar("DB_DATABASE"),
-        val dbUrl: String = getDbUrl(dbHost, dbPort, dbName)
+        val dbUrl: String = getDbUrl(dbHost, dbPort, dbName),
+        val beskjedInternTopicName: String = getEnvVar("INTERN_BESKJED_TOPIC"),
+        val oppgaveInternTopicName: String = getEnvVar("INTERN_OPPGAVE_TOPIC"),
+        val innboksInternTopicName: String = getEnvVar("INTERN_INNBOKS_TOPIC"),
+        val statusoppdateringInternTopicName: String = getEnvVar("INTERN_STATUSOPPDATERING_TOPIC"),
+        val doneInternTopicName: String = getEnvVar("INTERN_DONE_TOPIC"),
+        val beskjedInputTopicName: String = getEnvVar("OPEN_INPUT_BESKJED_TOPIC"),
+        val oppgaveInputTopicName: String = getEnvVar("OPEN_INPUT_OPPGAVE_TOPIC"),
+        val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
+        val statusoppdateringInputTopicName: String = getEnvVar("OPEN_INPUT_STATUSOPPDATERING_TOPIC"),
+        val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
+        val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC")
 )
 
 data class SecurityConfig(

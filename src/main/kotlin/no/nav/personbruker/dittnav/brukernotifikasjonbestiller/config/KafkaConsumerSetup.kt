@@ -68,29 +68,9 @@ object KafkaConsumerSetup {
         log.info("...ferdig med å stoppe kafka-pollerne.")
     }
 
-    fun setupConsumerForTheBeskjedInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Beskjed>): Consumer<Nokkel, Beskjed> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(kafkaProps)
-        return Consumer(Kafka.beskjedInputTopicName, kafkaConsumer, eventProcessor)
-    }
-
-    fun setupConsumerForTheOppgaveInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Oppgave>): Consumer<Nokkel, Oppgave> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(kafkaProps)
-        return Consumer(Kafka.oppgaveInputTopicName, kafkaConsumer, eventProcessor)
-    }
-
-    fun setupConsumerForTheInnboksInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Innboks>): Consumer<Nokkel, Innboks> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, Innboks>(kafkaProps)
-        return Consumer(Kafka.innboksInputTopicName, kafkaConsumer, eventProcessor)
-    }
-
-    fun setupConsumerForTheStatusoppdateringInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Statusoppdatering>): Consumer<Nokkel, Statusoppdatering> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(kafkaProps)
-        return Consumer(Kafka.statusoppdateringInputTopicName, kafkaConsumer, eventProcessor)
-    }
-
-    fun setupConsumerForTheDoneInputTopic(kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, Done>): Consumer<Nokkel, Done> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, Done>(kafkaProps)
-        return Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventProcessor)
+    fun <T> setUpConsumerForInputTopic(topicName: String, kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, T>): Consumer<Nokkel, T> {
+        val kafkaConsumer = KafkaConsumer<Nokkel, T>(kafkaProps)
+        return Consumer(topicName, kafkaConsumer, eventProcessor)
     }
 
     suspend fun restartPolling(appContext: ApplicationContext) {

@@ -13,11 +13,11 @@ import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
+import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
@@ -41,7 +41,11 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DoneIT {
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.doneInputTopicName, Kafka.doneHovedTopicName, Kafka.feilresponsTopicName))
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
+            KafkaTestTopics.doneInputTopicName,
+            KafkaTestTopics.doneInternTopicName,
+            KafkaTestTopics.feilresponsTopicName
+    ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
@@ -80,7 +84,7 @@ class DoneIT {
     @Test
     fun `Should read Done-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.doneInputTopicName, doneEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.doneInputTopicName, doneEvents)
         } shouldBeEqualTo true
 
         `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -96,18 +100,18 @@ class DoneIT {
 
         val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
-        val internalEventProducer = Producer(Kafka.doneHovedTopicName, internalKafkaProducer)
+        val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
 
         val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
-        val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
+        val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
         val eventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.doneInputTopicName, kafkaConsumer, eventService)
+        val consumer = Consumer(KafkaTestTopics.doneInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -126,7 +130,7 @@ class DoneIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, DoneIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
 
-        val targetConsumer = Consumer(Kafka.doneHovedTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.doneInternTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
@@ -152,7 +156,7 @@ class DoneIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
-        val targetConsumer = Consumer(Kafka.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
 
         var receivedEvent = false
 

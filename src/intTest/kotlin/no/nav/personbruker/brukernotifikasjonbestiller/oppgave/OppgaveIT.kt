@@ -13,6 +13,7 @@ import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
+import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
@@ -40,7 +41,11 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OppgaveIT {
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.oppgaveInputTopicName, Kafka.oppgaveHovedTopicName, Kafka.feilresponsTopicName))
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
+            KafkaTestTopics.oppgaveInputTopicName,
+            KafkaTestTopics.oppgaveInternTopicName,
+            KafkaTestTopics.feilresponsTopicName
+    ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
@@ -79,7 +84,7 @@ class OppgaveIT {
     @Test
     fun `Should read Oppgave-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.oppgaveInputTopicName, oppgaveEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.oppgaveInputTopicName, oppgaveEvents)
         } shouldBeEqualTo true
 
         `Read all Oppgave-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -95,18 +100,18 @@ class OppgaveIT {
 
         val oppgaveInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.OPPGAVEINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(oppgaveInternProducerProps)
-        val internalEventProducer = Producer(Kafka.oppgaveHovedTopicName, internalKafkaProducer)
+        val internalEventProducer = Producer(KafkaTestTopics.oppgaveInternTopicName, internalKafkaProducer)
 
         val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
-        val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
+        val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
         val eventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.oppgaveInputTopicName, kafkaConsumer, eventService)
+        val consumer = Consumer(KafkaTestTopics.oppgaveInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -125,7 +130,7 @@ class OppgaveIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, OppgaveIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, OppgaveIntern>()
 
-        val targetConsumer = Consumer(Kafka.oppgaveHovedTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.oppgaveInternTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
@@ -151,7 +156,7 @@ class OppgaveIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
-        val targetConsumer = Consumer(Kafka.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
 
         var receivedEvent = false
 

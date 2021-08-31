@@ -61,7 +61,7 @@ class ApplicationContext {
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
         val beskjedEventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
-        return KafkaConsumerSetup.setupConsumerForTheBeskjedInputTopic(consumerProps, beskjedEventService)
+        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }
 
     private fun initializeOppgaveProcessor(): Consumer<Nokkel, Oppgave> {
@@ -70,7 +70,7 @@ class ApplicationContext {
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
         val oppgaveEventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
-        return KafkaConsumerSetup.setupConsumerForTheOppgaveInputTopic(consumerProps, oppgaveEventService)
+        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
     }
 
     private fun initializeInnboksProcessor(): Consumer<Nokkel, Innboks> {
@@ -79,7 +79,7 @@ class ApplicationContext {
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
         val innboksEventService = InnboksEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
-        return KafkaConsumerSetup.setupConsumerForTheInnboksInputTopic(consumerProps, innboksEventService)
+        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
     }
 
     private fun initializeStatusoppdateringProcessor(): Consumer<Nokkel, Statusoppdatering> {
@@ -88,7 +88,7 @@ class ApplicationContext {
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING)
         val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
         val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
-        return KafkaConsumerSetup.setupConsumerForTheStatusoppdateringInputTopic(consumerProps, statusoppdateringEventService)
+        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.statusoppdateringInputTopicName, consumerProps, statusoppdateringEventService)
     }
 
     private fun initializeDoneProcessor(): Consumer<Nokkel, Done> {
@@ -97,14 +97,14 @@ class ApplicationContext {
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
         val doneEventService = DoneEventService(metricsCollector, handleDuplicateDoneEvents, doneEventDispatcher)
-        return KafkaConsumerSetup.setupConsumerForTheDoneInputTopic(consumerProps, doneEventService)
+        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
     }
 
     private fun initializeInternBeskjedProducer(): Producer<NokkelIntern, BeskjedIntern> {
         val producerProps = Kafka.producerProps(environment, Eventtype.BESKJEDINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.beskjedHovedTopicName, kafkaProducer)
+        val producer = Producer(environment.beskjedInternTopicName, kafkaProducer)
         return producer
     }
 
@@ -112,7 +112,7 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment, Eventtype.OPPGAVEINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.oppgaveHovedTopicName, kafkaProducer)
+        val producer = Producer(environment.oppgaveInternTopicName, kafkaProducer)
         return producer
     }
 
@@ -120,7 +120,7 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment, Eventtype.INNBOKSINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, InnboksIntern>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.innboksHovedTopicName, kafkaProducer)
+        val producer = Producer(environment.innboksInternTopicName, kafkaProducer)
         return producer
     }
 
@@ -128,7 +128,7 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment, Eventtype.DONEINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.doneHovedTopicName, kafkaProducer)
+        val producer = Producer(environment.doneInternTopicName, kafkaProducer)
         return producer
     }
 
@@ -136,7 +136,7 @@ class ApplicationContext {
         val producerProps = Kafka.producerProps(environment, Eventtype.STATUSOPPDATERINGINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.statusoppdateringHovedTopicName, kafkaProducer)
+        val producer = Producer(environment.statusoppdateringInternTopicName, kafkaProducer)
         return producer
     }
 
@@ -144,7 +144,7 @@ class ApplicationContext {
         val producerProps = Kafka.producerFeilresponsProps(environment, eventtype)
         val kafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
         kafkaProducer.initTransactions()
-        val producer = Producer(Kafka.feilresponsTopicName, kafkaProducer)
+        val producer = Producer(environment.feilresponsTopicName, kafkaProducer)
         return producer
     }
 

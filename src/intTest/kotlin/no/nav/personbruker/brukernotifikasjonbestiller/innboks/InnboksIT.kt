@@ -13,6 +13,7 @@ import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
+import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
@@ -41,7 +42,11 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InnboksIT {
 
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.innboksInputTopicName, Kafka.innboksHovedTopicName, Kafka.feilresponsTopicName))
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
+            KafkaTestTopics.innboksInputTopicName,
+            KafkaTestTopics.innboksInternTopicName,
+            KafkaTestTopics.feilresponsTopicName
+    ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
@@ -80,7 +85,7 @@ class InnboksIT {
     @Test
     fun `Should read Innboks-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.innboksInputTopicName, innboksEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.innboksInputTopicName, innboksEvents)
         } shouldBeEqualTo true
 
         `Read all Innboks-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -96,18 +101,18 @@ class InnboksIT {
 
         val innboksInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.INNBOKSINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, InnboksIntern>(innboksInternProducerProps)
-        val internalEventProducer = Producer(Kafka.innboksHovedTopicName, internalKafkaProducer)
+        val internalEventProducer = Producer(KafkaTestTopics.innboksInternTopicName, internalKafkaProducer)
 
         val feilresponsProducerProps = Kafka.producerFeilresponsProps(testEnvironment, Eventtype.INNBOKS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
-        val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
+        val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
         val eventService = InnboksEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.innboksInputTopicName, kafkaConsumer, eventService)
+        val consumer = Consumer(KafkaTestTopics.innboksInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -126,7 +131,7 @@ class InnboksIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, InnboksIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, InnboksIntern>()
 
-        val targetConsumer = Consumer(Kafka.innboksHovedTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.innboksInternTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
@@ -152,7 +157,7 @@ class InnboksIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
-        val targetConsumer = Consumer(Kafka.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
 
         var receivedEvent = false
 

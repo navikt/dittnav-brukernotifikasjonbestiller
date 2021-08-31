@@ -13,6 +13,7 @@ import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
+import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
@@ -40,7 +41,11 @@ import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StatusoppdateringIT {
-    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(Kafka.statusoppdateringInputTopicName, Kafka.statusoppdateringHovedTopicName, Kafka.feilresponsTopicName))
+    private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
+            KafkaTestTopics.statusoppdateringInputTopicName,
+            KafkaTestTopics.statusoppdateringInternTopicName,
+            KafkaTestTopics.feilresponsTopicName
+    ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = H2Database()
@@ -79,7 +84,7 @@ class StatusoppdateringIT {
     @Test
     fun `Should read Statusoppdatering-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, Kafka.statusoppdateringInputTopicName, statusoppdateringEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.statusoppdateringInputTopicName, statusoppdateringEvents)
         } shouldBeEqualTo true
 
         `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -95,18 +100,18 @@ class StatusoppdateringIT {
 
         val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(statusoppdateringInternProducerProps)
-        val internalEventProducer = Producer(Kafka.statusoppdateringHovedTopicName, internalKafkaProducer)
+        val internalEventProducer = Producer(KafkaTestTopics.statusoppdateringInternTopicName, internalKafkaProducer)
 
         val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
-        val feilresponsEventProducer = Producer(Kafka.feilresponsTopicName, feilresponsKafkaProducer)
+        val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
         val eventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(Kafka.statusoppdateringInputTopicName, kafkaConsumer, eventService)
+        val consumer = Consumer(KafkaTestTopics.statusoppdateringInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -125,7 +130,7 @@ class StatusoppdateringIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, StatusoppdateringIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, StatusoppdateringIntern>()
 
-        val targetConsumer = Consumer(Kafka.statusoppdateringHovedTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.statusoppdateringInternTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
@@ -151,7 +156,7 @@ class StatusoppdateringIT {
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 
-        val targetConsumer = Consumer(Kafka.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.feilresponsTopicName, targetKafkaConsumer, capturingProcessor)
 
         var receivedEvent = false
 
