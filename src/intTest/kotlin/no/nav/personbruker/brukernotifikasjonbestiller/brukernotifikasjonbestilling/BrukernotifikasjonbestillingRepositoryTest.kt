@@ -2,7 +2,7 @@ package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestil
 
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling.objectMother.giveMeANumberOfInternalEvents
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
@@ -13,13 +13,12 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDupl
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should contain all`
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 class BrukernotifikasjonbestillingRepositoryTest {
 
-    private val database = H2Database()
+    private val database = LocalPostgresDatabase()
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
 
