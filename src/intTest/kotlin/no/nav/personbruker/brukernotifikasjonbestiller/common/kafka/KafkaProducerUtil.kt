@@ -1,7 +1,7 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
 
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import kotlinx.coroutines.withTimeoutOrNull
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import org.apache.avro.generic.GenericRecord
@@ -16,8 +16,6 @@ object KafkaProducerUtil {
             brokersURL: String,
             schemaRegistryUrl: String,
             topic: String,
-            user: String,
-            pwd: String,
             data: Map<Nokkel, GenericRecord>
     ): Boolean =
             try {
@@ -27,7 +25,7 @@ object KafkaProducerUtil {
                             set(ProducerConfig.CLIENT_ID_CONFIG, "funKafkaAvroProduce")
                             set(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
                             set(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer")
-                            set(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
+                            set(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl)
                             set(ProducerConfig.ACKS_CONFIG, "all")
                             set(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 1)
                             set(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 500)

@@ -72,9 +72,6 @@ object KafkaTestUtil {
                 env.bootstrapServers,
                 env.schemaRegistryUrl,
                 topicName,
-                env.username,
-                env.password,
                 events)
     }
-
 }
