@@ -2,7 +2,7 @@ package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestil
 
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling.objectMother.giveMeANumberOfInternalEvents
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class brukernotifikasjonbestillingQueriesTest {
 
-    private val database = H2Database()
+    private val database = LocalPostgresDatabase()
 
     private val brukernotifikasjonbestilling_1: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
     private val brukernotifikasjonbestilling_2: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")

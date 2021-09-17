@@ -4,13 +4,13 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.createBrukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.deleteAllBrukernotifikasjonbestilling
 
-suspend fun H2Database.createBrukernotifikasjonbestillinger(eventer: List<Brukernotifikasjonbestilling>) {
+suspend fun LocalPostgresDatabase.createBrukernotifikasjonbestillinger(eventer: List<Brukernotifikasjonbestilling>) {
     dbQuery {
         createBrukernotifikasjonbestilling(eventer)
     }
 }
 
-suspend fun H2Database.deleteAllBrukernotifikasjonbestillinger() {
+suspend fun LocalPostgresDatabase.deleteAllBrukernotifikasjonbestillinger() {
     dbQuery {
         deleteAllBrukernotifikasjonbestilling()
     }

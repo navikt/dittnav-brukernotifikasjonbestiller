@@ -60,7 +60,6 @@ dependencies {
     implementation(Ktor.clientJackson)
     implementation(Jackson.dataTypeJsr310)
 
-    testImplementation(H2Database.h2)
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)

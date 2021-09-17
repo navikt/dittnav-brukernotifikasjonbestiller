@@ -10,7 +10,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
@@ -49,7 +49,7 @@ class InnboksIT {
     ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
-    private val database = H2Database()
+    private val database = LocalPostgresDatabase()
 
     private val goodEvents = createEvents(10)
     private val badEvents = listOf(createEventWithTooLongGrupperingsid("bad"))

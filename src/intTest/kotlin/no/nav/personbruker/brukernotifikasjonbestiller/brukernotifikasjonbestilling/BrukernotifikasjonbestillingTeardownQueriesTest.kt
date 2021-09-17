@@ -1,7 +1,7 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import kotlinx.coroutines.runBlocking
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.H2Database
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.deleteAllBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class BrukernotifikasjonbestillingTeardownQueriesTest {
 
-    private val database = H2Database()
+    private val database = LocalPostgresDatabase()
 
     private val event1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-001", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
     private val event2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-002", systembruker = "systembruker-2", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
