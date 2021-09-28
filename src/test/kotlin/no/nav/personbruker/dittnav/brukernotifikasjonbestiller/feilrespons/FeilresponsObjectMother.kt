@@ -14,7 +14,7 @@ object FeilresponsObjectMother {
 
         for (i in 0 until numberOfEvents) {
             val tidspunkt = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-            val nokkelFeilrespons = NokkelFeilrespons("$systembruker-$i", "$eventId-$i", eventtype.toString())
+            val nokkelFeilrespons = createNokkelFeilrespons("$eventId-$i", eventtype, "$systembruker-$i")
             val feilrespons = Feilrespons(tidspunkt, FeilresponsBegrunnelse.VALIDERINGSFEIL.toString(), "Simulert feil i test - $i.")
             problematicEvents.add(Pair(nokkelFeilrespons, feilrespons))
         }
@@ -22,9 +22,18 @@ object FeilresponsObjectMother {
         return problematicEvents
     }
 
+    private fun createNokkelFeilrespons(eventId: String, eventtype: Eventtype, systembruker: String) =
+            NokkelFeilrespons(
+                    eventId,
+                    eventtype.name,
+                    "namespace",
+                    "$systembruker-app",
+                    systembruker
+            )
+
     fun createANumberOfProblematicEvents(numberOfEvents: Int): List<Pair<NokkelFeilrespons, Feilrespons>> {
         return (1..numberOfEvents).map {
-            NokkelFeilrespons("systembruker", it.toString(),"type") to Feilrespons()
+            NokkelFeilrespons(it.toString(), "type", "namespace", "app", "systembruker") to Feilrespons()
         }
     }
 }

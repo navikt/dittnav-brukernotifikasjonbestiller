@@ -1,33 +1,37 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
-import no.nav.brukernotifikasjon.schemas.Beskjed
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
+import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class BeskjedEventService(
+class BeskjedLegacyEventService(
+        private val beskjedTransformer: BeskjedLegacyTransformer,
+        private val feilresponsTransformer: FeilresponsLegacyTransformer,
         private val metricsCollector: MetricsCollector,
         private val handleDuplicateEvents: HandleDuplicateEvents,
         private val eventDispatcher: EventDispatcher<BeskjedIntern>
-) : EventBatchProcessorService<Nokkel, Beskjed> {
+) : EventBatchProcessorService<NokkelLegacy, BeskjedLegacy> {
 
-    private val log: Logger = LoggerFactory.getLogger(BeskjedEventService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(BeskjedLegacyEventService::class.java)
 
-    override suspend fun processEvents(events: ConsumerRecords<Nokkel, Beskjed>) {
+    override suspend fun processEvents(events: ConsumerRecords<NokkelLegacy, BeskjedLegacy>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
@@ -36,8 +40,8 @@ class BeskjedEventService(
                 try {
                     val externalNokkel = event.getNonNullKey()
                     val externalBeskjed = event.value()
-                    val internalNokkel = BeskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
-                    val internalBeskjed = BeskjedTransformer.toBeskjedInternal(externalBeskjed)
+                    val internalNokkel = beskjedTransformer.toNokkelInternal(externalNokkel, externalBeskjed)
+                    val internalBeskjed = beskjedTransformer.toBeskjedInternal(externalBeskjed)
                     successfullyValidatedEvents.add(Pair(internalNokkel, internalBeskjed))
                     countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
@@ -46,7 +50,7 @@ class BeskjedEventService(
                 } catch (fve: FieldValidationException) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
                     countFailedEventForSystemUser(systembruker)
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.BESKJED)
+                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.BESKJED)
                     problematicEvents.add(feilrespons)
                     log.warn("Validering av beskjed-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (cce: ClassCastException) {
@@ -54,13 +58,13 @@ class BeskjedEventService(
                     countFailedEventForSystemUser(systembruker)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.BESKJED)
+                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.BESKJED)
                     problematicEvents.add(feilrespons)
                     log.warn("Feil eventtype funnet på beskjed-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
                 } catch (e: Exception) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
                     countFailedEventForSystemUser(systembruker)
-                    val feilrespons = FeilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.BESKJED)
+                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.BESKJED)
                     problematicEvents.add(feilrespons)
                     log.warn("Transformasjon av beskjed-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
                 }

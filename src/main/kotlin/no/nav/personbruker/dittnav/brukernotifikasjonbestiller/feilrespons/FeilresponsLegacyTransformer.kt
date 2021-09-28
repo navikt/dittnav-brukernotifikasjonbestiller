@@ -7,35 +7,21 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
-object FeilresponsTransformer {
+class FeilresponsLegacyTransformer(private val mapper: ServiceUserMapper) {
 
-    private val log: Logger = LoggerFactory.getLogger(FeilresponsTransformer::class.java)
+    private val log: Logger = LoggerFactory.getLogger(FeilresponsLegacyTransformer::class.java)
 
-    fun <T> createFeilresponsFromDuplicateEvents(eventtype: Eventtype, duplicateEvents: List<Pair<NokkelIntern, T>>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
-        val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
-
-        duplicateEvents.forEach { (duplicateEventKey, _) ->
-            val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
-            val feilrespons = createFeilrespons(duplicateEventKey, duplicateEventException, eventtype)
-            problematicEvents.add(feilrespons)
-        }
-        return problematicEvents
-    }
-
-    private fun createFeilrespons(eventKey: NokkelIntern, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
-        val nokkelFeilrespons = toNokkelFeilrespons(
-                eventKey.getEventId(),
-                eventKey.getNamespace(),
-                eventKey.getAppnavn(),
-                eventKey.getSystembruker(),
-                eventtype
-        )
+    fun createFeilrespons(eventId: String, systembruker: String, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
+        val nokkelFeilrespons = toNokkelFeilrespons(eventId, systembruker, eventtype)
         val feilrespons = toFeilrespons(exception)
 
         //TODO FJERN DENNE
@@ -48,17 +34,19 @@ object FeilresponsTransformer {
         return Pair(nokkelFeilrespons, feilrespons)
     }
 
-    fun toNokkelFeilrespons(eventId: String, namespace: String, appName: String, systembruker: String, eventtype: Eventtype): NokkelFeilrespons {
+    private fun toNokkelFeilrespons(eventId: String, systembruker: String, eventtype: Eventtype): NokkelFeilrespons {
+        val origin = getNamespaceAppnameOrUnknown(systembruker)
+
         return NokkelFeilrespons.newBuilder()
-                .setNamespace(namespace)
-                .setAppnavn(appName)
+                .setNamespace(origin.namespace)
+                .setAppnavn(origin.appName)
                 .setSystembruker(systembruker)
                 .setEventId(eventId)
                 .setBrukernotifikasjonstype(eventtype.toString())
                 .build()
     }
 
-    fun toFeilrespons(exception: Exception): Feilrespons {
+    private fun toFeilrespons(exception: Exception): Feilrespons {
         return Feilrespons.newBuilder()
                 .setTidspunkt(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))
                 .setBegrunnelse(getFeilresponsBegrunnelse(exception).toString())
@@ -71,6 +59,14 @@ object FeilresponsTransformer {
             is FieldValidationException -> FeilresponsBegrunnelse.VALIDERINGSFEIL
             is DuplicateEventException -> FeilresponsBegrunnelse.DUPLIKAT
             else -> FeilresponsBegrunnelse.UKJENT
+        }
+    }
+
+    private fun getNamespaceAppnameOrUnknown(systembruker: String): NamespaceAppName {
+        return try {
+            mapper.getNamespaceAppName(systembruker)
+        } catch (e: ServiceUserMappingException) {
+            NamespaceAppName("ukjent", "ukjent")
         }
     }
 }

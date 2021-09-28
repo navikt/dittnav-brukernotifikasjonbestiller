@@ -2,32 +2,14 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.NokkelEventPairObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 
 internal class FeilresponsTransformerTest {
-
-    @Test
-    fun `should transform from external to feilrespons`() {
-        val eventtype = Eventtype.BESKJED
-
-        val nokkelExternal = AvroNokkelObjectMother.createNokkelWithEventId("eventId")
-        val exception = FieldValidationException("Simulert feil i test.")
-
-        val nokkelFeilrespons = FeilresponsTransformer.toNokkelFeilrespons(nokkelExternal.getEventId(), nokkelExternal.getSystembruker(), eventtype)
-        val feilrespons = FeilresponsTransformer.toFeilrespons(exception)
-
-        nokkelFeilrespons.getSystembruker() `should be equal to` nokkelExternal.getSystembruker()
-        nokkelFeilrespons.getEventId() `should be equal to` nokkelExternal.getEventId()
-        nokkelFeilrespons.getBrukernotifikasjonstype() `should be equal to` eventtype.toString()
-        feilrespons.getFeilmelding() `should be equal to` exception.toString()
-        feilrespons.getBegrunnelse() `should be equal to` FeilresponsBegrunnelse.VALIDERINGSFEIL.toString()
-    }
 
     @Test
     fun `Skal transformere alle duplikat til feilrespons`() {

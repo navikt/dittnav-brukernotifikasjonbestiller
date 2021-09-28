@@ -8,33 +8,42 @@ import java.time.Instant
 object AvroInnboksInternObjectMother {
 
     private val defaultUlid = "54321"
-    private val defaultTekst = "Dette er et innboks-event"
+    private val defaultTekst = "Dette er en innboks til bruker."
     private val defaultSikkerhetsnivaa = 4
     private val defaultLink = "http://gyldig.url"
+    private val defaultGrupperingsid = "123"
+    private val defaultNamespace = "namespace"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultEksternVarsling = false
+    private val defaultPrefererteKanaler = emptyList<String>()
 
     fun giveMeANumberOfInternalInnboksEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, InnboksIntern>> {
         val events = mutableListOf<Pair<NokkelIntern, InnboksIntern>>()
+
         for (i in 0 until numberOfEvents) {
-            val nokkelIntern = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-$i", "$eventId-$i", fodselsnummer)
-            val innboksIntern = createInnboksInternWithGrupperingsId("$i")
+            val nokkelIntern = createNokkelIntern("$eventId-$i", fodselsnummer, "$systembruker-$i")
+            val innboksIntern = createInnboksIntern()
             events.add(Pair(nokkelIntern, innboksIntern))
         }
         return events
     }
 
-    fun createInnboksInternWithGrupperingsId(grupperingsid: String): InnboksIntern {
-        return createInnboksIntern(defaultUlid, defaultTidspunkt, grupperingsid, defaultTekst, defaultLink, defaultSikkerhetsnivaa)
+    fun createNokkelIntern(eventId: String, fnr: String, systembruker: String): NokkelIntern {
+        return AvroNokkelInternObjectMother.createNokkelIntern(defaultUlid, eventId, defaultGrupperingsid, fnr, defaultNamespace, "$systembruker-app", systembruker)
     }
 
-    fun createInnboksIntern(ulid: String, tidspunkt: Long, grupperingsid: String, tekst: String, link: String, sikkerhetsnivaa: Int): InnboksIntern {
+    fun createInnboksIntern(): InnboksIntern {
+        return createInnboksIntern(defaultTidspunkt, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+    }
+
+    fun createInnboksIntern(tidspunkt: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, prefererteKanaler: List<String>): InnboksIntern {
         return InnboksIntern(
-            ulid,
-            tidspunkt,
-            grupperingsid,
-            tekst,
-            link,
-            sikkerhetsnivaa
+                tidspunkt,
+                tekst,
+                link,
+                sikkerhetsnivaa,
+                eksternVarsling,
+                prefererteKanaler
         )
     }
 }

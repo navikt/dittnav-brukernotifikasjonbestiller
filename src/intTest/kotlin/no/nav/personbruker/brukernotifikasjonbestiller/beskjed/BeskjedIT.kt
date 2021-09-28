@@ -2,12 +2,12 @@ package no.nav.personbruker.brukernotifikasjonbestiller.beskjed
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
+import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
+import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -15,20 +15,24 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedLegacyObjectMother.createBeskjedLegacyWithGrupperingsId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother.createNokkelWithEventId
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeEqualTo
@@ -42,7 +46,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BeskjedIT {
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.beskjedInputTopicName,
+            KafkaTestTopics.beskjedLegacyTopicName,
             KafkaTestTopics.beskjedInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
@@ -50,21 +54,29 @@ class BeskjedIT {
 
     private val database = LocalPostgresDatabase()
 
-    private val goodEvents = createEvents(10)
-    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
-    private val beskjedEvents = goodEvents.toMutableList().apply {
-        addAll(badEvents)
-    }.toMap()
-
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, BeskjedIntern>>()
-    private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
+    private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
     private val producerNameAlias = "dittnav"
+
     private val client = getClient(producerNameAlias)
     private val metricsReporter = StubMetricsReporter()
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+    private val producerServiceUser = "dummySystembruker"
+
+    private val producerNamespace = "namespace"
+    private val producerAppName = "appName"
+    private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
+    private val beskjedTransformer = BeskjedLegacyTransformer(mapper)
+    private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
+
+    private val goodEvents = createEvents(10)
+    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
+    private val beskjedEvents = goodEvents.toMutableList().apply {
+        addAll(badEvents)
+    }.toMap()
 
     @BeforeAll
     fun setup() {
@@ -84,7 +96,7 @@ class BeskjedIT {
     @Test
     fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.beskjedInputTopicName, beskjedEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.beskjedLegacyTopicName, beskjedEvents)
         } shouldBeEqualTo true
 
         `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -96,7 +108,7 @@ class BeskjedIT {
 
     fun `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED, false)
-        val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(consumerProps)
+        val kafkaConsumer = KafkaConsumer<NokkelLegacy, BeskjedLegacy>(consumerProps)
 
         val beskjedInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(beskjedInternProducerProps)
@@ -110,8 +122,8 @@ class BeskjedIT {
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.beskjedInputTopicName, kafkaConsumer, eventService)
+        val eventService = BeskjedLegacyEventService(beskjedTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.beskjedLegacyTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -177,12 +189,12 @@ class BeskjedIT {
     }
 
     private fun createEvents(number: Int) = (1..number).map {
-        createNokkelWithEventId(it.toString()) to AvroBeskjedObjectMother.createBeskjedWithGrupperingsId(it.toString())
+        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createBeskjedLegacyWithGrupperingsId(it.toString())
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Beskjed> {
+    private fun createEventWithTooLongGroupId(eventId: String): Pair<NokkelLegacy, BeskjedLegacy> {
         val groupId = "groupId".repeat(100)
 
-        return createNokkelWithEventId(eventId) to AvroBeskjedObjectMother.createBeskjedWithGrupperingsId(groupId)
+        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createBeskjedLegacyWithGrupperingsId(groupId)
     }
 }

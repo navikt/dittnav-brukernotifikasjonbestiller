@@ -1,45 +1,57 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.mockk.slot
+import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Done
-import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.legacy.DoneLegacy
+import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveLegacyObjectMother
 import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
-internal class DoneEventServiceTest {
+internal class DoneLegacyEventServiceTest {
     private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-done-test"
     private val handleDuplicateEvents = mockk<HandleDuplicateDoneEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<DoneIntern>>(relaxed = true)
     private val internalEvents = AvroDoneInternObjectMother.giveMeANumberOfInternalDoneEvents(2, "eventId", "systembruker", "fodselsnummer")
+    private val transformer = mockk<DoneLegacyTransformer>()
+    private val feilresponsTransformer = mockk<FeilresponsLegacyTransformer>()
+
+    @AfterEach
+    fun cleanUp() {
+        clearMocks(transformer)
+    }
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
-        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
-        val externalDone = AvroDoneObjectMother.createDone()
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalDone = AvroDoneLegacyObjectMother.createDoneLegacy()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val internalNokkel = createNokkelIntern(externalNokkel, externalDone)
+        val internalDone = createDoneIntern(externalDone)
+
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
         coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
+        every { transformer.toDoneInternal(externalDone) } returns internalDone
+        every { transformer.toNokkelInternal(externalNokkel, externalDone) } returns internalNokkel
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -55,20 +67,25 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        verify(exactly = 1) { transformer.toDoneInternal(externalDone) }
+        verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalDone) }
     }
 
     @Test
     fun `skal ikke skrive til topic hvis nokkel er null`() {
         val externalNullNokkel = null
-        val externalDone = AvroDoneObjectMother.createDone()
+        val externalDone = AvroDoneLegacyObjectMother.createDoneLegacy()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNullNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val internalDone = createDoneIntern(externalDone)
+
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNullNokkel, externalDone, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
+        every { transformer.toDoneInternal(externalDone) } returns internalDone
 
         runBlocking {
             doneEventService.processEvents(externalEvents)
@@ -80,20 +97,28 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        verify(exactly = 0) { transformer.toDoneInternal(externalDone) }
+        verify(exactly = 0) { transformer.toNokkelInternal(any(), externalDone) }
     }
 
     @Test
     fun `skal skrive til feilrespons-topic hvis eventet har en valideringsfeil`() {
-        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
-        val externalDoneWithTooLongGrupperingsid = AvroDoneObjectMother.createDoneWithGrupperingsId("G".repeat(101))
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalDoneWithTooLongGrupperingsid = AvroDoneLegacyObjectMother.createDoneLegacyWithGrupperingsId("G".repeat(101))
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDoneWithTooLongGrupperingsid, topic)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val internalDone = createDoneIntern(externalDoneWithTooLongGrupperingsid)
+
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDoneWithTooLongGrupperingsid, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
+
+        every { transformer.toDoneInternal(externalDoneWithTooLongGrupperingsid) } returns internalDone
+        every { transformer.toNokkelInternal(externalNokkel, externalDoneWithTooLongGrupperingsid) } throws FieldValidationException("")
+        every { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) } returns mockk()
 
         runBlocking {
             doneEventService.processEvents(externalEvents)
@@ -105,20 +130,27 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        verify(exactly = 0) { transformer.toDoneInternal(externalDoneWithTooLongGrupperingsid) }
+        verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalDoneWithTooLongGrupperingsid) }
+        verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
     }
 
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
-        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
-        val externalUnexpectedDone = mockk<Done>()
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalUnexpectedDone = mockk<DoneLegacy>()
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
+
+        every { transformer.toDoneInternal(externalUnexpectedDone) } throws Exception()
+        every { transformer.toNokkelInternal(externalNokkel, externalUnexpectedDone) } throws Exception()
+        every { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) } returns mockk()
 
         runBlocking {
             doneEventService.processEvents(externalEvents)
@@ -130,18 +162,25 @@ internal class DoneEventServiceTest {
 
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+
+        verify(exactly = 0) { transformer.toDoneInternal(externalUnexpectedDone) }
+        verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalUnexpectedDone) }
+        verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
     }
 
     @Test
     fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
-        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
-        val externalDone = AvroDoneObjectMother.createDone()
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalDone = AvroDoneLegacyObjectMother.createDoneLegacy()
+
+        val internalNokkel = createNokkelIntern(externalNokkel, externalDone)
+        val internalDone = createDoneIntern(externalDone)
 
         val validEvents = listOf(internalEvents[0])
         val duplicateEvents = listOf(internalEvents[1])
 
-        val externalEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
@@ -153,6 +192,9 @@ internal class DoneEventServiceTest {
             slot.captured.invoke(metricsSession)
         }
 
+        every { transformer.toDoneInternal(externalDone) } returns internalDone
+        every { transformer.toNokkelInternal(externalNokkel, externalDone) } returns internalNokkel
+
         runBlocking {
             doneEventService.processEvents(externalEvents)
         }
@@ -163,22 +205,26 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        verify(exactly = 1) { transformer.toDoneInternal(externalDone) }
+        verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalDone) }
     }
 
     @Test
     fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
-        val externalNokkel = AvroNokkelObjectMother.createNokkelWithEventId("1")
-        val externalOppgave = AvroOppgaveObjectMother.createOppgave()
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalOppgave = AvroOppgaveLegacyObjectMother.createOppgaveLegacy()
 
-        val externalMalplacedEvents = ConsumerRecordsObjectMother.createConsumerRecords(externalNokkel, externalOppgave, topic)
+        val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalOppgave, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Done>
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, DoneLegacy>
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
+        every { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) } returns mockk()
+
 
         runBlocking {
             doneEventService.processEvents(externalEvents)
@@ -189,5 +235,21 @@ internal class DoneEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        verify(exactly = 0) { transformer.toDoneInternal(any()) }
+        verify(exactly = 0) { transformer.toNokkelInternal(any(), any()) }
+        verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
     }
+
+    private fun createDoneIntern(beskjedLegacy: DoneLegacy) = DoneIntern(beskjedLegacy.getTidspunkt())
+
+    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, doneLegacy: DoneLegacy) =
+            NokkelIntern(
+                    "1234",
+                    nokkelLegacy.getEventId(),
+                    doneLegacy.getGrupperingsId(),
+                    doneLegacy.getFodselsnummer(),
+                    "${nokkelLegacy.getSystembruker()}-namespace",
+                    "${nokkelLegacy.getSystembruker()}-app",
+                    nokkelLegacy.getSystembruker()
+            )
 }

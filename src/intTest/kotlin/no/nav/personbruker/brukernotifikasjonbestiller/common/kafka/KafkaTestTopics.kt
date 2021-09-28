@@ -14,4 +14,12 @@ object KafkaTestTopics {
     const val innboksInputTopicName = "inputInnboksTopic"
     const val statusoppdateringInputTopicName = "inputStatusoppdateringTopic"
     const val doneInputTopicName = "inputDoneTopic"
+
+    const val beskjedLegacyTopicName = "legacyBeskjedTopic"
+    const val oppgaveLegacyTopicName = "legacyOppgaveTopic"
+    const val innboksLegacyTopicName = "legacyInnboksTopic"
+    const val statusoppdateringLegacyTopicName = "legacyStatusoppdateringTopic"
+    const val doneLegacyTopicName = "legacyDoneTopic"
+
+
 }
