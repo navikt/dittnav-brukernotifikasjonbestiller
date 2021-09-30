@@ -11,11 +11,14 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateC
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveLegacyObjectMother
+import org.amshove.kluent.`should throw`
+import org.amshove.kluent.invoking
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -238,6 +241,40 @@ internal class DoneLegacyEventServiceTest {
         verify(exactly = 0) { transformer.toDoneInternal(any()) }
         verify(exactly = 0) { transformer.toNokkelInternal(any(), any()) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `skal la ServiceUserMappingException boble oppover, og skal ikke skrive til noen topics eller basen`() {
+        val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
+        val externalDone = AvroDoneLegacyObjectMother.createDoneLegacy()
+
+        val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
+        val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+
+        coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
+        coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
+        every { transformer.toNokkelInternal(externalNokkel, externalDone) } throws ServiceUserMappingException("")
+
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
+
+        invoking {
+            runBlocking {
+                doneEventService.processEvents(externalEvents)
+            }
+        } `should throw` ServiceUserMappingException::class
+
+        coVerify(exactly = 0) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
+        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
+        verify(exactly = 0) { transformer.toDoneInternal(externalDone) }
+        verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalDone) }
     }
 
     private fun createDoneIntern(beskjedLegacy: DoneLegacy) = DoneIntern(beskjedLegacy.getTidspunkt())

@@ -12,6 +12,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
@@ -60,6 +61,9 @@ class StatusoppdateringLegacyEventService(
                     val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.STATUSOPPDATERING)
                     problematicEvents.add(feilrespons)
                     log.warn("Feil eventtype funnet på statusoppdatering-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
+                } catch(sme: ServiceUserMappingException) {
+                    log.warn("Feil ved henting av systembrukermapping for statusoppdatering-legacy.", sme)
+                    throw sme
                 } catch (e: Exception) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
                     countFailedEventForSystemUser(systembruker)

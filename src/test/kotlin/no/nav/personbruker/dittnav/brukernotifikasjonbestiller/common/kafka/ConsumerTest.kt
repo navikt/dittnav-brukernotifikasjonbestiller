@@ -14,6 +14,7 @@ import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnvalidatableRecordException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.amshove.kluent.`should be equal to`
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -132,7 +133,33 @@ class ConsumerTest {
         verify(exactly = 0) { kafkaConsumer.commitSync() }
     }
 
+    @Test
+    fun `skal stoppe polling etter en ServiceUserMappingException`() {
+        val topic = "dummyTopicServiceUserMappingException"
+        every { kafkaConsumer.poll(any<Duration>()) } throws ServiceUserMappingException("")
+        val consumer: Consumer<NokkelLegacy, BeskjedLegacy> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+
+        val jobActive = runBlocking {
+            consumer.startPolling()
+            consumer.`vent til inaktiv eller avbryt`(1000)
+        }
+        verify(exactly = 0) { kafkaConsumer.commitSync() }
+        jobActive `should be equal to` false
+    }
+
     private suspend fun `Vent litt for aa bevise at det fortsettes aa polle`() {
         delay(10)
     }
+
+    private suspend fun <K, T> Consumer<K, T>.`vent til inaktiv eller avbryt`(maxDelay: Int = 1000): Boolean {
+        for (i in 0..maxDelay step 10) {
+            delay(10)
+
+            if (!job.isActive) {
+                return false
+            }
+        }
+        return job.isActive
+    }
+
 }

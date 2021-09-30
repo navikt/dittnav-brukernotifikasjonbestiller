@@ -6,6 +6,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.e
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
@@ -92,6 +93,9 @@ class Consumer<K, V>(
         } catch (ce: CancellationException) {
             log.info("Denne coroutine-en ble stoppet. ${ce.message}", ce)
 
+        } catch(sme: ServiceUserMappingException) {
+            log.warn("Feil ved henting av systembrukermapping. Stopper polling.", sme)
+            stopPolling()
         } catch (e: Exception) {
             log.error("Noe uventet feilet, stopper polling. Topic: $topic", e)
             stopPolling()

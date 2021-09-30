@@ -1,11 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser
 
-import java.util.*
-
 object ServiceUserMappingParser {
 
     private const val VALID_CHARS = "[a-zA-Z0-9-]"
-    private val MAPPING_PATTERN = "($VALID_CHARS+)|($VALID_CHARS+):($VALID_CHARS+)".toRegex()
+    private val MAPPING_PATTERN = "^($VALID_CHARS+)\\|($VALID_CHARS+):($VALID_CHARS+)$".toRegex()
 
     fun parseMappingStrings(mappingEntries: List<String>): Map<String, NamespaceAppName> {
         return mappingEntries.map { entry ->

@@ -61,6 +61,9 @@ class BeskjedLegacyEventService(
                     val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.BESKJED)
                     problematicEvents.add(feilrespons)
                     log.warn("Feil eventtype funnet på beskjed-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
+                } catch(sme: ServiceUserMappingException) {
+                    log.warn("Feil ved henting av systembrukermapping for beskjed-legacy.", sme)
+                    throw sme
                 } catch (e: Exception) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
                     countFailedEventForSystemUser(systembruker)
