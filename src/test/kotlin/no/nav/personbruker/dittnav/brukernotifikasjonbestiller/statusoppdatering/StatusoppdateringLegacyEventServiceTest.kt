@@ -2,11 +2,11 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdaterin
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Statusoppdatering
+import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -18,7 +18,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetr
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should throw`
-import org.amshove.kluent.coInvoking
 import org.amshove.kluent.invoking
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.AfterEach

@@ -1,11 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler

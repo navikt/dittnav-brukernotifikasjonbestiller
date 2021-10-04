@@ -2,8 +2,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.http.*
-import io.ktor.response.*
 import io.ktor.routing.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.runBlocking

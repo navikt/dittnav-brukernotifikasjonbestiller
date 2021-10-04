@@ -2,12 +2,12 @@ package no.nav.personbruker.brukernotifikasjonbestiller.innboks
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Innboks
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.Innboks
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -15,7 +15,6 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -29,6 +28,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksLegacyObjectMother.createInnboksLegacyWithGrupperingsId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber

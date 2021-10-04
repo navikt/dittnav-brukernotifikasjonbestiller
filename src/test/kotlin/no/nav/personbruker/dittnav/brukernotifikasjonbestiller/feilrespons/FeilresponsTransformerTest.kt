@@ -5,7 +5,6 @@ import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.NokkelEventPairObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 

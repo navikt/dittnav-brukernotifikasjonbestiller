@@ -10,7 +10,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class FeilresponsLegacyTransformerTest {

@@ -2,12 +2,12 @@ package no.nav.personbruker.brukernotifikasjonbestiller.oppgave
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -15,7 +15,6 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -30,10 +29,10 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.Feilr
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveLegacyObjectMother.createOppgaveLegacyWithGrupperingsId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveLegacyTransformer
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeEqualTo

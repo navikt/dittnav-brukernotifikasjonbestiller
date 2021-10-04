@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.logging
 
-import org.amshove.kluent.`should contain`
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.`should contain`
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 

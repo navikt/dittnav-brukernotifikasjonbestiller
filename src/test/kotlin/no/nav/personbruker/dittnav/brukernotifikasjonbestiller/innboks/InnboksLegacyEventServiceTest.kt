@@ -2,11 +2,11 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.Innboks
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.Innboks
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents

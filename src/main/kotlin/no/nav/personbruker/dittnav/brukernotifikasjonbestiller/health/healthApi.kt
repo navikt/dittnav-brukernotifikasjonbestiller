@@ -1,10 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health
 
-import io.ktor.application.call
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.response.respondText
-import io.ktor.response.respondTextWriter
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.response.*
 import io.ktor.routing.Routing
 import io.ktor.routing.get
 import io.prometheus.client.CollectorRegistry

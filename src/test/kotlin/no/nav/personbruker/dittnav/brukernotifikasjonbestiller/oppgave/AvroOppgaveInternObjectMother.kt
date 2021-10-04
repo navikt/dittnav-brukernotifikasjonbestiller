@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
-import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import java.time.Instant
 

@@ -4,7 +4,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.influx.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.prometheus.PrometheusMetricsCollector
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
-import org.slf4j.LoggerFactory
 
 class MetricsCollector(private val metricsReporter: MetricsReporter, private val nameScrubber: ProducerNameScrubber) {
 

@@ -1,11 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering
 
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 

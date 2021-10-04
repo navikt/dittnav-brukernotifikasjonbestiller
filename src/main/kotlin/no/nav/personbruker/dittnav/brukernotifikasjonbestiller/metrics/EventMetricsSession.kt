@@ -1,7 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

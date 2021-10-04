@@ -1,6 +1,5 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import no.nav.brukernotifikasjon.schemas.*
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
