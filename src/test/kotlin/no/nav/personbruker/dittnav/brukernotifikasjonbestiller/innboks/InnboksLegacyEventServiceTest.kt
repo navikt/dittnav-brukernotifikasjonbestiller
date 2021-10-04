@@ -5,8 +5,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.InnboksLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Innboks
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -141,7 +141,7 @@ internal class InnboksLegacyEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
         val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
-        val externalUnexpectedInnboks = mockk<InnboksLegacy>()
+        val externalUnexpectedInnboks = mockk<Innboks>()
 
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedInnboks, topic)
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
@@ -218,7 +218,7 @@ internal class InnboksLegacyEventServiceTest {
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, InnboksLegacy>
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Innboks>
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -275,7 +275,7 @@ internal class InnboksLegacyEventServiceTest {
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalInnboks) }
     }
 
-    private fun createInnboksIntern(innboksLegacy: InnboksLegacy) =
+    private fun createInnboksIntern(innboksLegacy: Innboks) =
             InnboksIntern(
                     innboksLegacy.getTidspunkt(),
                     innboksLegacy.getTekst(),
@@ -285,7 +285,7 @@ internal class InnboksLegacyEventServiceTest {
                     innboksLegacy.getPrefererteKanaler()
             )
 
-    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, innboksLegacy: InnboksLegacy) =
+    private fun createNokkelIntern(nokkelLegacy: Nokkel, innboksLegacy: Innboks) =
             NokkelIntern(
                     "1234",
                     nokkelLegacy.getEventId(),

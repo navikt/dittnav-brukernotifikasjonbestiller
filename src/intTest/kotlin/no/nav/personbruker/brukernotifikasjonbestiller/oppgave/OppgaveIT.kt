@@ -6,8 +6,8 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.OppgaveLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -107,7 +107,7 @@ class OppgaveIT {
 
     fun `Read all Oppgave-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.OPPGAVE, enableSecurity = false)
-        val kafkaConsumer = KafkaConsumer<NokkelLegacy, OppgaveLegacy>(consumerProps)
+        val kafkaConsumer = KafkaConsumer<Nokkel, Oppgave>(consumerProps)
 
         val oppgaveInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.OPPGAVEINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(oppgaveInternProducerProps)
@@ -191,7 +191,7 @@ class OppgaveIT {
         createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createOppgaveLegacyWithGrupperingsId(it.toString())
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<NokkelLegacy, OppgaveLegacy> {
+    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Oppgave> {
         val groupId = "groupId".repeat(100)
 
         return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createOppgaveLegacyWithGrupperingsId(groupId)

@@ -4,15 +4,15 @@ import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.OppgaveLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 
 class OppgaveLegacyTransformer(private val mapper: ServiceUserMapper) {
 
-    fun toOppgaveInternal(externalOppgave: OppgaveLegacy): OppgaveIntern {
+    fun toOppgaveInternal(externalOppgave: Oppgave): OppgaveIntern {
         return OppgaveIntern.newBuilder()
                 .setTidspunkt(externalOppgave.getTidspunkt())
                 .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_OPPGAVE))
@@ -23,7 +23,7 @@ class OppgaveLegacyTransformer(private val mapper: ServiceUserMapper) {
                 .build()
     }
 
-    fun toNokkelInternal(externalNokkel: NokkelLegacy, externalOppgave: OppgaveLegacy): NokkelIntern {
+    fun toNokkelInternal(externalNokkel: Nokkel, externalOppgave: Oppgave): NokkelIntern {
         val origin = mapper.getNamespaceAppName(externalNokkel.getSystembruker())
 
         return NokkelIntern.newBuilder()

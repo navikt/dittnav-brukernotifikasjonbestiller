@@ -5,8 +5,8 @@ import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -27,11 +27,11 @@ class BeskjedLegacyEventService(
         private val metricsCollector: MetricsCollector,
         private val handleDuplicateEvents: HandleDuplicateEvents,
         private val eventDispatcher: EventDispatcher<BeskjedIntern>
-) : EventBatchProcessorService<NokkelLegacy, BeskjedLegacy> {
+) : EventBatchProcessorService<Nokkel, Beskjed> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedLegacyEventService::class.java)
 
-    override suspend fun processEvents(events: ConsumerRecords<NokkelLegacy, BeskjedLegacy>) {
+    override suspend fun processEvents(events: ConsumerRecords<Nokkel, Beskjed>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 

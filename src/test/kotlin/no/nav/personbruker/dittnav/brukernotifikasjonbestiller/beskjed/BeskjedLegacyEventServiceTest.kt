@@ -7,8 +7,8 @@ import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -141,7 +141,7 @@ internal class BeskjedLegacyEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
         val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
-        val externalUnexpectedBeskjed = mockk<BeskjedLegacy>()
+        val externalUnexpectedBeskjed = mockk<Beskjed>()
 
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
@@ -218,7 +218,7 @@ internal class BeskjedLegacyEventServiceTest {
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, BeskjedLegacy>
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Beskjed>
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -275,7 +275,7 @@ internal class BeskjedLegacyEventServiceTest {
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalBeskjed) }
     }
 
-    private fun createBeskjedIntern(beskjedLegacy: BeskjedLegacy) =
+    private fun createBeskjedIntern(beskjedLegacy: Beskjed) =
             BeskjedIntern(
                     beskjedLegacy.getTidspunkt(),
                     beskjedLegacy.getSynligFremTil(),
@@ -286,7 +286,7 @@ internal class BeskjedLegacyEventServiceTest {
                     beskjedLegacy.getPrefererteKanaler()
     )
 
-    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, beskjedLegacy: BeskjedLegacy) =
+    private fun createNokkelIntern(nokkelLegacy: Nokkel, beskjedLegacy: Beskjed) =
             NokkelIntern(
                     "1234",
                     nokkelLegacy.getEventId(),

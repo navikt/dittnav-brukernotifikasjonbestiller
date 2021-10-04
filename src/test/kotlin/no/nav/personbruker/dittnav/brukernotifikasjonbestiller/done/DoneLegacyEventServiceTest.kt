@@ -5,8 +5,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.DoneLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Done
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -141,7 +141,7 @@ internal class DoneLegacyEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
         val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
-        val externalUnexpectedDone = mockk<DoneLegacy>()
+        val externalUnexpectedDone = mockk<Done>()
 
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
         val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
@@ -219,7 +219,7 @@ internal class DoneLegacyEventServiceTest {
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalOppgave, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, DoneLegacy>
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Done>
         val doneEventService = DoneLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -277,9 +277,9 @@ internal class DoneLegacyEventServiceTest {
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalDone) }
     }
 
-    private fun createDoneIntern(beskjedLegacy: DoneLegacy) = DoneIntern(beskjedLegacy.getTidspunkt())
+    private fun createDoneIntern(beskjedLegacy: Done) = DoneIntern(beskjedLegacy.getTidspunkt())
 
-    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, doneLegacy: DoneLegacy) =
+    private fun createNokkelIntern(nokkelLegacy: Nokkel, doneLegacy: Done) =
             NokkelIntern(
                     "1234",
                     nokkelLegacy.getEventId(),

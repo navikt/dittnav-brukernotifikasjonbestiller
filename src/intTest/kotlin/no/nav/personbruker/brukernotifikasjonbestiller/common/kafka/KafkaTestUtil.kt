@@ -1,6 +1,6 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.common.JAASCredential
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Environment
@@ -73,7 +73,7 @@ object KafkaTestUtil {
         )
     }
 
-    suspend fun produceEvents(env: Environment, topicName: String, events: Map<NokkelLegacy, GenericRecord>): Boolean {
+    suspend fun produceEvents(env: Environment, topicName: String, events: Map<Nokkel, GenericRecord>): Boolean {
         return KafkaProducerUtil.kafkaAvroProduceLegacy(
                 env.bootstrapServers,
                 env.schemaRegistryUrl,

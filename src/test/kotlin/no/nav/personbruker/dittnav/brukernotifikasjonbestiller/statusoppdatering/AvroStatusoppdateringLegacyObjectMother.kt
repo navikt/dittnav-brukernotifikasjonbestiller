@@ -1,7 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering
 
 import no.nav.brukernotifikasjon.schemas.Statusoppdatering
-import no.nav.brukernotifikasjon.schemas.legacy.StatusoppdateringLegacy
 import java.time.Instant
 
 object AvroStatusoppdateringLegacyObjectMother {
@@ -15,44 +14,44 @@ object AvroStatusoppdateringLegacyObjectMother {
     private val defaultStatusIntern = "Intern status"
     private val defaultSakstema = "tema123"
 
-    fun createStatusoppdateringLegacy(): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacy(): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacy(lopenummer: Int): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacy(lopenummer: Int): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, "$defaultGrupperingsid-$lopenummer", defaultTidspunkt, defaultStatusGlobal, "$defaultStatusIntern-$lopenummer", defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithLink(link: String): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithLink(link: String): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, link, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithFodselsnummer(fodselsnummer: String): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithFodselsnummer(fodselsnummer: String): Statusoppdatering {
         return createStatusoppdateringLegacy(fodselsnummer, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithGrupperingsId(grupperingsid: String): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithGrupperingsId(grupperingsid: String): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, grupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithSikkerhetsnivaa(sikkerhetsnivaa: Int): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithSikkerhetsnivaa(sikkerhetsnivaa: Int): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, sikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithStatusGlobal(statusGlobal: String): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithStatusGlobal(statusGlobal: String): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, statusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithStatusIntern(statusIntern: String?): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithStatusIntern(statusIntern: String?): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, statusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringLegacyWithSakstema(sakstema: String): StatusoppdateringLegacy {
+    fun createStatusoppdateringLegacyWithSakstema(sakstema: String): Statusoppdatering {
         return createStatusoppdateringLegacy(defaultFodselsnr, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultTidspunkt, defaultStatusGlobal, defaultStatusIntern, sakstema)
     }
 
-    private fun createStatusoppdateringLegacy(fodselsnummer: String, sikkerhetsnivaa: Int, link: String, grupperingsid: String, tidspunkt: Long, statusGlobal: String, statusIntern: String?, sakstema: String): StatusoppdateringLegacy {
-        return StatusoppdateringLegacy(
+    private fun createStatusoppdateringLegacy(fodselsnummer: String, sikkerhetsnivaa: Int, link: String, grupperingsid: String, tidspunkt: Long, statusGlobal: String, statusIntern: String?, sakstema: String): Statusoppdatering {
+        return Statusoppdatering(
                 tidspunkt,
                 grupperingsid,
                 link,

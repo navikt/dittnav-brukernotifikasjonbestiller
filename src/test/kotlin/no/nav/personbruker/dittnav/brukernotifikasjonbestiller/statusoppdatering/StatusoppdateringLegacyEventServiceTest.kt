@@ -5,8 +5,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.StatusoppdateringLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Statusoppdatering
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -140,7 +140,7 @@ internal class StatusoppdateringLegacyEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
         val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
-        val externalUnexpectedStatusoppdatering = mockk<StatusoppdateringLegacy>()
+        val externalUnexpectedStatusoppdatering = mockk<Statusoppdatering>()
 
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedStatusoppdatering, topic)
         val statusoppdateringEventService = StatusoppdateringLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
@@ -217,7 +217,7 @@ internal class StatusoppdateringLegacyEventServiceTest {
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, StatusoppdateringLegacy>
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Statusoppdatering>
         val statusoppdateringEventService = StatusoppdateringLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -274,7 +274,7 @@ internal class StatusoppdateringLegacyEventServiceTest {
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalStatusoppdatering) }
     }
 
-    private fun createStatusoppdateringIntern(statusoppdateringLegacy: StatusoppdateringLegacy) =
+    private fun createStatusoppdateringIntern(statusoppdateringLegacy: Statusoppdatering) =
             StatusoppdateringIntern(
                     statusoppdateringLegacy.getTidspunkt(),
                     statusoppdateringLegacy.getLink(),
@@ -284,7 +284,7 @@ internal class StatusoppdateringLegacyEventServiceTest {
                     statusoppdateringLegacy.getSakstema()
             )
 
-    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, statusoppdateringLegacy: StatusoppdateringLegacy) =
+    private fun createNokkelIntern(nokkelLegacy: Nokkel, statusoppdateringLegacy: Statusoppdatering) =
             NokkelIntern(
                     "1234",
                     nokkelLegacy.getEventId(),

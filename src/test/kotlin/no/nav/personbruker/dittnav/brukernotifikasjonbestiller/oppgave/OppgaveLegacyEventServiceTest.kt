@@ -5,8 +5,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.OppgaveLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Oppgave
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -139,7 +139,7 @@ internal class OppgaveLegacyEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
         val externalNokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId("1")
-        val externalUnexpectedOppgave = mockk<OppgaveLegacy>()
+        val externalUnexpectedOppgave = mockk<Oppgave>()
 
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedOppgave, topic)
         val oppgaveEventService = OppgaveLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
@@ -216,7 +216,7 @@ internal class OppgaveLegacyEventServiceTest {
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalDone, topic)
 
-        val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelLegacy, OppgaveLegacy>
+        val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Oppgave>
         val oppgaveEventService = OppgaveLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
@@ -273,7 +273,7 @@ internal class OppgaveLegacyEventServiceTest {
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalOppgave) }
     }
 
-    private fun createOppgaveIntern(oppgaveLegacy: OppgaveLegacy) =
+    private fun createOppgaveIntern(oppgaveLegacy: Oppgave) =
             OppgaveIntern(
                     oppgaveLegacy.getTidspunkt(),
                     oppgaveLegacy.getTekst(),
@@ -283,7 +283,7 @@ internal class OppgaveLegacyEventServiceTest {
                     oppgaveLegacy.getPrefererteKanaler()
             )
 
-    private fun createNokkelIntern(nokkelLegacy: NokkelLegacy, oppgaveLegacy: OppgaveLegacy) =
+    private fun createNokkelIntern(nokkelLegacy: Nokkel, oppgaveLegacy: Oppgave) =
             NokkelIntern(
                     "1234",
                     nokkelLegacy.getEventId(),

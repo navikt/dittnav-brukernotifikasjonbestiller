@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
-import no.nav.brukernotifikasjon.schemas.legacy.DoneLegacy
+import no.nav.brukernotifikasjon.schemas.Done
 import java.time.Instant
 
 object AvroDoneLegacyObjectMother {
@@ -8,24 +8,24 @@ object AvroDoneLegacyObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
 
-    fun createDoneLegacy(): DoneLegacy {
+    fun createDoneLegacy(): Done {
         return createDoneLegacy(defaultFodselsnr, defaultGrupperingsid, defaultTidspunkt)
     }
 
-    fun createDoneLegacyWithFodselsnummer(fodselsnummer: String): DoneLegacy {
+    fun createDoneLegacyWithFodselsnummer(fodselsnummer: String): Done {
         return createDoneLegacy(fodselsnummer, defaultGrupperingsid, defaultTidspunkt)
     }
 
-    fun createDoneLegacyWithGrupperingsId(grupperingsid: String): DoneLegacy {
+    fun createDoneLegacyWithGrupperingsId(grupperingsid: String): Done {
         return createDoneLegacy(defaultFodselsnr, grupperingsid, defaultTidspunkt)
     }
 
-    fun createDoneLegacyWithTidspunkt(tidspunkt: Long): DoneLegacy {
+    fun createDoneLegacyWithTidspunkt(tidspunkt: Long): Done {
         return createDoneLegacy(defaultFodselsnr, defaultGrupperingsid, tidspunkt)
     }
 
-    private fun createDoneLegacy(fodselsnummer: String, grupperingsid: String, tidspunkt: Long): DoneLegacy {
-        return DoneLegacy(
+    private fun createDoneLegacy(fodselsnummer: String, grupperingsid: String, tidspunkt: Long): Done {
+        return Done(
                 tidspunkt,
                 fodselsnummer,
                 grupperingsid

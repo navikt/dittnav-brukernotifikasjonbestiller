@@ -3,7 +3,7 @@ package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig
 import kotlinx.coroutines.withTimeoutOrNull
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -16,10 +16,10 @@ object KafkaProducerUtil {
             brokersURL: String,
             schemaRegistryUrl: String,
             topic: String,
-            data: Map<NokkelLegacy, GenericRecord>
+            data: Map<Nokkel, GenericRecord>
     ): Boolean =
             try {
-                KafkaProducer<NokkelLegacy, GenericRecord>(
+                KafkaProducer<Nokkel, GenericRecord>(
                         Properties().apply {
                             set(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokersURL)
                             set(ProducerConfig.CLIENT_ID_CONFIG, "funKafkaAvroProduce")

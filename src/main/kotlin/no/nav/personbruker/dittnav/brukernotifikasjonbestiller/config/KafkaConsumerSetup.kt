@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import no.nav.brukernotifikasjon.schemas.*
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -69,8 +69,8 @@ object KafkaConsumerSetup {
         log.info("...ferdig med å stoppe kafka-pollerne.")
     }
 
-    fun <T> setUpConsumerForLegacyTopic(topicName: String, kafkaProps: Properties, eventProcessor: EventBatchProcessorService<NokkelLegacy, T>): Consumer<NokkelLegacy, T> {
-        val kafkaConsumer = KafkaConsumer<NokkelLegacy, T>(kafkaProps)
+    fun <T> setUpConsumerForLegacyTopic(topicName: String, kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, T>): Consumer<Nokkel, T> {
+        val kafkaConsumer = KafkaConsumer<Nokkel, T>(kafkaProps)
         return Consumer(topicName, kafkaConsumer, eventProcessor)
     }
 

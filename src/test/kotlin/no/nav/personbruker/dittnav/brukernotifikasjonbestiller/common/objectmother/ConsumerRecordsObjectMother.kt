@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother
 
-import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedLegacyObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -13,15 +13,15 @@ object ConsumerRecordsObjectMother {
     private val defaultPartition = 1
     private val defaultOffset = 1
 
-    fun giveMeANumberOfBeskjedLegacyRecords(numberOfRecords: Int, topicName: String): ConsumerRecords<NokkelLegacy, BeskjedLegacy> {
-        val records = mutableMapOf<TopicPartition, List<ConsumerRecord<NokkelLegacy, BeskjedLegacy>>>()
+    fun giveMeANumberOfBeskjedLegacyRecords(numberOfRecords: Int, topicName: String): ConsumerRecords<Nokkel, Beskjed> {
+        val records = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, Beskjed>>>()
         val recordsForSingleTopic = createBeskjedLegacyRecords(topicName, numberOfRecords)
         records[TopicPartition(topicName, numberOfRecords)] = recordsForSingleTopic
         return ConsumerRecords(records)
     }
 
-    private fun createBeskjedLegacyRecords(topicName: String, totalNumber: Int): List<ConsumerRecord<NokkelLegacy, BeskjedLegacy>> {
-        val allRecords = mutableListOf<ConsumerRecord<NokkelLegacy, BeskjedLegacy>>()
+    private fun createBeskjedLegacyRecords(topicName: String, totalNumber: Int): List<ConsumerRecord<Nokkel, Beskjed>> {
+        val allRecords = mutableListOf<ConsumerRecord<Nokkel, Beskjed>>()
         for (i in 0 until totalNumber) {
             val schemaRecord = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(i)
             val nokkel = AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventId(i.toString())
@@ -31,9 +31,9 @@ object ConsumerRecordsObjectMother {
         return allRecords
     }
 
-    fun <T> createLegacyConsumerRecords(nokkel: NokkelLegacy?, event: T?, topic: String): ConsumerRecords<NokkelLegacy, T> {
-        val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<NokkelLegacy, T>>>()
-        val recordsForSingleTopic = mutableListOf<ConsumerRecord<NokkelLegacy, T>>()
+    fun <T> createLegacyConsumerRecords(nokkel: Nokkel?, event: T?, topic: String): ConsumerRecords<Nokkel, T> {
+        val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, T>>>()
+        val recordsForSingleTopic = mutableListOf<ConsumerRecord<Nokkel, T>>()
 
         recordsForSingleTopic.add(ConsumerRecord(topic, defaultPartition, defaultOffset.toLong(), nokkel, event))
         allRecords[TopicPartition(topic, defaultPartition)] = recordsForSingleTopic

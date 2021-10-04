@@ -6,8 +6,8 @@ import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.StatusoppdateringLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -108,7 +108,7 @@ class StatusoppdateringIT {
 
     fun `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERING, enableSecurity = false)
-        val kafkaConsumer = KafkaConsumer<NokkelLegacy, StatusoppdateringLegacy>(consumerProps)
+        val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(consumerProps)
 
         val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(statusoppdateringInternProducerProps)
@@ -192,7 +192,7 @@ class StatusoppdateringIT {
         createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createStatusoppdateringLegacyWithGrupperingsId(it.toString())
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<NokkelLegacy, StatusoppdateringLegacy> {
+    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Statusoppdatering> {
         val groupId = "groupId".repeat(100)
 
         return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createStatusoppdateringLegacyWithGrupperingsId(groupId)

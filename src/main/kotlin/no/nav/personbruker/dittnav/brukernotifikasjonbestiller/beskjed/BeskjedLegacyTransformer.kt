@@ -4,15 +4,15 @@ import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.legacy.BeskjedLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 
 class BeskjedLegacyTransformer(private val mapper: ServiceUserMapper) {
 
-    fun toBeskjedInternal(externalBeskjed: BeskjedLegacy): BeskjedIntern {
+    fun toBeskjedInternal(externalBeskjed: Beskjed): BeskjedIntern {
         return BeskjedIntern.newBuilder()
                 .setTidspunkt(externalBeskjed.getTidspunkt())
                 .setSynligFremTil(externalBeskjed.getSynligFremTil())
@@ -24,7 +24,7 @@ class BeskjedLegacyTransformer(private val mapper: ServiceUserMapper) {
                 .build()
     }
 
-    fun toNokkelInternal(externalNokkel: NokkelLegacy, externalBeskjed: BeskjedLegacy): NokkelIntern {
+    fun toNokkelInternal(externalNokkel: Nokkel, externalBeskjed: Beskjed): NokkelIntern {
         val origin = mapper.getNamespaceAppName(externalNokkel.getSystembruker())
 
         return NokkelIntern.newBuilder()

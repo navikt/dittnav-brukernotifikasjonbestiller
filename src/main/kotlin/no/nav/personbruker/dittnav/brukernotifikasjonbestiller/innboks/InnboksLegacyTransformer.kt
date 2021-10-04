@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
-import no.nav.brukernotifikasjon.schemas.legacy.InnboksLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
+import no.nav.brukernotifikasjon.schemas.Innboks
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
@@ -13,7 +13,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation
 
 class InnboksLegacyTransformer(private val mapper: ServiceUserMapper) {
 
-    fun toInnboksInternal(externalInnboks: InnboksLegacy): InnboksIntern {
+    fun toInnboksInternal(externalInnboks: Innboks): InnboksIntern {
         return InnboksIntern.newBuilder()
                 .setTidspunkt(externalInnboks.getTidspunkt())
                 .setTekst(validateNonNullFieldMaxLength(externalInnboks.getTekst(), "tekst", MAX_LENGTH_TEXT_INNBOKS))
@@ -24,7 +24,7 @@ class InnboksLegacyTransformer(private val mapper: ServiceUserMapper) {
                 .build()
     }
 
-    fun toNokkelInternal(externalNokkel: NokkelLegacy, externalInnboks: InnboksLegacy): NokkelIntern {
+    fun toNokkelInternal(externalNokkel: Nokkel, externalInnboks: Innboks): NokkelIntern {
         val origin = mapper.getNamespaceAppName(externalNokkel.getSystembruker())
 
         return NokkelIntern.newBuilder()

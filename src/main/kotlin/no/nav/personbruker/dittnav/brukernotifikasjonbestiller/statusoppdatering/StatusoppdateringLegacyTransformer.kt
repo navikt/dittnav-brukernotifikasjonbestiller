@@ -4,14 +4,14 @@ import no.nav.brukernotifikasjon.schemas.builders.domain.Eventtype
 import no.nav.brukernotifikasjon.schemas.builders.util.ValidationUtil.*
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
-import no.nav.brukernotifikasjon.schemas.legacy.NokkelLegacy
-import no.nav.brukernotifikasjon.schemas.legacy.StatusoppdateringLegacy
+import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.Statusoppdatering
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 
 class StatusoppdateringLegacyTransformer(private val mapper: ServiceUserMapper) {
 
-    fun toStatusoppdateringInternal(externalStatusoppdatering: StatusoppdateringLegacy): StatusoppdateringIntern {
+    fun toStatusoppdateringInternal(externalStatusoppdatering: Statusoppdatering): StatusoppdateringIntern {
         return StatusoppdateringIntern.newBuilder()
                 .setTidspunkt(externalStatusoppdatering.getTidspunkt())
                 .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalStatusoppdatering.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.STATUSOPPDATERING)))
@@ -22,7 +22,7 @@ class StatusoppdateringLegacyTransformer(private val mapper: ServiceUserMapper) 
                 .build()
     }
 
-    fun toNokkelInternal(externalNokkel: NokkelLegacy, externalStatusoppdatering: StatusoppdateringLegacy): NokkelIntern {
+    fun toNokkelInternal(externalNokkel: Nokkel, externalStatusoppdatering: Statusoppdatering): NokkelIntern {
         val origin = mapper.getNamespaceAppName(externalNokkel.getSystembruker())
 
         return NokkelIntern.newBuilder()
