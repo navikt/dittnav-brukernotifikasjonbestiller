@@ -1,8 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
-import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.output.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
 import java.time.ZoneOffset
