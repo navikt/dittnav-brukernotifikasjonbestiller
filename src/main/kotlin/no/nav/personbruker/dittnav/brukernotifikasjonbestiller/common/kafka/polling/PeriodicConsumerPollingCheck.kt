@@ -42,16 +42,16 @@ class PeriodicConsumerPollingCheck(
     fun getConsumersThatHaveStopped(): MutableList<Eventtype> {
         val stoppedConsumers = mutableListOf<Eventtype>()
 
-        if (appContext.beskjedConsumer.isStopped()) {
+        if (appContext.beskjedLegacyConsumer.isStopped()) {
             stoppedConsumers.add(Eventtype.BESKJED)
         }
-        if (appContext.oppgaveConsumer.isStopped()) {
+        if (appContext.oppgaveLegacyConsumer.isStopped()) {
             stoppedConsumers.add(Eventtype.OPPGAVE)
         }
-        if (appContext.statusoppdateringConsumer.isStopped()) {
+        if (appContext.statusoppdateringLegacyConsumer.isStopped()) {
             stoppedConsumers.add(Eventtype.STATUSOPPDATERING)
         }
-        if (appContext.doneConsumer.isStopped()) {
+        if (appContext.doneLegacyConsumer.isStopped()) {
             stoppedConsumers.add(Eventtype.DONE)
         }
         return stoppedConsumers

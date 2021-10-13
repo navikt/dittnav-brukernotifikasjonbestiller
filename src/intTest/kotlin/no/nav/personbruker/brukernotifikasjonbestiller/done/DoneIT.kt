@@ -2,12 +2,12 @@ package no.nav.personbruker.brukernotifikasjonbestiller.done
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.Done
-import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
@@ -21,14 +21,18 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDupl
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother.createDoneLegacyWithGrupperingsId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyTransformer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother.createNokkelWithEventId
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeEqualTo
@@ -42,19 +46,13 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DoneIT {
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.doneInputTopicName,
+            KafkaTestTopics.doneLegacyTopicName,
             KafkaTestTopics.doneInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = LocalPostgresDatabase()
-
-    private val goodEvents = createEvents(10)
-    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
-    private val doneEvents = goodEvents.toMutableList().apply {
-        addAll(badEvents)
-    }.toMap()
 
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
@@ -65,6 +63,18 @@ class DoneIT {
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+    private val producerServiceUser = "dummySystembruker"
+    private val producerNamespace = "namespace"
+    private val producerAppName = "appName"
+    private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
+    private val doneTransformer = DoneLegacyTransformer(mapper)
+    private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
+
+    private val goodEvents = createEvents(10)
+    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
+    private val doneEvents = goodEvents.toMutableList().apply {
+        addAll(badEvents)
+    }.toMap()
 
     @BeforeAll
     fun setup() {
@@ -84,7 +94,7 @@ class DoneIT {
     @Test
     fun `Should read Done-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.doneInputTopicName, doneEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.doneLegacyTopicName, doneEvents)
         } shouldBeEqualTo true
 
         `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -110,8 +120,8 @@ class DoneIT {
         val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = DoneEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.doneInputTopicName, kafkaConsumer, eventService)
+        val eventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.doneLegacyTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -177,12 +187,12 @@ class DoneIT {
     }
 
     private fun createEvents(number: Int) = (1..number).map {
-        createNokkelWithEventId(it.toString()) to AvroDoneObjectMother.createDoneWithGrupperingsId(it.toString())
+        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createDoneLegacyWithGrupperingsId(it.toString())
     }
 
     private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Done> {
         val groupId = "groupId".repeat(100)
 
-        return createNokkelWithEventId(eventId) to AvroDoneObjectMother.createDoneWithGrupperingsId(groupId)
+        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createDoneLegacyWithGrupperingsId(groupId)
     }
 }

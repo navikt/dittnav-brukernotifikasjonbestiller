@@ -40,9 +40,9 @@ internal class HandleDuplicateEventsTest {
     fun `Skal filtere ut eventer som allerede finnes i basen`() {
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
 
-        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
-        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
+        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("12345", "$eventId-0", "123", fodselsnummer, "namespace", "app","$systembruker-0")
+        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("12345", "$eventId-2", "123", fodselsnummer, "namespace", "app","$systembruker-2")
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedIntern()
 
         val duplicateInDb = BrukernotifikasjonKey(nokkelDuplicate.getEventId(), nokkelDuplicate.getSystembruker(), Eventtype.BESKJED)
 
@@ -74,9 +74,9 @@ internal class HandleDuplicateEventsTest {
     fun `Skal plassere duplikater innen samme batch i validEvents og duplicateEvents dersom de ikke allerede fantes i basen`() {
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
 
-        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
-        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
+        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("12345", "$eventId-0", "123", fodselsnummer, "namespace", "app","$systembruker-0")
+        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("12345", "$eventId-2", "123", fodselsnummer, "namespace", "app","$systembruker-2")
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedIntern()
 
         coEvery {
             brukernotifikasjonbestillingRepository.fetchBrukernotifikasjonKeysThatMatchEventIds(any())

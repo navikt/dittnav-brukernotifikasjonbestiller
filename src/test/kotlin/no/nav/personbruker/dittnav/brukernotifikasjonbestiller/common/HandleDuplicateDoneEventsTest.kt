@@ -3,8 +3,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInternObjectMother
 import org.amshove.kluent.`should be equal to`
@@ -39,9 +39,9 @@ internal class HandleDuplicateDoneEventsTest {
     fun `Skal filtere ut eventer som allerede finnes i basen`() {
         val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
 
-        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
-        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
-        val doneIntern = AvroDoneInternObjectMother.createDoneInternWithGrupperingsId("123")
+        val nokkelDuplicate = createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
+        val nokkelValid = createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
+        val doneIntern = AvroDoneInternObjectMother.createDoneIntern()
 
         val duplicateInDb = DoneKey(nokkelDuplicate.getEventId(), nokkelDuplicate.getSystembruker(), Eventtype.DONE, nokkelDuplicate.getFodselsnummer())
 
@@ -71,9 +71,9 @@ internal class HandleDuplicateDoneEventsTest {
     fun `Skal plassere duplikater innen samme batch i validEvents og duplicateEvents dersom de ikke allerede fantes i basen`() {
         val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
 
-        val nokkelDuplicate = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
-        val nokkelValid = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
-        val doneIntern = AvroDoneInternObjectMother.createDoneInternWithGrupperingsId("123")
+        val nokkelDuplicate = createNokkelIntern("$systembruker-0", "$eventId-0", fodselsnummer)
+        val nokkelValid = createNokkelIntern("$systembruker-2", "$eventId-2", fodselsnummer)
+        val doneIntern = AvroDoneInternObjectMother.createDoneIntern()
 
         coEvery {
             brukernotifikasjonbestillingRepository.fetchDoneKeysThatMatchEventIds(any())
@@ -97,5 +97,17 @@ internal class HandleDuplicateDoneEventsTest {
         result.validEvents `should contain` normalEvent
         result.validEvents `should contain` eventWithDuplicate
         result.duplicateEvents `should contain` eventWithDuplicate
+    }
+
+    fun createNokkelIntern(systembruker: String, fnr: String, eventId: String): NokkelIntern {
+        return NokkelIntern(
+                "12345",
+                eventId,
+                "123",
+                fnr,
+                "namespace",
+                "$systembruker-app",
+                systembruker
+        )
     }
 }

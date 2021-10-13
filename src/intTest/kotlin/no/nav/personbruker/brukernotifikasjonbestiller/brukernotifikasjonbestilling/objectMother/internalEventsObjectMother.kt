@@ -9,8 +9,8 @@ fun giveMeANumberOfInternalEvents(numberOfEvents: Int, eventId: String, systembr
     val result = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
 
     for (i in 0 until numberOfEvents) {
-        val nokkelIntern = AvroNokkelInternObjectMother.createNokkelIntern(systembruker = "$systembruker-$i", eventId = "$eventId-$i", fnr = "$i")
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("$i")
+        val nokkelIntern = AvroNokkelInternObjectMother.createNokkelIntern(systembruker = "$systembruker-$i", eventId = "$eventId-$i", fnr = "$i", grupperingsId = "$i", appName = "$systembruker-$i-app", namespace = "namespace", ulid = "123")
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedIntern()
         result.add(Pair(nokkelIntern, beskjedIntern))
     }
     return result

@@ -60,8 +60,8 @@ class BrukernotifikasjonbestillingRepositoryTest {
     @Test
     fun `Skal returnere en liste av duplikat naar successfullyValidatedEvents inneholder duplikat som finnes i basen`() {
         val fodselsnummer = "123"
-        val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-0", "eventId-0", fodselsnummer)
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
+        val nokkel_0 = AvroNokkelInternObjectMother.createNokkelIntern("123", "eventId-0", "1234",  fodselsnummer, "namespace", "app-0", "systembruker-0")
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedIntern()
 
         val successfullyValidatedEvents =
                 mutableListOf(Pair(nokkel_0, beskjedIntern))
@@ -81,9 +81,9 @@ class BrukernotifikasjonbestillingRepositoryTest {
     @Test
     fun `Skal returnere en tom liste hvis successfullyValidatedEvents ikke inneholder duplikat`() {
         val fodselsnummer = "123"
-        val nokkel_1 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-1", "eventId-1", fodselsnummer)
-        val nokkel_2 = AvroNokkelInternObjectMother.createNokkelIntern("systembruker-2", "eventId-2", fodselsnummer)
-        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedInternWithGrupperingsId("123")
+        val nokkel_1 = AvroNokkelInternObjectMother.createNokkelIntern("123", "eventId-1", "1234",  fodselsnummer, "namespace", "app-1", "systembruker-1")
+        val nokkel_2 = AvroNokkelInternObjectMother.createNokkelIntern("123", "eventId-2", "1234",  fodselsnummer, "namespace", "app-2", "systembruker-2")
+        val beskjedIntern = AvroBeskjedInternObjectMother.createBeskjedIntern()
 
         val successfullyValidatedEvents =
                 mutableListOf(

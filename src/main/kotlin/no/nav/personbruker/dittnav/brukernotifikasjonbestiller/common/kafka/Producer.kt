@@ -6,7 +6,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
 import org.slf4j.LoggerFactory
-import java.lang.IllegalStateException
 
 class Producer<K, V>(
         private val destinationTopicName: String,

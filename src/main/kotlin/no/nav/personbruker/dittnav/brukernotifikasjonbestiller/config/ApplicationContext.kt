@@ -2,7 +2,10 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import no.nav.brukernotifikasjon.schemas.*
 import no.nav.brukernotifikasjon.schemas.internal.*
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedEventService
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -11,14 +14,21 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.D
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingParser
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyTransformer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveLegacyTransformer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringLegacyTransformer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
@@ -40,6 +50,7 @@ class ApplicationContext {
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+    private val serviceUserMapper = initializeServiceUserMapper(environment.serviceUserMapping)
 
     var internBeskjedKafkaProducer = initializeInternBeskjedProducer()
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
@@ -47,57 +58,67 @@ class ApplicationContext {
     var internDoneKafkaProducer = initializeInternDoneProducer()
     var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer()
 
-    var beskjedConsumer = initializeBeskjedProcessor()
-    var oppgaveConsumer = initializeOppgaveProcessor()
-    var innboksConsumer = initializeInnboksProcessor()
-    var statusoppdateringConsumer = initializeStatusoppdateringProcessor()
-    var doneConsumer = initializeDoneProcessor()
+    var beskjedLegacyConsumer = initializeBeskjedLegacyProcessor()
+    var oppgaveLegacyConsumer = initializeOppgaveLegacyProcessor()
+    var innboksLegacyConsumer = initializeInnboksLegacyProcessor()
+    var statusoppdateringLegacyConsumer = initializeStatusoppdateringLegacyProcessor()
+    var doneLegacyConsumer = initializeDoneLegacyProcessor()
 
     var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
 
-    private fun initializeBeskjedProcessor(): Consumer<Nokkel, Beskjed> {
+    private fun initializeBeskjedLegacyProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
-        val beskjedEventService = BeskjedEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
+        val beskjedTransformer = BeskjedLegacyTransformer(serviceUserMapper)
+        val feilresponsTransformer = FeilresponsLegacyTransformer(serviceUserMapper)
+        val beskjedEventService = BeskjedLegacyEventService(beskjedTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
+        return KafkaConsumerSetup.setUpConsumerForLegacyTopic(environment.beskjedLegacyTopicName, consumerProps, beskjedEventService)
     }
 
-    private fun initializeOppgaveProcessor(): Consumer<Nokkel, Oppgave> {
+    private fun initializeOppgaveLegacyProcessor(): Consumer<Nokkel, Oppgave> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
-        val oppgaveEventService = OppgaveEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
+        val oppgaveTransformer = OppgaveLegacyTransformer(serviceUserMapper)
+        val feilresponsTransformer = FeilresponsLegacyTransformer(serviceUserMapper)
+        val oppgaveEventService = OppgaveLegacyEventService(oppgaveTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
+        return KafkaConsumerSetup.setUpConsumerForLegacyTopic(environment.oppgaveLegacyTopicName, consumerProps, oppgaveEventService)
     }
 
-    private fun initializeInnboksProcessor(): Consumer<Nokkel, Innboks> {
+    private fun initializeInnboksLegacyProcessor(): Consumer<Nokkel, Innboks> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.INNBOKS)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
-        val innboksEventService = InnboksEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
+        val innboksTransformer = InnboksLegacyTransformer(serviceUserMapper)
+        val feilresponsTransformer = FeilresponsLegacyTransformer(serviceUserMapper)
+        val innboksEventService = InnboksLegacyEventService(innboksTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
+        return KafkaConsumerSetup.setUpConsumerForLegacyTopic(environment.innboksLegacyTopicName, consumerProps, innboksEventService)
     }
 
-    private fun initializeStatusoppdateringProcessor(): Consumer<Nokkel, Statusoppdatering> {
+    private fun initializeStatusoppdateringLegacyProcessor(): Consumer<Nokkel, Statusoppdatering> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING)
         val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
-        val statusoppdateringEventService = StatusoppdateringEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.statusoppdateringInputTopicName, consumerProps, statusoppdateringEventService)
+        val statusoppdateringTransformer = StatusoppdateringLegacyTransformer(serviceUserMapper)
+        val feilresponsTransformer = FeilresponsLegacyTransformer(serviceUserMapper)
+        val statusoppdateringEventService = StatusoppdateringLegacyEventService(statusoppdateringTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
+        return KafkaConsumerSetup.setUpConsumerForLegacyTopic(environment.statusoppdateringLegacyTopicName, consumerProps, statusoppdateringEventService)
     }
 
-    private fun initializeDoneProcessor(): Consumer<Nokkel, Done> {
+    private fun initializeDoneLegacyProcessor(): Consumer<Nokkel, Done> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
         val handleDuplicateDoneEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
-        val doneEventService = DoneEventService(metricsCollector, handleDuplicateDoneEvents, doneEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
+        val doneTransformer = DoneLegacyTransformer(serviceUserMapper)
+        val feilresponsTransformer = FeilresponsLegacyTransformer(serviceUserMapper)
+        val doneEventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateDoneEvents, doneEventDispatcher)
+        return KafkaConsumerSetup.setUpConsumerForLegacyTopic(environment.doneLegacyTopicName, consumerProps, doneEventService)
     }
 
     private fun initializeInternBeskjedProducer(): Producer<NokkelIntern, BeskjedIntern> {
@@ -152,40 +173,46 @@ class ApplicationContext {
         return PeriodicConsumerPollingCheck(this)
     }
 
+    private fun initializeServiceUserMapper(mappingStrings: List<String>): ServiceUserMapper {
+        val mappings = ServiceUserMappingParser.parseMappingStrings(mappingStrings)
+
+        return ServiceUserMapper(mappings)
+    }
+
     fun reinitializeConsumers() {
-        if (beskjedConsumer.isCompleted()) {
-            beskjedConsumer = initializeBeskjedProcessor()
-            log.info("beskjedConsumer har blitt reinstansiert.")
+        if (beskjedLegacyConsumer.isCompleted()) {
+            beskjedLegacyConsumer = initializeBeskjedLegacyProcessor()
+            log.info("beskjedLegacyConsumer har blitt reinstansiert.")
         } else {
-            log.warn("beskjedConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn("beskjedLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
-        if (oppgaveConsumer.isCompleted()) {
-            oppgaveConsumer = initializeOppgaveProcessor()
-            log.info("oppgaveConsumer har blitt reinstansiert.")
+        if (oppgaveLegacyConsumer.isCompleted()) {
+            oppgaveLegacyConsumer = initializeOppgaveLegacyProcessor()
+            log.info("oppgaveLegacyConsumer har blitt reinstansiert.")
         } else {
-            log.warn("oppgaveConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn("oppgaveLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
-        if (innboksConsumer.isCompleted()) {
-            innboksConsumer = initializeInnboksProcessor()
-            log.info("innboksConsumer har blitt reinstansiert.")
+        if (innboksLegacyConsumer.isCompleted()) {
+            innboksLegacyConsumer = initializeInnboksLegacyProcessor()
+            log.info("innboksLegacyConsumer har blitt reinstansiert.")
         } else {
-            log.warn("innboksConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn("innboksLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
-        if (statusoppdateringConsumer.isCompleted()) {
-            statusoppdateringConsumer = initializeStatusoppdateringProcessor()
-            log.info("statusoppdateringConsumer har blitt reinstansiert.")
+        if (statusoppdateringLegacyConsumer.isCompleted()) {
+            statusoppdateringLegacyConsumer = initializeStatusoppdateringLegacyProcessor()
+            log.info("statusoppdateringLegacyConsumer har blitt reinstansiert.")
         } else {
-            log.warn("statusoppdateringConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn("statusoppdateringLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
-        if (doneConsumer.isCompleted()) {
-            doneConsumer = initializeDoneProcessor()
-            log.info("doneConsumer har blitt reinstansiert.")
+        if (doneLegacyConsumer.isCompleted()) {
+            doneLegacyConsumer = initializeDoneLegacyProcessor()
+            log.info("doneLegacyConsumer har blitt reinstansiert.")
         } else {
-            log.warn("doneConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn("doneLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
     }
 

@@ -12,7 +12,10 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.postgresql.util.PSQLException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.sql.*
+import java.sql.Connection
+import java.sql.SQLException
+import java.sql.SQLRecoverableException
+import java.sql.SQLTransientException
 
 val log: Logger = LoggerFactory.getLogger(Database::class.java)
 

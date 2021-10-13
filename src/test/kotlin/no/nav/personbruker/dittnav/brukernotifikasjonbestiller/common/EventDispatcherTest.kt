@@ -5,8 +5,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository

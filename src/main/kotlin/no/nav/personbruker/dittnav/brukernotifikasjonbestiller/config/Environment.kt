@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import no.nav.personbruker.dittnav.common.util.config.IntEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
+import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVarAsList
 import java.net.URL
 
 data class Environment(
@@ -30,6 +31,11 @@ data class Environment(
         val dbPort: String = getEnvVar("DB_PORT"),
         val dbName: String = getEnvVar("DB_DATABASE"),
         val dbUrl: String = getDbUrl(dbHost, dbPort, dbName),
+        val beskjedLegacyTopicName: String = getEnvVar("LEGACY_BESKJED_TOPIC"),
+        val oppgaveLegacyTopicName: String = getEnvVar("LEGACY_OPPGAVE_TOPIC"),
+        val innboksLegacyTopicName: String = getEnvVar("LEGACY_INNBOKS_TOPIC"),
+        val statusoppdateringLegacyTopicName: String = getEnvVar("LEGACY_STATUSOPPDATERING_TOPIC"),
+        val doneLegacyTopicName: String = getEnvVar("LEGACY_DONE_TOPIC"),
         val beskjedInternTopicName: String = getEnvVar("INTERN_BESKJED_TOPIC"),
         val oppgaveInternTopicName: String = getEnvVar("INTERN_OPPGAVE_TOPIC"),
         val innboksInternTopicName: String = getEnvVar("INTERN_INNBOKS_TOPIC"),
@@ -40,7 +46,8 @@ data class Environment(
         val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
         val statusoppdateringInputTopicName: String = getEnvVar("OPEN_INPUT_STATUSOPPDATERING_TOPIC"),
         val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
-        val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC")
+        val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC"),
+        val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING")
 )
 
 data class SecurityConfig(

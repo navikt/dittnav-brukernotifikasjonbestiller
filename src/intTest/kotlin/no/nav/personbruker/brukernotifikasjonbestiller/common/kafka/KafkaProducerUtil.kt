@@ -12,7 +12,7 @@ import java.util.*
 
 object KafkaProducerUtil {
 
-    suspend fun kafkaAvroProduce(
+    suspend fun kafkaAvroProduceLegacy(
             brokersURL: String,
             schemaRegistryUrl: String,
             topic: String,

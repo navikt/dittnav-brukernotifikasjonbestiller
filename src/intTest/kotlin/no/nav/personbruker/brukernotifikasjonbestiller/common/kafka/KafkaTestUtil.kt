@@ -53,6 +53,7 @@ object KafkaTestUtil {
                 aivenBrokers = embeddedEnv.brokersURL.substringAfterLast("/"),
                 aivenSchemaRegistry = embeddedEnv.schemaRegistry!!.url,
                 securityConfig = SecurityConfig(enabled = false),
+                serviceUserMapping = listOf(""),
                 beskjedInternTopicName = KafkaTestTopics.beskjedInternTopicName,
                 oppgaveInternTopicName = KafkaTestTopics.oppgaveInternTopicName,
                 innboksInternTopicName = KafkaTestTopics.innboksInternTopicName,
@@ -63,12 +64,17 @@ object KafkaTestUtil {
                 innboksInputTopicName = KafkaTestTopics.innboksInputTopicName,
                 statusoppdateringInputTopicName = KafkaTestTopics.statusoppdateringInputTopicName,
                 doneInputTopicName = KafkaTestTopics.doneInputTopicName,
-                feilresponsTopicName = KafkaTestTopics.feilresponsTopicName
+                feilresponsTopicName = KafkaTestTopics.feilresponsTopicName,
+                beskjedLegacyTopicName = KafkaTestTopics.beskjedLegacyTopicName,
+                oppgaveLegacyTopicName = KafkaTestTopics.oppgaveLegacyTopicName,
+                innboksLegacyTopicName = KafkaTestTopics.innboksLegacyTopicName,
+                statusoppdateringLegacyTopicName = KafkaTestTopics.statusoppdateringLegacyTopicName,
+                doneLegacyTopicName = KafkaTestTopics.doneLegacyTopicName
         )
     }
 
     suspend fun produceEvents(env: Environment, topicName: String, events: Map<Nokkel, GenericRecord>): Boolean {
-        return KafkaProducerUtil.kafkaAvroProduce(
+        return KafkaProducerUtil.kafkaAvroProduceLegacy(
                 env.bootstrapServers,
                 env.schemaRegistryUrl,
                 topicName,

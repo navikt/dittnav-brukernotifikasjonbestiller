@@ -4,9 +4,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.Innboks
 import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
-import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
@@ -21,14 +21,18 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDupl
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksLegacyObjectMother.createInnboksLegacyWithGrupperingsId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeEqualTo
@@ -43,19 +47,13 @@ import org.junit.jupiter.api.TestInstance
 class InnboksIT {
 
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.innboksInputTopicName,
+            KafkaTestTopics.innboksLegacyTopicName,
             KafkaTestTopics.innboksInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = LocalPostgresDatabase()
-
-    private val goodEvents = createEvents(10)
-    private val badEvents = listOf(createEventWithTooLongGrupperingsid("bad"))
-    private val innboksEvents = goodEvents.toMutableList().apply {
-        addAll(badEvents)
-    }.toMap()
 
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, InnboksIntern>>()
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
@@ -66,6 +64,18 @@ class InnboksIT {
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+    private val producerServiceUser = "dummySystembruker"
+    private val producerNamespace = "namespace"
+    private val producerAppName = "appName"
+    private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
+    private val innboksTransformer = InnboksLegacyTransformer(mapper)
+    private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
+
+    private val goodEvents = createEvents(10)
+    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
+    private val innboksEvents = goodEvents.toMutableList().apply {
+        addAll(badEvents)
+    }.toMap()
 
     @BeforeAll
     fun setup() {
@@ -85,7 +95,7 @@ class InnboksIT {
     @Test
     fun `Should read Innboks-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.innboksInputTopicName, innboksEvents)
+            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.innboksLegacyTopicName, innboksEvents)
         } shouldBeEqualTo true
 
         `Read all Innboks-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -111,8 +121,8 @@ class InnboksIT {
         val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = InnboksEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.innboksInputTopicName, kafkaConsumer, eventService)
+        val eventService = InnboksLegacyEventService(innboksTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.innboksLegacyTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -178,12 +188,12 @@ class InnboksIT {
     }
 
     private fun createEvents(number: Int) = (1..number).map {
-        AvroNokkelObjectMother.createNokkelWithEventId(it.toString()) to AvroInnboksObjectMother.createInnboksWithGrupperingsid(it.toString())
+        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createInnboksLegacyWithGrupperingsId(it.toString())
     }
 
-    private fun createEventWithTooLongGrupperingsid(eventId: String): Pair<Nokkel, Innboks> {
-        val grupperingsid = "gruppering".repeat(100)
+    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Innboks> {
+        val groupId = "groupId".repeat(100)
 
-        return AvroNokkelObjectMother.createNokkelWithEventId(eventId) to AvroInnboksObjectMother.createInnboksWithGrupperingsid(grupperingsid)
+        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createInnboksLegacyWithGrupperingsId(groupId)
     }
 }

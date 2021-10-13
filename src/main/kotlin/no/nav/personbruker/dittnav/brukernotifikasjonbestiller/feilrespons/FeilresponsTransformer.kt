@@ -1,11 +1,10 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.brukernotifikasjon.schemas.internal.Feilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelFeilrespons
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.internal.domain.FeilresponsBegrunnelse
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
+import no.nav.brukernotifikasjon.schemas.output.domain.FeilresponsBegrunnelse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.DuplicateEventException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
@@ -20,18 +19,22 @@ object FeilresponsTransformer {
     fun <T> createFeilresponsFromDuplicateEvents(eventtype: Eventtype, duplicateEvents: List<Pair<NokkelIntern, T>>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
-        duplicateEvents.map {
-            it.first
-        }.forEach { duplicateEvent ->
+        duplicateEvents.forEach { (duplicateEventKey, _) ->
             val duplicateEventException = DuplicateEventException("Dette eventet er allerede opprettet. Nokkel-en er et duplikat, derfor forkaster vi eventet.")
-            val feilrespons = createFeilrespons(duplicateEvent.getEventId(), duplicateEvent.getSystembruker(), duplicateEventException, eventtype)
+            val feilrespons = createFeilrespons(duplicateEventKey, duplicateEventException, eventtype)
             problematicEvents.add(feilrespons)
         }
         return problematicEvents
     }
 
-    fun createFeilrespons(eventId: String, systembruker: String, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
-        val nokkelFeilrespons = toNokkelFeilrespons(eventId, systembruker, eventtype)
+    private fun createFeilrespons(eventKey: NokkelIntern, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
+        val nokkelFeilrespons = toNokkelFeilrespons(
+                eventKey.getEventId(),
+                eventKey.getNamespace(),
+                eventKey.getAppnavn(),
+                eventKey.getSystembruker(),
+                eventtype
+        )
         val feilrespons = toFeilrespons(exception)
 
         //TODO FJERN DENNE
@@ -44,8 +47,10 @@ object FeilresponsTransformer {
         return Pair(nokkelFeilrespons, feilrespons)
     }
 
-    fun toNokkelFeilrespons(eventId: String, systembruker: String, eventtype: Eventtype): NokkelFeilrespons {
+    fun toNokkelFeilrespons(eventId: String, namespace: String, appName: String, systembruker: String, eventtype: Eventtype): NokkelFeilrespons {
         return NokkelFeilrespons.newBuilder()
+                .setNamespace(namespace)
+                .setAppnavn(appName)
                 .setSystembruker(systembruker)
                 .setEventId(eventId)
                 .setBrukernotifikasjonstype(eventtype.toString())

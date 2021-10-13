@@ -13,6 +13,7 @@ object AvroBeskjedInternObjectMother {
     private val defaultEksternVarsling = false
     private val defaultLink = "http://gyldig.url"
     private val defaultGrupperingsid = "123"
+    private val defaultNamespace = "namespace"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultTidspunkt = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
@@ -21,23 +22,25 @@ object AvroBeskjedInternObjectMother {
         val events = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
 
         for (i in 0 until numberOfEvents) {
-            val nokkelIntern = AvroNokkelInternObjectMother.createNokkelIntern("$systembruker-$i", "$eventId-$i", fodselsnummer)
-            val beskjedIntern = createBeskjedInternWithGrupperingsId("$i")
+            val nokkelIntern = createNokkelIntern("$eventId-$i", fodselsnummer, "$systembruker-$i")
+            val beskjedIntern = createBeskjedIntern()
             events.add(Pair(nokkelIntern, beskjedIntern))
         }
         return events
     }
 
-    fun createBeskjedInternWithGrupperingsId(grupperingsid: String): BeskjedIntern {
-        return createBeskjedIntern(defaultUlid, defaultTidspunkt, defaultSynligFremTil, grupperingsid, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+    fun createNokkelIntern(eventId: String, fnr: String, systembruker: String): NokkelIntern {
+        return AvroNokkelInternObjectMother.createNokkelIntern(defaultUlid, eventId, defaultGrupperingsid, fnr, defaultNamespace, "$systembruker-app", systembruker)
     }
 
-    fun createBeskjedIntern(ulid: String, tidspunkt: Long, synligFremTil: Long, grupperingsid: String, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>): BeskjedIntern {
+    fun createBeskjedIntern(): BeskjedIntern {
+        return createBeskjedIntern(defaultTidspunkt, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+    }
+
+    fun createBeskjedIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>): BeskjedIntern {
         return BeskjedIntern(
-                ulid,
                 tidspunkt,
                 synligFremTil,
-                grupperingsid,
                 tekst,
                 link,
                 sikkerhetsnivaa,
