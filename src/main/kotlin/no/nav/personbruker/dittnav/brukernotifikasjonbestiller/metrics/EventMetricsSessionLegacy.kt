@@ -1,22 +1,21 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class EventMetricsSession(val eventtype: Eventtype) {
+class EventMetricsSessionLegacy(val eventtype: Eventtype) {
 
-    private val log: Logger = LoggerFactory.getLogger(EventMetricsSession::class.java)
+    private val log: Logger = LoggerFactory.getLogger(EventMetricsSessionLegacy::class.java)
 
-    private val countProcessedEventsBySysUser = HashMap<NamespaceAppName, Int>()
-    private val countFailedEventsBySysUser = HashMap<NamespaceAppName, Int>()
-    private val countDuplicateKeyBySysUser = HashMap<NamespaceAppName, Int>()
+    private val countProcessedEventsBySysUser = HashMap<String, Int>()
+    private val countFailedEventsBySysUser = HashMap<String, Int>()
+    private val countDuplicateKeyBySysUser = HashMap<String, Int>()
     private var countNokkelWasNull: Int = 0
     private val startTime = System.nanoTime()
 
-    fun countSuccessfulEventForProducer(producer: NamespaceAppName) {
+    fun countSuccessfulEventForProducer(producer: String) {
         countProcessedEventsBySysUser[producer] = countProcessedEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
@@ -24,7 +23,7 @@ class EventMetricsSession(val eventtype: Eventtype) {
         countNokkelWasNull++
     }
 
-    fun countFailedEventForProducer(producer: NamespaceAppName) {
+    fun countFailedEventForProducer(producer: String) {
         countFailedEventsBySysUser[producer] = countFailedEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
@@ -32,11 +31,11 @@ class EventMetricsSession(val eventtype: Eventtype) {
         duplicateEvents.map {
             it.first
         }.forEach { duplicateEvent ->
-            countDuplicateEventForProducer(duplicateEvent.getProducerNamespaceAppName())
+            countDuplicateEventForProducer(duplicateEvent.getSystembruker())
         }
     }
 
-    fun countDuplicateEventForProducer(producer: NamespaceAppName) {
+    fun countDuplicateEventForProducer(producer: String) {
         countDuplicateKeyBySysUser[producer] = countDuplicateKeyBySysUser.getOrDefault(producer, 0).inc()
     }
 
@@ -44,19 +43,19 @@ class EventMetricsSession(val eventtype: Eventtype) {
         return System.nanoTime() - startTime
     }
 
-    fun getEventsSeen(producer: NamespaceAppName): Int {
+    fun getEventsSeen(producer: String): Int {
         return getEventsProcessed(producer) + getEventsFailed(producer)
     }
 
-    fun getEventsProcessed(producer: NamespaceAppName): Int {
+    fun getEventsProcessed(producer: String): Int {
         return countProcessedEventsBySysUser.getOrDefault(producer, 0)
     }
 
-    fun getEventsFailed(producer: NamespaceAppName): Int {
+    fun getEventsFailed(producer: String): Int {
         return countFailedEventsBySysUser.getOrDefault(producer, 0)
     }
 
-    fun getDuplicateKeys(producer: NamespaceAppName): Int {
+    fun getDuplicateKeys(producer: String): Int {
         return countDuplicateKeyBySysUser.getOrDefault(producer, 0)
     }
 
@@ -72,7 +71,7 @@ class EventMetricsSession(val eventtype: Eventtype) {
         return countFailedEventsBySysUser.values.sum()
     }
 
-    fun getDuplicateKeys(): HashMap<NamespaceAppName, Int> {
+    fun getDuplicateKeys(): HashMap<String, Int> {
         return countDuplicateKeyBySysUser
     }
 
@@ -80,12 +79,10 @@ class EventMetricsSession(val eventtype: Eventtype) {
         return countNokkelWasNull
     }
 
-    fun getUniqueProducer(): List<NamespaceAppName> {
-        val producers = countProcessedEventsBySysUser.keys + countFailedEventsBySysUser.keys
+    fun getUniqueProducer(): List<String> {
+        val producers = ArrayList<String>()
+        producers.addAll(countProcessedEventsBySysUser.keys)
+        producers.addAll(countFailedEventsBySysUser.keys)
         return producers.distinct()
-    }
-
-    companion object {
-        fun NokkelIntern.getProducerNamespaceAppName() = NamespaceAppName(getNamespace(), getAppnavn())
     }
 }

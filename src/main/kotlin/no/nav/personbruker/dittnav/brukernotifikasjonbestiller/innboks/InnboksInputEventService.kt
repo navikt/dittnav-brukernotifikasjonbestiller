@@ -1,10 +1,10 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
-import no.nav.brukernotifikasjon.schemas.Innboks
-import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.brukernotifikasjon.schemas.output.Feilrespons
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
+import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
@@ -12,64 +12,53 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class InnboksLegacyEventService(
-    private val innboksTransformer: InnboksLegacyTransformer,
-    private val feilresponsTransformer: FeilresponsLegacyTransformer,
-    private val metricsCollector: MetricsCollectorLegacy,
+class InnboksInputEventService(
+    private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateEvents,
     private val eventDispatcher: EventDispatcher<InnboksIntern>
-) : EventBatchProcessorService<Nokkel, Innboks> {
+) : EventBatchProcessorService<NokkelInput, InnboksInput> {
 
-    private val log: Logger = LoggerFactory.getLogger(InnboksLegacyEventService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(InnboksInputEventService::class.java)
 
-    override suspend fun processEvents(events: ConsumerRecords<Nokkel, Innboks>) {
+    override suspend fun processEvents(events: ConsumerRecords<NokkelInput, InnboksInput>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, InnboksIntern>>()
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.INNBOKS) {
             events.forEach { event ->
                 try {
-                    val externalNokkel = event.getNonNullKey()
-                    val externalInnboks = event.value()
-                    val internalNokkel = innboksTransformer.toNokkelInternal(externalNokkel, externalInnboks)
-                    val internalInnboks = innboksTransformer.toInnboksInternal(externalInnboks)
-                    successfullyValidatedEvents.add(Pair(internalNokkel, internalInnboks))
-                    countSuccessfulEventForProducer(internalNokkel.getSystembruker())
+                    val nokkelExternal = event.getNonNullKey()
+                    val innboksExternal = event.value()
+                    val internalNokkelInnboks = InnboksInputTransformer.toInternal(nokkelExternal, innboksExternal)
+                    successfullyValidatedEvents.add(internalNokkelInnboks)
+                    countSuccessfulEventForProducer(event.namespaceAppName)
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
-                    log.warn("Innboks-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
+                    log.warn("InnboksInput-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
                 } catch (fve: FieldValidationException) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.INNBOKS)
+                    countFailedEventForProducer(event.namespaceAppName)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), fve, Eventtype.INNBOKS)
                     problematicEvents.add(feilrespons)
-                    log.warn("Validering av innboks-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
+                    log.warn("Validering av InnboksInput-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (cce: ClassCastException) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
+                    countFailedEventForProducer(event.namespaceAppName)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.INNBOKS)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), cce, Eventtype.INNBOKS)
                     problematicEvents.add(feilrespons)
-                    log.warn("Feil eventtype funnet på innboks-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
-                } catch(sme: ServiceUserMappingException) {
-                    log.warn("Feil ved henting av systembrukermapping for innboks-legacy.", sme)
-                    throw sme
+                    log.warn("Feil eventtype funnet på InnboksInput-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, produsent: ${event.namespaceAppName}, $cce", cce)
                 } catch (e: Exception) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.INNBOKS)
+                    countFailedEventForProducer(event.namespaceAppName)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), e, Eventtype.INNBOKS)
                     problematicEvents.add(feilrespons)
-                    log.warn("Transformasjon av innboks-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
+                    log.warn("Transformasjon av InnboksInput-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
                 }
             }
 

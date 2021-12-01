@@ -14,8 +14,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmoth
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSessionLegacy
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking
@@ -24,8 +24,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 internal class BeskjedLegacyEventServiceTest {
-    private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
-    private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
+    private val metricsCollector = mockk<MetricsCollectorLegacy>(relaxed = true)
+    private val metricsSession = mockk<EventMetricsSessionLegacy>(relaxed = true)
     private val topic = "topic-beskjed-test"
     private val transformer = mockk<BeskjedLegacyTransformer>()
     private val feilresponsTransformer = mockk<FeilresponsLegacyTransformer>()
@@ -56,7 +56,7 @@ internal class BeskjedLegacyEventServiceTest {
         every { transformer.toBeskjedInternal(externalBeskjed) } returns internalBeskjed
         every { transformer.toNokkelInternal(externalNokkel, externalBeskjed) } returns internalNokkel
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -65,7 +65,7 @@ internal class BeskjedLegacyEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
@@ -84,7 +84,7 @@ internal class BeskjedLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNullNokkel, externalBeskjed, topic)
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -114,7 +114,7 @@ internal class BeskjedLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalBeskjedWithTooLongGrupperingsid, topic)
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -130,7 +130,7 @@ internal class BeskjedLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toBeskjedInternal(externalBeskjedWithTooLongGrupperingsid) }
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalBeskjedWithTooLongGrupperingsid) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -144,7 +144,7 @@ internal class BeskjedLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -161,7 +161,7 @@ internal class BeskjedLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toBeskjedInternal(externalUnexpectedBeskjed) }
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalUnexpectedBeskjed) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -186,7 +186,7 @@ internal class BeskjedLegacyEventServiceTest {
         coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -198,7 +198,7 @@ internal class BeskjedLegacyEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 1) { metricsSession.countDuplicateEvents(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
 
@@ -219,7 +219,7 @@ internal class BeskjedLegacyEventServiceTest {
         val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Beskjed>
         val beskjedEventService = BeskjedLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -233,7 +233,7 @@ internal class BeskjedLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toBeskjedInternal(any()) }
         verify(exactly = 0) { transformer.toNokkelInternal(any(), any()) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -253,7 +253,7 @@ internal class BeskjedLegacyEventServiceTest {
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
         every { transformer.toNokkelInternal(externalNokkel, externalBeskjed) } throws ServiceUserMappingException("")
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -264,7 +264,7 @@ internal class BeskjedLegacyEventServiceTest {
             }
         } `should throw` ServiceUserMappingException::class
 
-        coVerify(exactly = 0) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 0) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
