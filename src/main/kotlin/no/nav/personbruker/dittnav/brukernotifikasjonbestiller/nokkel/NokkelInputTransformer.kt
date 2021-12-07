@@ -16,6 +16,7 @@ object NokkelInputTransformer {
             .setFodselsnummer(validateNonNullFieldMaxLength(externalNokkel.getFodselsnummer(), "fodselsnummer", MAX_LENGTH_FODSELSNUMMER))
             .setNamespace(externalNokkel.getNamespace())
             .setAppnavn(externalNokkel.getAppnavn())
+            .setSystembruker("N/A")
             .build()
     }
 }
