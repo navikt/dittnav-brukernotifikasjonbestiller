@@ -47,14 +47,15 @@ object AvroOppgaveLegacyObjectMother {
 
     private fun createOppgaveLegacy(fodselsnummer: String, text: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, link: String, grupperingsid: String, prefererteKanaler: List<String>): Oppgave {
         return Oppgave(
-                Instant.now().toEpochMilli(),
-                fodselsnummer,
-                grupperingsid,
-                text,
-                link,
-                sikkerhetsnivaa,
-                eksternVarsling,
-                prefererteKanaler
+            Instant.now().toEpochMilli(),
+            Instant.now().toEpochMilli(),
+            fodselsnummer,
+            grupperingsid,
+            text,
+            link,
+            sikkerhetsnivaa,
+            eksternVarsling,
+            prefererteKanaler
         )
     }
 }

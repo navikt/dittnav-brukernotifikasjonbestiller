@@ -18,12 +18,13 @@ object OppgaveInputTransformer {
 
     private fun toOppgaveInternal(externalOppgave: OppgaveInput): OppgaveIntern {
         return OppgaveIntern.newBuilder()
-                .setTidspunkt(externalOppgave.getTidspunkt())
-                .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_OPPGAVE))
-                .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))
-                .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalOppgave.getSikkerhetsnivaa()))
-                .setEksternVarsling(externalOppgave.getEksternVarsling())
-                .setPrefererteKanaler(validatePrefererteKanaler(externalOppgave.getEksternVarsling(), externalOppgave.getPrefererteKanaler()))
-                .build()
+            .setTidspunkt(externalOppgave.getTidspunkt())
+            .setSynligFremTil(externalOppgave.getSynligFremTil())
+            .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_OPPGAVE))
+            .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))
+            .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalOppgave.getSikkerhetsnivaa()))
+            .setEksternVarsling(externalOppgave.getEksternVarsling())
+            .setPrefererteKanaler(validatePrefererteKanaler(externalOppgave.getEksternVarsling(), externalOppgave.getPrefererteKanaler()))
+            .build()
     }
 }

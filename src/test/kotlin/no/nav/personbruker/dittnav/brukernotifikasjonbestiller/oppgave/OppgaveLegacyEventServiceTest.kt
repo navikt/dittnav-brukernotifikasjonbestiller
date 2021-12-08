@@ -275,12 +275,13 @@ internal class OppgaveLegacyEventServiceTest {
 
     private fun createOppgaveIntern(oppgaveLegacy: Oppgave) =
             OppgaveIntern(
-                    oppgaveLegacy.getTidspunkt(),
-                    oppgaveLegacy.getTekst(),
-                    oppgaveLegacy.getLink(),
-                    oppgaveLegacy.getSikkerhetsnivaa(),
-                    oppgaveLegacy.getEksternVarsling(),
-                    oppgaveLegacy.getPrefererteKanaler()
+                oppgaveLegacy.getTidspunkt(),
+                oppgaveLegacy.getSynligFremTil(),
+                oppgaveLegacy.getTekst(),
+                oppgaveLegacy.getLink(),
+                oppgaveLegacy.getSikkerhetsnivaa(),
+                oppgaveLegacy.getEksternVarsling(),
+                oppgaveLegacy.getPrefererteKanaler()
             )
 
     private fun createNokkelIntern(nokkelLegacy: Nokkel, oppgaveLegacy: Oppgave) =
