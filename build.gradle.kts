@@ -37,7 +37,7 @@ val intTestImplementation by configurations.getting {
 configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
 
 dependencies {
-    implementation("com.github.navikt:brukernotifikasjon-schemas:1.2021.12.03-10.49-fcb958c6af8f")
+    implementation("com.github.navikt:brukernotifikasjon-schemas:1.2021.12.10-12.50-3a920475daa4")
     implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2021.12.08-12.03-cfa4ddd9cdcf")
     implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)

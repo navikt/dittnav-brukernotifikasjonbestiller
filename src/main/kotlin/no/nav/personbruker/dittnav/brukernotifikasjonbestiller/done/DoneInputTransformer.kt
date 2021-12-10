@@ -10,7 +10,7 @@ object DoneInputTransformer {
 
     fun toInternal(nokkelExternal: NokkelInput, doneExternal: DoneInput): Pair<NokkelIntern, DoneIntern> {
 
-        return NokkelInputTransformer.toNokkelInternal(nokkelExternal) to toDoneInternal(doneExternal)
+        return NokkelInputTransformer.toNokkelInternalWithoutEventIdValidation(nokkelExternal) to toDoneInternal(doneExternal)
     }
 
     private fun toDoneInternal(externalDone: DoneInput): DoneIntern {

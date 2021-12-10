@@ -19,4 +19,17 @@ object NokkelInputTransformer {
             .setSystembruker("N/A")
             .build()
     }
+
+    fun toNokkelInternalWithoutEventIdValidation(externalNokkel: NokkelInput): NokkelIntern {
+
+        return NokkelIntern.newBuilder()
+            .setUlid(createULID())
+            .setEventId(externalNokkel.getEventId())
+            .setGrupperingsId(validateNonNullFieldMaxLength(externalNokkel.getGrupperingsId(), "grupperingsId", MAX_LENGTH_GRUPPERINGSID))
+            .setFodselsnummer(validateNonNullFieldMaxLength(externalNokkel.getFodselsnummer(), "fodselsnummer", MAX_LENGTH_FODSELSNUMMER))
+            .setNamespace(externalNokkel.getNamespace())
+            .setAppnavn(externalNokkel.getAppnavn())
+            .setSystembruker("N/A")
+            .build()
+    }
 }
