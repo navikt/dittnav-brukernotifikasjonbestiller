@@ -18,4 +18,3 @@ class ServiceUserMapper(private val mappings: Map<String, NamespaceAppName>) {
         throw ServiceUserMappingException("Fant ikke mapping for systembruker $maskedUser.")
     }
 }
-
