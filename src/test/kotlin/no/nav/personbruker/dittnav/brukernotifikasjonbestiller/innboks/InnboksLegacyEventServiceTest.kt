@@ -14,8 +14,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmoth
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSessionLegacy
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking
@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test
 
 internal class InnboksLegacyEventServiceTest {
 
-    private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
-    private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
+    private val metricsCollector = mockk<MetricsCollectorLegacy>(relaxed = true)
+    private val metricsSession = mockk<EventMetricsSessionLegacy>(relaxed = true)
     private val topic = "topic-innboks-test"
     private val transformer = mockk<InnboksLegacyTransformer>()
     private val feilresponsTransformer = mockk<FeilresponsLegacyTransformer>()
@@ -57,7 +57,7 @@ internal class InnboksLegacyEventServiceTest {
         every { transformer.toInnboksInternal(externalInnboks) } returns internalInnboks
         every { transformer.toNokkelInternal(externalNokkel, externalInnboks) } returns internalNokkel
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -67,7 +67,7 @@ internal class InnboksLegacyEventServiceTest {
             innboksEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
@@ -86,7 +86,7 @@ internal class InnboksLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNullNokkel, externalInnboks, topic)
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -116,7 +116,7 @@ internal class InnboksLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalInnboksWithTooLongGrupperingsid, topic)
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -132,7 +132,7 @@ internal class InnboksLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toInnboksInternal(externalInnboksWithTooLongGrupperingsid) }
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalInnboksWithTooLongGrupperingsid) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -146,7 +146,7 @@ internal class InnboksLegacyEventServiceTest {
         val externalEvents = ConsumerRecordsObjectMother.createLegacyConsumerRecords(externalNokkel, externalUnexpectedInnboks, topic)
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -163,7 +163,7 @@ internal class InnboksLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toInnboksInternal(externalUnexpectedInnboks) }
         verify(exactly = 1) { transformer.toNokkelInternal(externalNokkel, externalUnexpectedInnboks) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -188,7 +188,7 @@ internal class InnboksLegacyEventServiceTest {
         coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -200,7 +200,7 @@ internal class InnboksLegacyEventServiceTest {
             innboksEventService.processEvents(externalEvents)
         }
 
-        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 1) { metricsSession.countDuplicateEvents(any()) }
         coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
 
@@ -221,7 +221,7 @@ internal class InnboksLegacyEventServiceTest {
         val externalEvents = externalMalplacedEvents as ConsumerRecords<Nokkel, Innboks>
         val innboksEventService = InnboksLegacyEventService(transformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -235,7 +235,7 @@ internal class InnboksLegacyEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-        coVerify(exactly = 1) { metricsSession.countFailedEventForSystemUser(any()) }
+        coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
         verify(exactly = 0) { transformer.toInnboksInternal(any()) }
         verify(exactly = 0) { transformer.toNokkelInternal(any(), any()) }
         verify(exactly = 1) { feilresponsTransformer.createFeilrespons(any(), any(), any(), any()) }
@@ -255,7 +255,7 @@ internal class InnboksLegacyEventServiceTest {
         coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
         every { transformer.toNokkelInternal(externalNokkel, externalInnboks) } throws ServiceUserMappingException("")
 
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        val slot = slot<suspend EventMetricsSessionLegacy.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
             slot.captured.invoke(metricsSession)
         }
@@ -266,7 +266,7 @@ internal class InnboksLegacyEventServiceTest {
             }
         } `should throw` ServiceUserMappingException::class
 
-        coVerify(exactly = 0) { metricsSession.countSuccessfulEventForSystemUser(any()) }
+        coVerify(exactly = 0) { metricsSession.countSuccessfulEventForProducer(any()) }
         coVerify(exactly = 0) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) }
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) }

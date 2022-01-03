@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons
 
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
@@ -14,7 +15,18 @@ import java.time.ZoneOffset
 
 object FeilresponsTransformer {
 
-    private val log: Logger = LoggerFactory.getLogger(FeilresponsTransformer::class.java)
+    fun createFeilresponsFromNokkel(eventKey: NokkelInput, exception: Exception, eventtype: Eventtype): Pair<NokkelFeilrespons, Feilrespons> {
+        val nokkelFeilrespons = toNokkelFeilrespons(
+            eventKey.getEventId(),
+            eventKey.getNamespace(),
+            eventKey.getAppnavn(),
+            "N/A",
+            eventtype
+        )
+        val feilrespons = toFeilrespons(exception)
+
+        return Pair(nokkelFeilrespons, feilrespons)
+    }
 
     fun <T> createFeilresponsFromDuplicateEvents(eventtype: Eventtype, duplicateEvents: List<Pair<NokkelIntern, T>>): MutableList<Pair<NokkelFeilrespons, Feilrespons>> {
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
@@ -36,13 +48,6 @@ object FeilresponsTransformer {
                 eventtype
         )
         val feilrespons = toFeilrespons(exception)
-
-        //TODO FJERN DENNE
-        log.warn("Feilrespons: eventid: ${nokkelFeilrespons.getEventId()}, " +
-                "systembruker: ${nokkelFeilrespons.getSystembruker()}, " +
-                "eventtype: ${nokkelFeilrespons.getBrukernotifikasjonstype()}, " +
-                "begrunnelse: ${feilrespons.getBegrunnelse()}, " +
-                "feilmelding: ${feilrespons.getFeilmelding()}")
 
         return Pair(nokkelFeilrespons, feilrespons)
     }

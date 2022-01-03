@@ -5,6 +5,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.netty.util.NetUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.SwallowSerializationErrorsAvroDeserializer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
@@ -22,7 +23,7 @@ object Kafka {
 
     private const val transactionIdName = "dittnav-brukernotifikasjonbestiller-transaction"
 
-    fun consumerProps(env: Environment, eventtypeToConsume: Eventtype, enableSecurity: Boolean = isCurrentlyRunningOnNais()): Properties {
+    fun consumerPropsLegacy(env: Environment, eventtypeToConsume: Eventtype): Properties {
         val groupIdAndEventType = buildGroupIdIncludingEventType(env, eventtypeToConsume)
         return Properties().apply {
             put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.bootstrapServers)
@@ -34,20 +35,38 @@ object Kafka {
             put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
             put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
             put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
-            if (enableSecurity) {
+            if (env.securityConfig.enabled) {
                 putAll(credentialPropsOnPrem(env))
             }
         }
     }
 
-    fun producerProps(env: Environment, type: Eventtype): Properties {
+    fun consumerProps(env: Environment, eventtypeToConsume: Eventtype): Properties {
+        val groupIdAndEventType = buildGroupIdIncludingEventType(env, eventtypeToConsume)
+        return Properties().apply {
+            put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
+            put(KafkaAvroDeserializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
+            put(ConsumerConfig.GROUP_ID_CONFIG, groupIdAndEventType)
+            put(ConsumerConfig.CLIENT_ID_CONFIG, groupIdAndEventType + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
+            put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false)
+            put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
+            put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
+            if (env.securityConfig.enabled) {
+                putAll(credentialPropsAiven(env.securityConfig.variables!!))
+            }
+        }
+    }
+
+    fun producerProps(env: Environment, type: Eventtype, eventSource: TopicSource): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
-            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + type + eventSource + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdName(type))
+            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdName(type, eventSource))
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
@@ -57,14 +76,14 @@ object Kafka {
         }
     }
 
-    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype): Properties {
+    fun producerFeilresponsProps(env: Environment, eventtype: Eventtype, eventSource: TopicSource): Properties {
         return Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, env.aivenBrokers)
             put(KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG, env.aivenSchemaRegistry)
-            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + Eventtype.FEILRESPONS + eventtype + NetUtil.getHostname(InetSocketAddress(0)))
+            put(ProducerConfig.CLIENT_ID_CONFIG, env.groupId + Eventtype.FEILRESPONS + eventtype + eventSource + NetUtil.getHostname(InetSocketAddress(0)))
             put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
             put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer::class.java)
-            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdNameFeilrespons(eventtype))
+            put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, buildTransactionIdNameFeilrespons(eventtype, eventSource))
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
@@ -108,9 +127,9 @@ object Kafka {
     private fun buildGroupIdIncludingEventType(env: Environment, eventtypeToConsume: Eventtype) =
             env.groupId + eventtypeToConsume.eventtype
 
-    private fun buildTransactionIdName(eventtype: Eventtype) =
-            "$transactionIdName-${eventtype.eventtype}"
+    private fun buildTransactionIdName(eventtype: Eventtype, eventSource: TopicSource) =
+            "$transactionIdName-${eventtype.eventtype}-$eventSource"
 
-    private fun buildTransactionIdNameFeilrespons(eventtype: Eventtype) =
-            "$transactionIdName-${Eventtype.FEILRESPONS}-${eventtype.eventtype}"
+    private fun buildTransactionIdNameFeilrespons(eventtype: Eventtype, eventSource: TopicSource) =
+            "$transactionIdName-${Eventtype.FEILRESPONS}-${eventtype.eventtype}-$eventSource"
 }

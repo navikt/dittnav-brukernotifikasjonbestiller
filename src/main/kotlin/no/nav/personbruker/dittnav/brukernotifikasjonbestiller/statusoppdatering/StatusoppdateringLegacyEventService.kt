@@ -16,17 +16,17 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class StatusoppdateringLegacyEventService(
-        private val statusoppdateringTransformer: StatusoppdateringLegacyTransformer,
-        private val feilresponsTransformer: FeilresponsLegacyTransformer,
-        private val metricsCollector: MetricsCollector,
-        private val handleDuplicateEvents: HandleDuplicateEvents,
-        private val eventDispatcher: EventDispatcher<StatusoppdateringIntern>
+    private val statusoppdateringTransformer: StatusoppdateringLegacyTransformer,
+    private val feilresponsTransformer: FeilresponsLegacyTransformer,
+    private val metricsCollector: MetricsCollectorLegacy,
+    private val handleDuplicateEvents: HandleDuplicateEvents,
+    private val eventDispatcher: EventDispatcher<StatusoppdateringIntern>
 ) : EventBatchProcessorService<Nokkel, Statusoppdatering> {
 
     private val log: Logger = LoggerFactory.getLogger(StatusoppdateringLegacyEventService::class.java)
@@ -43,19 +43,19 @@ class StatusoppdateringLegacyEventService(
                     val internalNokkel = statusoppdateringTransformer.toNokkelInternal(externalNokkel, externalStatusoppdatering)
                     val internalStatusoppdatering = statusoppdateringTransformer.toStatusoppdateringInternal(externalStatusoppdatering)
                     successfullyValidatedEvents.add(Pair(internalNokkel, internalStatusoppdatering))
-                    countSuccessfulEventForSystemUser(internalNokkel.getSystembruker())
+                    countSuccessfulEventForProducer(internalNokkel.getSystembruker())
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
                     log.warn("Statusoppdatering-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
                 } catch (fve: FieldValidationException) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForSystemUser(systembruker)
+                    countFailedEventForProducer(systembruker)
                     val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.STATUSOPPDATERING)
                     problematicEvents.add(feilrespons)
                     log.warn("Validering av statusoppdatering-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (cce: ClassCastException) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForSystemUser(systembruker)
+                    countFailedEventForProducer(systembruker)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
                     val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.STATUSOPPDATERING)
@@ -66,7 +66,7 @@ class StatusoppdateringLegacyEventService(
                     throw sme
                 } catch (e: Exception) {
                     val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForSystemUser(systembruker)
+                    countFailedEventForProducer(systembruker)
                     val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.STATUSOPPDATERING)
                     problematicEvents.add(feilrespons)
                     log.warn("Transformasjon av statusoppdatering-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)

@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmot
 
 import no.nav.brukernotifikasjon.schemas.Beskjed
 import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedLegacyObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -34,6 +35,16 @@ object ConsumerRecordsObjectMother {
     fun <T> createLegacyConsumerRecords(nokkel: Nokkel?, event: T?, topic: String): ConsumerRecords<Nokkel, T> {
         val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<Nokkel, T>>>()
         val recordsForSingleTopic = mutableListOf<ConsumerRecord<Nokkel, T>>()
+
+        recordsForSingleTopic.add(ConsumerRecord(topic, defaultPartition, defaultOffset.toLong(), nokkel, event))
+        allRecords[TopicPartition(topic, defaultPartition)] = recordsForSingleTopic
+
+        return ConsumerRecords(allRecords)
+    }
+
+    fun <T> createInputConsumerRecords(nokkel: NokkelInput?, event: T?, topic: String): ConsumerRecords<NokkelInput, T> {
+        val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<NokkelInput, T>>>()
+        val recordsForSingleTopic = mutableListOf<ConsumerRecord<NokkelInput, T>>()
 
         recordsForSingleTopic.add(ConsumerRecord(topic, defaultPartition, defaultOffset.toLong(), nokkel, event))
         allRecords[TopicPartition(topic, defaultPartition)] = recordsForSingleTopic

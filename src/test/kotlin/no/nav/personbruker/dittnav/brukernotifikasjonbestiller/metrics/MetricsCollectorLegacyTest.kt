@@ -5,13 +5,12 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.influx.*
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.prometheus.PrometheusMetricsCollector
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-internal class MetricsCollectorTest {
+internal class MetricsCollectorLegacyTest {
 
     private val metricsReporter = mockk<MetricsReporter>()
     private val producerNameResolver = mockk<ProducerNameResolver>()
@@ -21,7 +20,6 @@ internal class MetricsCollectorTest {
     @BeforeEach
     fun cleanup() {
         clearAllMocks()
-        mockkObject(PrometheusMetricsCollector)
     }
 
     @Test
@@ -29,26 +27,21 @@ internal class MetricsCollectorTest {
 
         coEvery { producerNameResolver.getProducerNameAlias(producerName) } returns producerAlias
         val nameScrubber = ProducerNameScrubber(producerNameResolver)
-        val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+        val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
 
-        val producerNameForPrometheus = slot<String>()
         val capturedTags = slot<Map<String, String>>()
 
         coEvery { metricsReporter.registerDataPoint(not(KAFKA_EVENTS_PROCESSING_TIME), any(), capture(capturedTags)) } returns Unit
         coEvery { metricsReporter.registerDataPoint(KAFKA_EVENTS_PROCESSING_TIME, any(), any()) } returns Unit
-        coEvery { PrometheusMetricsCollector.registerSeenEvents(any(), any(), capture(producerNameForPrometheus)) } returns Unit
 
         runBlocking {
             metricsCollector.recordMetrics(Eventtype.BESKJED) {
-                countSuccessfulEventForSystemUser(producerName)
+                countSuccessfulEventForProducer(producerName)
             }
         }
 
         coVerify(exactly = 2) { metricsReporter.registerDataPoint(not(KAFKA_EVENTS_PROCESSING_TIME), any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerSeenEvents(any(), any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerProcessedEvents(any(), any(), any()) }
 
-        producerNameForPrometheus.captured `should be equal to` producerAlias
         capturedTags.captured["producer"] `should be equal to` producerAlias
     }
 
@@ -57,26 +50,21 @@ internal class MetricsCollectorTest {
 
         coEvery { producerNameResolver.getProducerNameAlias(producerName) } returns producerAlias
         val nameScrubber = ProducerNameScrubber(producerNameResolver)
-        val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+        val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
 
         val capturedTags = slot<Map<String, String>>()
-        val producerNameForPrometheus = slot<String>()
 
         coEvery { metricsReporter.registerDataPoint(not(KAFKA_EVENTS_PROCESSING_TIME), any(), capture(capturedTags)) } returns Unit
         coEvery { metricsReporter.registerDataPoint(KAFKA_EVENTS_PROCESSING_TIME, any(), any()) } returns Unit
-        every { PrometheusMetricsCollector.registerFailedEvents(any(), any(), capture(producerNameForPrometheus)) } returns Unit
 
         runBlocking {
             metricsCollector.recordMetrics(Eventtype.BESKJED) {
-                countFailedEventForSystemUser(producerName)
+                countFailedEventForProducer(producerName)
             }
         }
 
         coVerify(exactly = 2) { metricsReporter.registerDataPoint(not(KAFKA_EVENTS_PROCESSING_TIME), any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerSeenEvents(any(), any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerFailedEvents(any(), any(), any()) }
 
-        producerNameForPrometheus.captured `should be equal to` producerAlias
         capturedTags.captured["producer"] `should be equal to` producerAlias
     }
 
@@ -85,7 +73,7 @@ internal class MetricsCollectorTest {
         coEvery { producerNameResolver.getProducerNameAlias(any()) } returns "test-user"
 
         val nameScrubber = ProducerNameScrubber(producerNameResolver)
-        val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+        val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
 
         val capturedFieldsForSeen = slot<Map<String, Any>>()
         val capturedFieldsForProcessed = slot<Map<String, Any>>()
@@ -100,18 +88,14 @@ internal class MetricsCollectorTest {
 
         runBlocking {
             metricsCollector.recordMetrics(Eventtype.BESKJED) {
-                countSuccessfulEventForSystemUser("producer")
-                countSuccessfulEventForSystemUser("producer")
-                countFailedEventForSystemUser("producer")
+                countSuccessfulEventForProducer("producer")
+                countSuccessfulEventForProducer("producer")
+                countFailedEventForProducer("producer")
                 countNokkelWasNull()
             }
         }
 
         coVerify(exactly = 5) { metricsReporter.registerDataPoint(any(), any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerSeenEvents(3, any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerProcessedEvents(2, any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerFailedEvents(1, any(), any()) }
-        verify(exactly = 1) { PrometheusMetricsCollector.registerNokkelWasNullEvents(1, any(), any()) }
 
         capturedFieldsForSeen.captured["counter"] `should be equal to` 3
         capturedFieldsForProcessed.captured["counter"] `should be equal to` 2

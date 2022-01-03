@@ -6,11 +6,11 @@ import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be`
 import org.junit.jupiter.api.Test
 
-internal class EventMetricsSessionTest {
+internal class EventMetricsSessionLegacyTest {
 
     @Test
     fun `Skal telle event hvis nokkel er null`() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
 
         session.countNokkelWasNull()
 
@@ -20,10 +20,10 @@ internal class EventMetricsSessionTest {
 
     @Test
     fun `Skal telle event som feiler`() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
         val systemUser = "dummySystemUser"
 
-        session.countFailedEventForSystemUser(systemUser)
+        session.countFailedEventForProducer(systemUser)
 
         session.getEventsSeen() `should be` 1
         session.getEventsSeen(systemUser) `should be` 1
@@ -31,10 +31,10 @@ internal class EventMetricsSessionTest {
 
     @Test
     fun `Skal telle vellykket event `() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
         val systemUser = "dummySystemUser"
 
-        session.countSuccessfulEventForSystemUser(systemUser)
+        session.countSuccessfulEventForProducer(systemUser)
 
         session.getEventsSeen() `should be` 1
         session.getEventsSeen(systemUser) `should be` 1
@@ -42,12 +42,12 @@ internal class EventMetricsSessionTest {
 
     @Test
     fun `Skal telle rett antall totale events fra Kafka`() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
         val systemUser = "dummySystemUser"
 
         session.countNokkelWasNull()
-        session.countFailedEventForSystemUser(systemUser)
-        session.countSuccessfulEventForSystemUser(systemUser)
+        session.countFailedEventForProducer(systemUser)
+        session.countSuccessfulEventForProducer(systemUser)
 
         session.getEventsSeen() `should be` 3
         session.getEventsSeen(systemUser) `should be` 2
@@ -58,10 +58,10 @@ internal class EventMetricsSessionTest {
 
     @Test
     fun `Skal telle duplikat per systembruker`() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
         val systemUser = "dummySystemUser"
 
-        session.countDuplicateEventForSystemUser(systemUser)
+        session.countDuplicateEventForProducer(systemUser)
 
         session.getDuplicateKeys().size `should be` 1
         session.getDuplicateKeys(systemUser) `should be` 1
@@ -69,7 +69,7 @@ internal class EventMetricsSessionTest {
 
     @Test
     fun `Skal telle alle duplikat`() {
-        val session = EventMetricsSession(Eventtype.BESKJED)
+        val session = EventMetricsSessionLegacy(Eventtype.BESKJED)
         val duplicate_1 = NokkelEventPairObjectMother.createEventPair(eventId = "eventId-0", systembruker = "systembruker-0")
         val duplicate_2 = NokkelEventPairObjectMother.createEventPair(eventId = "eventId-1", systembruker = "systembruker-1")
         val duplicateEvents = listOf(duplicate_1, duplicate_2)

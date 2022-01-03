@@ -73,15 +73,25 @@ fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null
 }
 
-fun shouldPollBeskjed() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED", "false").toBoolean()
+fun shouldPollBeskjedLegacy() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED", "false").toBoolean()
 
-fun shouldPollOppgave() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE", "false").toBoolean()
+fun shouldPollOppgaveLegacy() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE", "false").toBoolean()
 
-fun shouldPollInnboks() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS", "false").toBoolean()
+fun shouldPollInnboksLegacy() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS", "false").toBoolean()
 
-fun shouldPollStatusoppdatering() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING", "false").toBoolean()
+fun shouldPollStatusoppdateringLegacy() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING", "false").toBoolean()
 
-fun shouldPollDone() = StringEnvVar.getOptionalEnvVar("POLL_DONE", "false").toBoolean()
+fun shouldPollDoneLegacy() = StringEnvVar.getOptionalEnvVar("POLL_DONE", "false").toBoolean()
+
+fun shouldPollBeskjedInput() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED_INPUT", "false").toBoolean()
+
+fun shouldPollOppgaveInput() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE_INPUT", "false").toBoolean()
+
+fun shouldPollInnboksInput() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS_INPUT", "false").toBoolean()
+
+fun shouldPollStatusoppdateringInput() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING_INPUT", "false").toBoolean()
+
+fun shouldPollDoneInput() = StringEnvVar.getOptionalEnvVar("POLL_DONE_INPUT", "false").toBoolean()
 
 fun getDbUrl(host: String, port: String, name: String): String {
         return if (host.endsWith(":$port")) {

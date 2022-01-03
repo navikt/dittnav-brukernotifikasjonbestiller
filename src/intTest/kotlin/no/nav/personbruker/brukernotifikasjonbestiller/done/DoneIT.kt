@@ -29,9 +29,10 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLega
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
@@ -62,7 +63,7 @@ class DoneIT {
     private val metricsReporter = StubMetricsReporter()
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
-    private val metricsCollector = MetricsCollector(metricsReporter, nameScrubber)
+    private val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
     private val producerServiceUser = "dummySystembruker"
     private val producerNamespace = "namespace"
     private val producerAppName = "appName"
@@ -105,14 +106,14 @@ class DoneIT {
 
 
     fun `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE, enableSecurity = false)
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE)
         val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
 
-        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN)
+        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, TopicSource.ON_PREM)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
         val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, TopicSource.ON_PREM)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
@@ -136,7 +137,7 @@ class DoneIT {
     }
 
     private fun `Wait until all done events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN, enableSecurity = false)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN)
         val targetKafkaConsumer = KafkaConsumer<NokkelIntern, DoneIntern>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
 
@@ -162,7 +163,7 @@ class DoneIT {
 
 
     private fun `Wait until bad event has been received by error topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS, enableSecurity = false)
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
         val capturingProcessor = CapturingEventProcessor<NokkelFeilrespons, Feilrespons>()
 

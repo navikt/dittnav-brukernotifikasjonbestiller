@@ -1,75 +1,64 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Oppgave
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class OppgaveLegacyEventService(
-    private val oppgaveTransformer: OppgaveLegacyTransformer,
-    private val feilresponsTransformer: FeilresponsLegacyTransformer,
-    private val metricsCollector: MetricsCollectorLegacy,
+class OppgaveInputEventService(
+    private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateEvents,
     private val eventDispatcher: EventDispatcher<OppgaveIntern>
-) : EventBatchProcessorService<Nokkel, Oppgave> {
+) : EventBatchProcessorService<NokkelInput, OppgaveInput> {
 
-    private val log: Logger = LoggerFactory.getLogger(OppgaveLegacyEventService::class.java)
+    private val log: Logger = LoggerFactory.getLogger(OppgaveInputEventService::class.java)
 
-    override suspend fun processEvents(events: ConsumerRecords<Nokkel, Oppgave>) {
+    override suspend fun processEvents(events: ConsumerRecords<NokkelInput, OppgaveInput>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, OppgaveIntern>>()
         val problematicEvents = mutableListOf<Pair<NokkelFeilrespons, Feilrespons>>()
 
         metricsCollector.recordMetrics(eventType = Eventtype.OPPGAVE) {
             events.forEach { event ->
                 try {
-                    val externalNokkel = event.getNonNullKey()
-                    val externalOppgave = event.value()
-                    val internalNokkel = oppgaveTransformer.toNokkelInternal(externalNokkel, externalOppgave)
-                    val internalOppgave = oppgaveTransformer.toOppgaveInternal(externalOppgave)
-                    successfullyValidatedEvents.add(Pair(internalNokkel, internalOppgave))
-                    countSuccessfulEventForProducer(internalNokkel.getSystembruker())
+                    val nokkelExternal = event.getNonNullKey()
+                    val oppgaveExternal = event.value()
+                    val internalNokkelOppgave = OppgaveInputTransformer.toInternal(nokkelExternal, oppgaveExternal)
+                    successfullyValidatedEvents.add(internalNokkelOppgave)
+                    countSuccessfulEventForProducer(event.namespaceAppName)
                 } catch (nne: NokkelNullException) {
                     countNokkelWasNull()
-                    log.warn("Oppgave-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
+                    log.warn("OppgaveInput-eventet manglet nøkkel. Topic: ${event.topic()}, Partition: ${event.partition()}, Offset: ${event.offset()}", nne)
                 } catch (fve: FieldValidationException) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, fve, Eventtype.OPPGAVE)
+                    countFailedEventForProducer(event.namespaceAppName)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), fve, Eventtype.OPPGAVE)
                     problematicEvents.add(feilrespons)
-                    log.warn("Validering av oppgave-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
+                    log.warn("Validering av OppgaveInput-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", fve)
                 } catch (cce: ClassCastException) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
+                    countFailedEventForProducer(event.namespaceAppName)
                     val funnetType = event.javaClass.name
                     val eventId = event.key().getEventId()
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, cce, Eventtype.OPPGAVE)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), cce, Eventtype.OPPGAVE)
                     problematicEvents.add(feilrespons)
-                    log.warn("Feil eventtype funnet på oppgave-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, systembruker: $systembruker, $cce", cce)
-                } catch(sme: ServiceUserMappingException) {
-                    log.warn("Feil ved henting av systembrukermapping for oppgave-legacy.", sme)
-                    throw sme
+                    log.warn("Feil eventtype funnet på OppgaveInput-topic. Fant et event av typen $funnetType. Eventet blir forkastet. EventId: $eventId, produsent: ${event.namespaceAppName}, $cce", cce)
                 } catch (e: Exception) {
-                    val systembruker = event.systembruker ?: "NoProducerSpecified"
-                    countFailedEventForProducer(systembruker)
-                    val feilrespons = feilresponsTransformer.createFeilrespons(event.key().getEventId(), systembruker, e, Eventtype.OPPGAVE)
+                    countFailedEventForProducer(event.namespaceAppName)
+                    val feilrespons = FeilresponsTransformer.createFeilresponsFromNokkel(event.key(), e, Eventtype.OPPGAVE)
                     problematicEvents.add(feilrespons)
-                    log.warn("Transformasjon av oppgave-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
+                    log.warn("Transformasjon av OppgaveInput-event fra Kafka feilet, fullfører batch-en før vi skriver til feilrespons-topic.", e)
                 }
             }
 
@@ -94,5 +83,4 @@ class OppgaveLegacyEventService(
             }
         }
     }
-
 }

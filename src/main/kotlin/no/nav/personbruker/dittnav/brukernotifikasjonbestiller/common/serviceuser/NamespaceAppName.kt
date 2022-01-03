@@ -3,4 +3,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceus
 data class NamespaceAppName(
         val namespace: String,
         val appName: String
-)
+) {
+        val concatenated get() = "$namespace:$appName"
+}
