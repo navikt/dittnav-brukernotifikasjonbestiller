@@ -25,6 +25,8 @@ object OppgaveInputTransformer {
             .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalOppgave.getSikkerhetsnivaa()))
             .setEksternVarsling(externalOppgave.getEksternVarsling())
             .setPrefererteKanaler(validatePrefererteKanaler(externalOppgave.getEksternVarsling(), externalOppgave.getPrefererteKanaler()))
+            .setEpostVarslingstekst(validateEpostVarslingstekst(externalOppgave.getEksternVarsling(), externalOppgave.getEpostVarslingstekst()))
+            .setSmsVarslingstekst(validateSmsVarslingstekst(externalOppgave.getEksternVarsling(), externalOppgave.getSmsVarslingstekst()))
             .build()
     }
 }

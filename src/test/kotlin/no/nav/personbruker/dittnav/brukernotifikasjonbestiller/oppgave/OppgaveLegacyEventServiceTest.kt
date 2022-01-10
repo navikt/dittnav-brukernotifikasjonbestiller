@@ -281,7 +281,9 @@ internal class OppgaveLegacyEventServiceTest {
                 oppgaveLegacy.getLink(),
                 oppgaveLegacy.getSikkerhetsnivaa(),
                 oppgaveLegacy.getEksternVarsling(),
-                oppgaveLegacy.getPrefererteKanaler()
+                oppgaveLegacy.getPrefererteKanaler(),
+                oppgaveLegacy.getEpostVarslingstekst(),
+                oppgaveLegacy.getSmsVarslingstekst()
             )
 
     private fun createNokkelIntern(nokkelLegacy: Nokkel, oppgaveLegacy: Oppgave) =

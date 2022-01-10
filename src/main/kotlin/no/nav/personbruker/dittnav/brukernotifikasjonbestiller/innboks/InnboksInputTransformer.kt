@@ -6,7 +6,6 @@ import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelInputTransformer
 
@@ -25,6 +24,8 @@ object InnboksInputTransformer {
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalInnboks.getSikkerhetsnivaa()))
                 .setEksternVarsling(externalInnboks.getEksternVarsling())
                 .setPrefererteKanaler(validatePrefererteKanaler(externalInnboks.getEksternVarsling(), externalInnboks.getPrefererteKanaler()))
+                .setEpostVarslingstekst(validateEpostVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstekst()))
+                .setSmsVarslingstekst(validateSmsVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getSmsVarslingstekst()))
                 .build()
     }
 }

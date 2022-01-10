@@ -37,8 +37,8 @@ val intTestImplementation by configurations.getting {
 configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
 
 dependencies {
-    implementation("com.github.navikt:brukernotifikasjon-schemas:1.2021.12.10-12.50-3a920475daa4")
-    implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2021.12.08-12.03-cfa4ddd9cdcf")
+    implementation("com.github.navikt:brukernotifikasjon-schemas:feature~overstyre-varslingtekst-SNAPSHOT")
+    implementation("com.github.navikt:brukernotifikasjon-schemas-internal:feature~overstyre-varslingtekst-SNAPSHOT")
     implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)
     implementation(Flyway.core)

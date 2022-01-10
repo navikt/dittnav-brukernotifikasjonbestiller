@@ -10,35 +10,46 @@ object AvroInnboksInputObjectMother {
     private val defaultEksternVarsling = false
     private val defaultLink = "http://gyldig.url"
     private val defaultPrefererteKanaler = emptyList<String>()
+    private val defaultEpostVarslingstekst: String? = null
+    private val defaultSmsVarslingstekst: String? = null
 
-    fun createInnboksInput(): InnboksInput {
-        return createInnboksInput(defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultPrefererteKanaler)
+    fun createInnboksInput(
+        text: String = defaultTekst,
+        sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
+        eksternVarsling: Boolean = defaultEksternVarsling,
+        link: String = defaultLink,
+        prefererteKanaler: List<String> = defaultPrefererteKanaler,
+        epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        smsVarslingstekst: String? = defaultSmsVarslingstekst
+    ): InnboksInput {
+        return InnboksInput(
+            Instant.now().toEpochMilli(),
+            text,
+            link,
+            sikkerhetsnivaa,
+            eksternVarsling,
+            prefererteKanaler,
+            epostVarslingstekst,
+            smsVarslingstekst
+        )
     }
 
     fun createInnboksInputWithText(text: String): InnboksInput {
-        return createInnboksInput(text, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultPrefererteKanaler)
+        return createInnboksInput(text = text)
     }
 
     fun createInnboksInputWithLink(link: String): InnboksInput {
-        return createInnboksInput(defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, link, defaultPrefererteKanaler)
+        return createInnboksInput(link = link)
     }
 
     fun createInnboksInputWithSikkerhetsnivaa(sikkerhetsnivaa: Int): InnboksInput {
-        return createInnboksInput(defaultTekst, sikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultPrefererteKanaler)
+        return createInnboksInput(sikkerhetsnivaa = sikkerhetsnivaa)
     }
 
-    fun createInnboksInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling: Boolean, prefererteKanaler: List<String>): InnboksInput {
-        return createInnboksInput(defaultTekst, defaultSikkerhetsnivaa, eksternVarsling, defaultLink, prefererteKanaler)
-    }
-
-    private fun createInnboksInput(text: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, link: String, prefererteKanaler: List<String>): InnboksInput {
-        return InnboksInput(
-                Instant.now().toEpochMilli(),
-                text,
-                link,
-                sikkerhetsnivaa,
-                eksternVarsling,
-                prefererteKanaler
-        )
+    fun createInnboksInputWithEksternVarslingAndPrefererteKanaler(
+        eksternVarsling: Boolean,
+        prefererteKanaler: List<String>
+    ): InnboksInput {
+        return createInnboksInput(eksternVarsling = eksternVarsling, prefererteKanaler = prefererteKanaler)
     }
 }

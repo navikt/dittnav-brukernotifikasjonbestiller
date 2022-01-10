@@ -21,6 +21,8 @@ class BeskjedLegacyTransformer(private val mapper: ServiceUserMapper) {
                 .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalBeskjed.getSikkerhetsnivaa()))
                 .setEksternVarsling(externalBeskjed.getEksternVarsling())
                 .setPrefererteKanaler(validatePrefererteKanaler(externalBeskjed.getEksternVarsling(), externalBeskjed.getPrefererteKanaler()))
+                .setEpostVarslingstekst(validateEpostVarslingstekst(externalBeskjed.getEksternVarsling(), externalBeskjed.getEpostVarslingstekst()))
+                .setSmsVarslingstekst(validateSmsVarslingstekst(externalBeskjed.getEksternVarsling(), externalBeskjed.getSmsVarslingstekst()))
                 .build()
     }
 
