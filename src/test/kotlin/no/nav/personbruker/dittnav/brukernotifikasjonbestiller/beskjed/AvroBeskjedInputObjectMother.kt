@@ -19,18 +19,19 @@ object AvroBeskjedInputObjectMother {
         link: String = defaultLink,
         eksternVarsling: Boolean = defaultEksternVarsling,
         sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
-        synligFremTil: Long = defaultSynligFremTil,
+        synligFremTil: Long? = defaultSynligFremTil,
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
 
     ): BeskjedInput {
-        return createBeskjedInput(
+        return BeskjedInput(
+            Instant.now().toEpochMilli(),
+            synligFremTil,
             text,
+            link,
             sikkerhetsnivaa,
             eksternVarsling,
-            link,
-            synligFremTil,
             prefererteKanaler,
             epostVarslingstekst,
             smsVarslingstekst
@@ -38,36 +39,22 @@ object AvroBeskjedInputObjectMother {
     }
 
     fun createBeskjedInputWithText(text: String): BeskjedInput {
-        return createBeskjedInput(text, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedInput(text = text)
     }
 
     fun createBeskjedInputWithLink(link: String): BeskjedInput {
-        return createBeskjedInput(defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, link, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedInput(link = link)
     }
 
     fun createBeskjedInputWithSikkerhetsnivaa(sikkerhetsnivaa: Int): BeskjedInput {
-        return createBeskjedInput(defaultTekst, sikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedInput(sikkerhetsnivaa = sikkerhetsnivaa)
     }
 
     fun createBeskjedInputWithSynligFremTil(synligFremTil: Long?): BeskjedInput {
-        return createBeskjedInput(defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, synligFremTil, defaultPrefererteKanaler)
+        return createBeskjedInput(synligFremTil = synligFremTil)
     }
 
     fun createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling: Boolean, prefererteKanaler: List<String>): BeskjedInput {
-        return createBeskjedInput(defaultTekst, defaultSikkerhetsnivaa, eksternVarsling, defaultLink, defaultSynligFremTil, prefererteKanaler)
-    }
-
-    private fun createBeskjedInput(text: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, link: String, synligFremTil: Long?, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, smsVarslingstekst: String? = null): BeskjedInput {
-        return BeskjedInput(
-                Instant.now().toEpochMilli(),
-                synligFremTil,
-                text,
-                link,
-                sikkerhetsnivaa,
-                eksternVarsling,
-                prefererteKanaler,
-                epostVarslingstekst,
-                smsVarslingstekst
-        )
+        return createBeskjedInput(eksternVarsling = eksternVarsling, prefererteKanaler = prefererteKanaler)
     }
 }

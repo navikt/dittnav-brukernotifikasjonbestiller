@@ -34,8 +34,6 @@ internal class BeskjedInputTransformerTest {
         transformedBeskjed.getSynligFremTil() `should be equal to` externalBeskjedInput.getSynligFremTil()
         transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjedInput.getEksternVarsling()
         transformedBeskjed.getPrefererteKanaler() `should be equal to` externalBeskjedInput.getPrefererteKanaler()
-        //transformedBeskjed.getEpostVarslingstekst() `should be equal to` externalBeskjedInput.getEpostVarslingstekst()
-        //transformedBeskjed.getSmsVarslingstekst() `should be equal to` externalBeskjedInput.getSmsVarslingstekst()
     }
 
     @Test
