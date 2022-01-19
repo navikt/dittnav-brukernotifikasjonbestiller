@@ -36,7 +36,7 @@ object AvroInnboksInternObjectMother {
         return createInnboksIntern(defaultTidspunkt, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createInnboksIntern(tidspunkt: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, smsVarslingstekst: String? = null): InnboksIntern {
+    fun createInnboksIntern(tidspunkt: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): InnboksIntern {
         return InnboksIntern(
                 tidspunkt,
                 tekst,
@@ -45,6 +45,7 @@ object AvroInnboksInternObjectMother {
                 eksternVarsling,
                 prefererteKanaler,
                 epostVarslingstekst,
+                epostVarslingstittel,
                 smsVarslingstekst
         )
     }

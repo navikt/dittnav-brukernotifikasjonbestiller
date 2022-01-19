@@ -14,6 +14,7 @@ object AvroBeskjedLegacyObjectMother {
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createBeskjedLegacy(
@@ -26,6 +27,7 @@ object AvroBeskjedLegacyObjectMother {
         synligFremTil: Long? = defaultSynligFremTil,
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
     ): Beskjed {
         return Beskjed(
@@ -39,6 +41,7 @@ object AvroBeskjedLegacyObjectMother {
             eksternVarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

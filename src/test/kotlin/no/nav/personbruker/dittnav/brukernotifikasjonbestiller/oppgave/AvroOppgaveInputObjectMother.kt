@@ -12,6 +12,7 @@ object AvroOppgaveInputObjectMother {
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createOppgaveInput(
@@ -22,6 +23,7 @@ object AvroOppgaveInputObjectMother {
         synligFremTil: Long? = defaultSynligFremTil,
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
     ): OppgaveInput {
         return OppgaveInput(
@@ -33,6 +35,7 @@ object AvroOppgaveInputObjectMother {
             eksternVarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

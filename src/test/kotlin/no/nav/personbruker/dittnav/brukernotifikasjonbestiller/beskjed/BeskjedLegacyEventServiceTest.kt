@@ -283,6 +283,7 @@ internal class BeskjedLegacyEventServiceTest {
                     beskjedLegacy.getEksternVarsling(),
                     beskjedLegacy.getPrefererteKanaler(),
                     beskjedLegacy.getEpostVarslingstekst(),
+                    beskjedLegacy.getEpostVarslingstittel(),
                     beskjedLegacy.getSmsVarslingstekst()
     )
 

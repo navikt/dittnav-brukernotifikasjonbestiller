@@ -26,6 +26,7 @@ object OppgaveInputTransformer {
             .setEksternVarsling(externalOppgave.getEksternVarsling())
             .setPrefererteKanaler(validatePrefererteKanaler(externalOppgave.getEksternVarsling(), externalOppgave.getPrefererteKanaler()))
             .setEpostVarslingstekst(validateEpostVarslingstekst(externalOppgave.getEksternVarsling(), externalOppgave.getEpostVarslingstekst()))
+            .setEpostVarslingstittel(validateEpostVarslingstittel(externalOppgave.getEksternVarsling(), externalOppgave.getEpostVarslingstittel()))
             .setSmsVarslingstekst(validateSmsVarslingstekst(externalOppgave.getEksternVarsling(), externalOppgave.getSmsVarslingstekst()))
             .build()
     }

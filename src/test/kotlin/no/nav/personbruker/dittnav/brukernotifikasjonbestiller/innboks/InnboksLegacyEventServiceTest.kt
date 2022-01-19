@@ -284,6 +284,7 @@ internal class InnboksLegacyEventServiceTest {
                     innboksLegacy.getEksternVarsling(),
                     innboksLegacy.getPrefererteKanaler(),
                     innboksLegacy.getEpostVarslingstekst(),
+                    innboksLegacy.getEpostVarslingstittel(),
                     innboksLegacy.getSmsVarslingstekst()
             )
 

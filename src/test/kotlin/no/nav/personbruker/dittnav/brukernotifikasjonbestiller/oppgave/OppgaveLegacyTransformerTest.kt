@@ -11,6 +11,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksLegacyObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be null`
@@ -363,6 +364,69 @@ internal class OppgaveLegacyTransformerTest {
                 transformer.toOppgaveInternal(externalOppgaveLegacy)
             }
         } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val transformedOppgave = transformer.toOppgaveInternal(externalOppgaveLegacy)
+
+        transformedOppgave.getEpostVarslingstittel() `should be equal to` externalOppgaveLegacy.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val transformedOppgave = transformer.toOppgaveInternal(externalOppgaveLegacy)
+
+        transformedOppgave.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toOppgaveInternal(externalOppgaveLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                transformer.toOppgaveInternal(externalOppgaveLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toOppgaveInternal(externalOppgaveLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
     }
 
     @Test

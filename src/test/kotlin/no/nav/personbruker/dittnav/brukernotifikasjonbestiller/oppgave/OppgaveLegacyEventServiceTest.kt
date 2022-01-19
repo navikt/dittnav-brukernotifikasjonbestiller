@@ -283,6 +283,7 @@ internal class OppgaveLegacyEventServiceTest {
                 oppgaveLegacy.getEksternVarsling(),
                 oppgaveLegacy.getPrefererteKanaler(),
                 oppgaveLegacy.getEpostVarslingstekst(),
+                oppgaveLegacy.getEpostVarslingstittel(),
                 oppgaveLegacy.getSmsVarslingstekst()
             )
 

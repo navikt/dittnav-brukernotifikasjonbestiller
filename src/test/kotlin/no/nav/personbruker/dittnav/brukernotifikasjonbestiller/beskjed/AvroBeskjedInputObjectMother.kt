@@ -12,6 +12,7 @@ object AvroBeskjedInputObjectMother {
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createBeskjedInput(
@@ -22,6 +23,7 @@ object AvroBeskjedInputObjectMother {
         synligFremTil: Long? = defaultSynligFremTil,
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
 
     ): BeskjedInput {
@@ -34,6 +36,7 @@ object AvroBeskjedInputObjectMother {
             eksternVarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

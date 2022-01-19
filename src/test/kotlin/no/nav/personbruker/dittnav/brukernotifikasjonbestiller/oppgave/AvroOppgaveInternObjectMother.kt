@@ -37,7 +37,7 @@ object AvroOppgaveInternObjectMother {
         return createOppgaveIntern(defaultTidspunkt, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createOppgaveIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, smsVarslingstekst: String? = null): OppgaveIntern {
+    fun createOppgaveIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): OppgaveIntern {
         return OppgaveIntern(
             tidspunkt,
             synligFremTil,
@@ -47,6 +47,7 @@ object AvroOppgaveInternObjectMother {
             eksternvarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

@@ -374,4 +374,72 @@ internal class BeskjedInputTransformerTest {
             }
         } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
     }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
+
+        externalBeskjedInput.getEpostVarslingstittel() `should be equal to` transformedBeskjed.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
+
+        transformedBeskjed.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
 }

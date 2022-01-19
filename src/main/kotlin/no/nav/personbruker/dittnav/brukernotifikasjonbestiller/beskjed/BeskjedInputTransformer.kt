@@ -26,6 +26,7 @@ object BeskjedInputTransformer {
                 .setEksternVarsling(externalBeskjed.getEksternVarsling())
                 .setPrefererteKanaler(validatePrefererteKanaler(externalBeskjed.getEksternVarsling(), externalBeskjed.getPrefererteKanaler()))
                 .setEpostVarslingstekst(validateEpostVarslingstekst(externalBeskjed.getEksternVarsling(), externalBeskjed.getEpostVarslingstekst()))
+                .setEpostVarslingstittel(validateEpostVarslingstittel(externalBeskjed.getEksternVarsling(), externalBeskjed.getEpostVarslingstittel()))
                 .setSmsVarslingstekst(validateSmsVarslingstekst(externalBeskjed.getEksternVarsling(), externalBeskjed.getSmsVarslingstekst()))
                 .build()
     }

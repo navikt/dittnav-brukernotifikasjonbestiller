@@ -22,6 +22,7 @@ class InnboksLegacyTransformer(private val mapper: ServiceUserMapper) {
                 .setEksternVarsling(externalInnboks.getEksternVarsling())
                 .setPrefererteKanaler(validatePrefererteKanaler(externalInnboks.getEksternVarsling(), externalInnboks.getPrefererteKanaler()))
                 .setEpostVarslingstekst(validateEpostVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstekst()))
+                .setEpostVarslingstittel(validateEpostVarslingstittel(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstittel()))
                 .setSmsVarslingstekst(validateSmsVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getSmsVarslingstekst()))
                 .build()
     }

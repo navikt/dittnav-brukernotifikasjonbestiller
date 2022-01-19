@@ -10,6 +10,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with mess
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be null`
@@ -359,6 +360,69 @@ internal class InnboksLegacyTransformerTest {
                 transformer.toInnboksInternal(externalInnboksLegacy)
             }
         } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val transformedInnboks = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformedInnboks.getEpostVarslingstittel() `should be equal to` externalInnboksLegacy.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val transformedInnboks = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformedInnboks.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
     }
 
     @Test

@@ -14,6 +14,7 @@ object AvroOppgaveLegacyObjectMother {
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createOppgaveLegacy(
@@ -26,6 +27,7 @@ object AvroOppgaveLegacyObjectMother {
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         synligFremTil: Long? = defaultSynligFremTil,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
     ): Oppgave {
         return Oppgave(
@@ -39,6 +41,7 @@ object AvroOppgaveLegacyObjectMother {
             eksternVarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

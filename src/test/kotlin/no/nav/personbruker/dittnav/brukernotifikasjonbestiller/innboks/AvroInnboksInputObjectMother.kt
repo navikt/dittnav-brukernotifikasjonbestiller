@@ -11,6 +11,7 @@ object AvroInnboksInputObjectMother {
     private val defaultLink = "http://gyldig.url"
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createInnboksInput(
@@ -20,6 +21,7 @@ object AvroInnboksInputObjectMother {
         link: String = defaultLink,
         prefererteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
     ): InnboksInput {
         return InnboksInput(
@@ -30,6 +32,7 @@ object AvroInnboksInputObjectMother {
             eksternVarsling,
             prefererteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }

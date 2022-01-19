@@ -4,8 +4,6 @@ import de.huxhorn.sulky.ulid.ULID
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInputObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import org.amshove.kluent.`should be equal to`
@@ -367,5 +365,73 @@ internal class InnboksInputTransformerTest {
                 InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
             }
         } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getEpostVarslingstittel() `should be equal to` externalInnboksInput.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
     }
 }

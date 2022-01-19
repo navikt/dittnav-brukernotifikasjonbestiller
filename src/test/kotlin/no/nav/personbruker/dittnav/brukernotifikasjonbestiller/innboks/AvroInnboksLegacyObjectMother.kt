@@ -13,6 +13,7 @@ object AvroInnboksLegacyObjectMother {
     private val defaultEksternVarsling = false
     private val defaultPrefererteKanaler = emptyList<String>()
     private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
     private val defaultSmsVarslingstekst: String? = null
 
     fun createInnboksLegacy(
@@ -24,6 +25,7 @@ object AvroInnboksLegacyObjectMother {
         eksternVarsling: Boolean = defaultEksternVarsling,
         preferefteKanaler: List<String> = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
     ): Innboks {
         return Innboks(
@@ -36,6 +38,7 @@ object AvroInnboksLegacyObjectMother {
             eksternVarsling,
             preferefteKanaler,
             epostVarslingstekst,
+            epostVarslingstittel,
             smsVarslingstekst
         )
     }
