@@ -230,4 +230,208 @@ internal class InnboksInputTransformerTest {
 
         externalInnboksInput.getPrefererteKanaler() `should be equal to` transformedInnboks.getPrefererteKanaler()
     }
+
+    @Test
+    fun `should transform smsVarslingstekst`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(160)
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getSmsVarslingstekst() `should be equal to` externalInnboksInput.getSmsVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null smsVarslingstekst`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            smsVarslingstekst = null
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getSmsVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow smsVarslingstekst if eksternVarsling is false`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = false,
+            smsVarslingstekst = "L".repeat(160)
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long sms text`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(161)
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty sms text`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            smsVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstekst`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstekst = "Hei ".repeat(20)
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        externalInnboksInput.getEpostVarslingstekst() `should be equal to` transformedInnboks.getEpostVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstekst`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstekst = null
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getEpostVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstekst if eksternVarsling is false`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = false,
+            epostVarslingstekst = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long email text`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstekst = "L".repeat(10_001)
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty email text`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getEpostVarslingstittel() `should be equal to` externalInnboksInput.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val (_, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+
+        transformedInnboks.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
 }

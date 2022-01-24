@@ -281,7 +281,10 @@ internal class BeskjedLegacyEventServiceTest {
                     beskjedLegacy.getLink(),
                     beskjedLegacy.getSikkerhetsnivaa(),
                     beskjedLegacy.getEksternVarsling(),
-                    beskjedLegacy.getPrefererteKanaler()
+                    beskjedLegacy.getPrefererteKanaler(),
+                    beskjedLegacy.getEpostVarslingstekst(),
+                    beskjedLegacy.getEpostVarslingstittel(),
+                    beskjedLegacy.getSmsVarslingstekst()
     )
 
     private fun createNokkelIntern(nokkelLegacy: Nokkel, beskjedLegacy: Beskjed) =

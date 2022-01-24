@@ -282,7 +282,10 @@ internal class InnboksLegacyEventServiceTest {
                     innboksLegacy.getLink(),
                     innboksLegacy.getSikkerhetsnivaa(),
                     innboksLegacy.getEksternVarsling(),
-                    innboksLegacy.getPrefererteKanaler()
+                    innboksLegacy.getPrefererteKanaler(),
+                    innboksLegacy.getEpostVarslingstekst(),
+                    innboksLegacy.getEpostVarslingstittel(),
+                    innboksLegacy.getSmsVarslingstekst()
             )
 
     private fun createNokkelIntern(nokkelLegacy: Nokkel, innboksLegacy: Innboks) =

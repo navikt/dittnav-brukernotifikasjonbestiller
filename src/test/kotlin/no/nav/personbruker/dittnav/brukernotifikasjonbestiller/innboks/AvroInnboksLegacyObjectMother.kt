@@ -12,49 +12,81 @@ object AvroInnboksLegacyObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultEksternVarsling = false
     private val defaultPrefererteKanaler = emptyList<String>()
+    private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
+    private val defaultSmsVarslingstekst: String? = null
 
-    fun createInnboksLegacy(): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+    fun createInnboksLegacy(
+        fodselsnummer: String = defaultFodselsnr,
+        text: String = defaultTekst,
+        sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
+        link: String = defaultLink,
+        grupperingsid: String = defaultGrupperingsid,
+        eksternVarsling: Boolean = defaultEksternVarsling,
+        preferefteKanaler: List<String> = defaultPrefererteKanaler,
+        epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
+        smsVarslingstekst: String? = defaultSmsVarslingstekst
+    ): Innboks {
+        return Innboks(
+            Instant.now().toEpochMilli(),
+            fodselsnummer,
+            grupperingsid,
+            text,
+            link,
+            sikkerhetsnivaa,
+            eksternVarsling,
+            preferefteKanaler,
+            epostVarslingstekst,
+            epostVarslingstittel,
+            smsVarslingstekst
+        )
     }
 
     fun createInnboksLegacy(lopenummer: Int): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, "$defaultTekst-$lopenummer", defaultSikkerhetsnivaa, defaultLink, "$defaultGrupperingsid-$lopenummer", defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            text = "$defaultTekst-$lopenummer",
+            grupperingsid = "$defaultGrupperingsid-$lopenummer",
+        )
     }
 
     fun createInnboksLegacyWithText(text: String): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, text, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            text = text,
+        )
     }
 
     fun createInnboksLegacyWithLink(link: String): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, link, defaultGrupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            link = link,
+        )
     }
 
     fun createInnboksLegacyWithFodselsnummer(fodselsnummer: String): Innboks {
-        return createInnboksLegacy(fodselsnummer, defaultTekst, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            fodselsnummer = fodselsnummer,
+        )
     }
 
     fun createInnboksLegacyWithGrupperingsId(grupperingsid: String): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultLink, grupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            grupperingsid = grupperingsid,
+        )
     }
 
     fun createInnboksLegacyWithSikkerhetsnivaa(sikkerhetsnivaa: Int): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, defaultTekst, sikkerhetsnivaa, defaultLink, defaultGrupperingsid, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksLegacy(
+            sikkerhetsnivaa = sikkerhetsnivaa,
+        )
     }
 
-    fun createInnboksLegacyWithEksternVarslingAndPrefererteKanaler(eksternVarsling: Boolean, prefererteKanaler: List<String>): Innboks {
-        return createInnboksLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultLink, defaultGrupperingsid, eksternVarsling,prefererteKanaler)
-    }
-
-    private fun createInnboksLegacy(fodselsnummer: String, text: String, sikkerhetsnivaa: Int, link: String, grupperingsid: String, externVarsling: Boolean, preferefteKanaler: List<String>): Innboks {
-        return Innboks(
-                Instant.now().toEpochMilli(),
-                fodselsnummer,
-                grupperingsid,
-                text,
-                link,
-                sikkerhetsnivaa,
-                externVarsling,
-                preferefteKanaler
+    fun createInnboksLegacyWithEksternVarslingAndPrefererteKanaler(
+        eksternVarsling: Boolean,
+        prefererteKanaler: List<String>
+    ): Innboks {
+        return createInnboksLegacy(
+            eksternVarsling = eksternVarsling,
+            preferefteKanaler = prefererteKanaler
         )
     }
 }

@@ -13,54 +13,68 @@ object AvroBeskjedLegacyObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
+    private val defaultEpostVarslingstekst: String? = null
+    private val defaultEpostVarslingstittel: String? = null
+    private val defaultSmsVarslingstekst: String? = null
 
-    fun createBeskjedLegacy(): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+    fun createBeskjedLegacy(
+        fodselsnummer: String = defaultFodselsnr,
+        text: String = defaultTekst,
+        sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
+        eksternVarsling: Boolean = defaultEksternVarsling,
+        link: String = defaultLink,
+        grupperingsid: String = defaultGrupperingsid,
+        synligFremTil: Long? = defaultSynligFremTil,
+        prefererteKanaler: List<String> = defaultPrefererteKanaler,
+        epostVarslingstekst: String? = defaultEpostVarslingstekst,
+        epostVarslingstittel: String? = defaultEpostVarslingstittel,
+        smsVarslingstekst: String? = defaultSmsVarslingstekst
+    ): Beskjed {
+        return Beskjed(
+            Instant.now().toEpochMilli(),
+            synligFremTil,
+            fodselsnummer,
+            grupperingsid,
+            text,
+            link,
+            sikkerhetsnivaa,
+            eksternVarsling,
+            prefererteKanaler,
+            epostVarslingstekst,
+            epostVarslingstittel,
+            smsVarslingstekst
+        )
     }
 
     fun createBeskjedLegacy(lopenummer: Int): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, "$defaultTekst-$lopenummer", defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, "$defaultGrupperingsid-$lopenummer", defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(text = "$defaultTekst-$lopenummer", grupperingsid = "$defaultGrupperingsid-$lopenummer")
     }
 
     fun createBeskjedLegacyWithText(text: String): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, text, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(text = text)
     }
 
     fun createBeskjedLegacyWithLink(link: String): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, link, defaultGrupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(link = link)
     }
 
     fun createBeskjedLegacyWithFodselsnummer(fodselsnummer: String): Beskjed {
-        return createBeskjedLegacy(fodselsnummer, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(fodselsnummer = fodselsnummer)
     }
 
     fun createBeskjedLegacyWithGrupperingsId(grupperingsid: String): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, grupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(grupperingsid = grupperingsid)
     }
 
     fun createBeskjedLegacyWithSikkerhetsnivaa(sikkerhetsnivaa: Int): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, sikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, defaultSynligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(sikkerhetsnivaa = sikkerhetsnivaa)
     }
 
     fun createBeskjedLegacyWithSynligFremTil(synligFremTil: Long?): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultLink, defaultGrupperingsid, synligFremTil, defaultPrefererteKanaler)
+        return createBeskjedLegacy(synligFremTil = synligFremTil)
     }
 
     fun createBeskjedLegacyWithEksternVarslingAndPrefererteKanaler(eksternVarsling: Boolean, prefererteKanaler: List<String>): Beskjed {
-        return createBeskjedLegacy(defaultFodselsnr, defaultTekst, defaultSikkerhetsnivaa, eksternVarsling, defaultLink, defaultGrupperingsid, defaultSynligFremTil, prefererteKanaler)
-    }
-
-    private fun createBeskjedLegacy(fodselsnummer: String, text: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, link: String, grupperingsid: String, synligFremTil: Long?, prefererteKanaler: List<String>): Beskjed {
-        return Beskjed(
-                Instant.now().toEpochMilli(),
-                synligFremTil,
-                fodselsnummer,
-                grupperingsid,
-                text,
-                link,
-                sikkerhetsnivaa,
-                eksternVarsling,
-                prefererteKanaler
-        )
+        return createBeskjedLegacy(eksternVarsling = eksternVarsling, prefererteKanaler = prefererteKanaler)
     }
 }

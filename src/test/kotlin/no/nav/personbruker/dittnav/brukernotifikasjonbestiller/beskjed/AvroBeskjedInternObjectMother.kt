@@ -37,7 +37,7 @@ object AvroBeskjedInternObjectMother {
         return createBeskjedIntern(defaultTidspunkt, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createBeskjedIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>): BeskjedIntern {
+    fun createBeskjedIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): BeskjedIntern {
         return BeskjedIntern(
                 tidspunkt,
                 synligFremTil,
@@ -45,7 +45,10 @@ object AvroBeskjedInternObjectMother {
                 link,
                 sikkerhetsnivaa,
                 eksternvarsling,
-                prefererteKanaler
+                prefererteKanaler,
+                epostVarslingstekst,
+                epostVarslingstittel,
+                smsVarslingstekst
         )
     }
 }

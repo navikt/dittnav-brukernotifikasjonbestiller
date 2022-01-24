@@ -10,8 +10,10 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with mess
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.`should be null`
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking
 import org.junit.jupiter.api.AfterEach
@@ -232,6 +234,195 @@ internal class InnboksLegacyTransformerTest {
         val transformed = transformer.toInnboksInternal(externalInnboksLegacy)
 
         externalInnboksLegacy.getPrefererteKanaler() `should be equal to` transformed.getPrefererteKanaler()
+    }
+
+    @Test
+    fun `should transform smsVarslingstekst`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(160)
+        )
+
+        val transformed = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        externalInnboksLegacy.getSmsVarslingstekst() `should be equal to` transformed.getSmsVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null smsVarslingstekst`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = null
+        )
+
+        val transformed = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformed.getSmsVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow smsVarslingstekst if eksternVarsling is false`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = false,
+            smsVarslingstekst = "L".repeat(160)
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long sms text`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(161)
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty sms text`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstekst`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = "Hei ".repeat(20)
+        )
+
+        val transformed = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        externalInnboksLegacy.getEpostVarslingstekst() `should be equal to` transformed.getEpostVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstekst`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = null
+        )
+
+        val transformed = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformed.getEpostVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstekst if eksternVarsling is false`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = false,
+            epostVarslingstekst = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long email text`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = "L".repeat(10_001)
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty email text`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val transformedInnboks = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformedInnboks.getEpostVarslingstittel() `should be equal to` externalInnboksLegacy.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val transformedInnboks = transformer.toInnboksInternal(externalInnboksLegacy)
+
+        transformedInnboks.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toInnboksInternal(externalInnboksLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
     }
 
     @Test

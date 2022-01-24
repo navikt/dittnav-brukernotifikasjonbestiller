@@ -10,6 +10,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with mess
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should be null`
@@ -242,6 +243,195 @@ internal class BeskjedLegacyTransformerTest {
         val transformed = transformer.toBeskjedInternal(externalBeskjedLegacy)
 
         externalBeskjedLegacy.getPrefererteKanaler() `should be equal to` transformed.getPrefererteKanaler()
+    }
+
+    @Test
+    fun `should transform smsVarslingstekst`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(160)
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        externalBeskjedLegacy.getSmsVarslingstekst() `should be equal to` transformedBeskjed.getSmsVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null smsVarslingstekst`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = null
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        transformedBeskjed.getSmsVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow smsVarslingstekst if eksternVarsling is false`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = false,
+            smsVarslingstekst = "L".repeat(160)
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long sms text`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = "L".repeat(161)
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty sms text`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            smsVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstekst`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = "Hei ".repeat(20)
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        externalBeskjedLegacy.getEpostVarslingstekst() `should be equal to` transformedBeskjed.getEpostVarslingstekst()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstekst`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = null
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        transformedBeskjed.getEpostVarslingstekst().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstekst if eksternVarsling is false`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = false,
+            epostVarslingstekst = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow too long email text`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = "L".repeat(10_001)
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    internal fun `should not allow empty email text`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstekst = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+    }
+
+    @Test
+    fun `should transform epostVarslingstittel`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "Hei ".repeat(10)
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        transformedBeskjed.getEpostVarslingstittel() `should be equal to` externalBeskjedLegacy.getEpostVarslingstittel()
+    }
+
+    @Test
+    fun `should allow null epostVarslingstittel`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = null
+        )
+
+        val transformedBeskjed = transformer.toBeskjedInternal(externalBeskjedLegacy)
+
+        transformedBeskjed.getEpostVarslingstittel().`should be null`()
+    }
+
+    @Test
+    fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = false,
+            epostVarslingstittel = "<p>Hei!</p>"
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow too long email titel`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = "L".repeat(201)
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+    }
+
+    @Test
+    internal fun `should not allow empty email tittel`() {
+        val externalBeskjedLegacy = AvroBeskjedLegacyObjectMother.createBeskjedLegacy(
+            eksternVarsling = true,
+            epostVarslingstittel = " "
+        )
+        invoking {
+            runBlocking {
+                transformer.toBeskjedInternal(externalBeskjedLegacy)
+            }
+        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
     }
 
     @Test
