@@ -162,8 +162,7 @@ class BeskjedIT {
 
         capturedInternalRecords.addAll(capturingProcessor.getEvents())
     }
-
-
+    
     private fun `Wait until bad event has been received by error topic`() {
         val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
