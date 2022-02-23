@@ -344,7 +344,7 @@ internal class OppgaveLegacyTransformerTest {
     internal fun `should not allow too long email text`() {
         val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
             eksternVarsling = true,
-            epostVarslingstekst = "L".repeat(10_001)
+            epostVarslingstekst = "L".repeat(4_001)
         )
         invoking {
             runBlocking {
@@ -407,7 +407,7 @@ internal class OppgaveLegacyTransformerTest {
     internal fun `should not allow too long email titel`() {
         val externalOppgaveLegacy = AvroOppgaveLegacyObjectMother.createOppgaveLegacy(
             eksternVarsling = true,
-            epostVarslingstittel = "L".repeat(201)
+            epostVarslingstittel = "L".repeat(41)
         )
         invoking {
             runBlocking {

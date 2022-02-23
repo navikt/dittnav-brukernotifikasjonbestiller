@@ -345,7 +345,7 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput(
             eksternVarsling = true,
-            epostVarslingstekst = "L".repeat(10_001)
+            epostVarslingstekst = "L".repeat(4_001)
         )
         invoking {
             runBlocking {
@@ -413,7 +413,7 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput(
             eksternVarsling = true,
-            epostVarslingstittel = "L".repeat(201)
+            epostVarslingstittel = "L".repeat(41)
         )
         invoking {
             runBlocking {

@@ -340,7 +340,7 @@ internal class InnboksLegacyTransformerTest {
     internal fun `should not allow too long email text`() {
         val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
             eksternVarsling = true,
-            epostVarslingstekst = "L".repeat(10_001)
+            epostVarslingstekst = "L".repeat(4_001)
         )
         invoking {
             runBlocking {
@@ -403,7 +403,7 @@ internal class InnboksLegacyTransformerTest {
     internal fun `should not allow too long email titel`() {
         val externalInnboksLegacy = AvroInnboksLegacyObjectMother.createInnboksLegacy(
             eksternVarsling = true,
-            epostVarslingstittel = "L".repeat(201)
+            epostVarslingstittel = "L".repeat(41)
         )
         invoking {
             runBlocking {
