@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother
@@ -30,7 +30,7 @@ internal class InnboksLegacyEventServiceTest {
     private val topic = "topic-innboks-test"
     private val transformer = mockk<InnboksLegacyTransformer>()
     private val feilresponsTransformer = mockk<FeilresponsLegacyTransformer>()
-    private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
+    private val handleDuplicateEvents = mockk<HandleDuplicateEventsLegacy>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<InnboksIntern>>(relaxed = true)
     private val internalEvents = AvroInnboksInternObjectMother.giveMeANumberOfInternalInnboksEvents(2, "systembruker", "eventId", "fodselsnummer")
 

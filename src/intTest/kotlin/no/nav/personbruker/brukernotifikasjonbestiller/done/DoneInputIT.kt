@@ -4,6 +4,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
@@ -11,28 +14,35 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
+import no.nav.personbruker.brukernotifikasjonbestiller.common.database.deleteAllBrukernotifikasjonbestillinger
 import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype.BESKJED
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother.createDoneInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother.createDoneLegacyWithGrupperingsId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
@@ -43,11 +53,14 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.LocalDateTime.now
+import java.util.*
+import kotlin.collections.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class DoneIT {
+class DoneInputIT {
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.doneLegacyTopicName,
+            KafkaTestTopics.doneInputTopicName,
             KafkaTestTopics.doneInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
@@ -58,21 +71,15 @@ class DoneIT {
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
-    private val producerNameAlias = "dittnav"
-    private val client = getClient(producerNameAlias)
     private val metricsReporter = StubMetricsReporter()
-    private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
-    private val nameScrubber = ProducerNameScrubber(nameResolver)
-    private val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
-    private val producerServiceUser = "dummySystembruker"
-    private val producerNamespace = "namespace"
-    private val producerAppName = "appName"
-    private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
-    private val doneTransformer = DoneLegacyTransformer(mapper)
-    private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
+    private val metricsCollector = MetricsCollector(metricsReporter)
 
-    private val goodEvents = createEvents(10)
-    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
+    private val goodEvents = createEvents(10) + createEventWithInvalidEventId()
+    private val badEvents = listOf(
+        createEventWithTooLongGroupId(),
+        createEventWithDuplicateId(goodEvents)
+    )
+
     private val doneEvents = goodEvents.toMutableList().apply {
         addAll(badEvents)
     }.toMap()
@@ -85,6 +92,9 @@ class DoneIT {
     @AfterAll
     fun tearDown() {
         embeddedEnv.tearDown()
+        runBlocking {
+            database.deleteAllBrukernotifikasjonbestillinger()
+        }
     }
 
     @Test
@@ -93,12 +103,16 @@ class DoneIT {
     }
 
     @Test
-    fun `Should read Done-events and send to hoved-topic or error response topic as appropriate`() {
+    fun `Should read Done-events and send to hoved-topic or error response topic, and allow invalid eventIds for backwards-compatibility`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.doneLegacyTopicName, doneEvents)
+            createMatchingBeskjedEventsInDatabase(goodEvents)
+
+            KafkaTestUtil.produceEventsInput(testEnvironment, KafkaTestTopics.doneInputTopicName, doneEvents)
         } shouldBeEqualTo true
 
+
         `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`()
+
 
         capturedInternalRecords.size `should be equal to` goodEvents.size
         capturedErrorResponseRecords.size `should be equal to` badEvents.size
@@ -107,7 +121,7 @@ class DoneIT {
 
     fun `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE)
-        val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
+        val kafkaConsumer = KafkaConsumer<NokkelInput, DoneInput>(consumerProps)
 
         val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, TopicSource.ON_PREM)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
@@ -118,11 +132,11 @@ class DoneIT {
         val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-        val handleDuplicateEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.doneLegacyTopicName, kafkaConsumer, eventService)
+        val eventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.doneInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -187,13 +201,36 @@ class DoneIT {
         capturedErrorResponseRecords.addAll(capturingProcessor.getEvents())
     }
 
-    private fun createEvents(number: Int) = (1..number).map {
-        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createDoneLegacyWithGrupperingsId(it.toString())
+    suspend fun createMatchingBeskjedEventsInDatabase(doneEvents: List<Pair<NokkelInput, DoneInput>>) {
+        val beskjedEvents = doneEvents.map { (nokkel, _) ->
+            Brukernotifikasjonbestilling(nokkel.getEventId(), "", BESKJED, now(), "123")
+        }
+
+        database.createBrukernotifikasjonbestillinger(beskjedEvents)
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Done> {
+    private fun createEvents(number: Int) = (1..number).map {
+        val eventId = UUID.randomUUID().toString()
+
+        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createDoneInput()
+    }
+
+    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, DoneInput> {
+        val eventId = UUID.randomUUID().toString()
         val groupId = "groupId".repeat(100)
 
-        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createDoneLegacyWithGrupperingsId(groupId)
+        return AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, groupId) to createDoneInput()
+    }
+
+    private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> {
+        val eventId = "notUuidOrUlid"
+
+        return AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId) to createDoneInput()
+    }
+
+    private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, DoneInput>>): Pair<NokkelInput, DoneInput> {
+        val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
+
+        return return AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
     }
 }

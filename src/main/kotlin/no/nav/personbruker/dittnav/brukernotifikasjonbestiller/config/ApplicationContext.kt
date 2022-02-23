@@ -9,9 +9,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedIn
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
@@ -87,7 +85,7 @@ class ApplicationContext {
 
     private fun initializeBeskjedLegacyProcessor(): Consumer<Nokkel, Beskjed> {
         val consumerProps = Kafka.consumerPropsLegacy(environment, Eventtype.BESKJED)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEventsLegacy(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED, ON_PREM)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducerLegacy, feilresponsKafkaProducer)
         val beskjedTransformer = BeskjedLegacyTransformer(serviceUserMapper)
@@ -98,7 +96,7 @@ class ApplicationContext {
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED, AIVEN)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
         val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
@@ -107,7 +105,7 @@ class ApplicationContext {
 
     private fun initializeOppgaveLegacyProcessor(): Consumer<Nokkel, Oppgave> {
         val consumerProps = Kafka.consumerPropsLegacy(environment, Eventtype.OPPGAVE)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEventsLegacy(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE, ON_PREM)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducerLegacy, feilresponsKafkaProducer)
         val oppgaveTransformer = OppgaveLegacyTransformer(serviceUserMapper)
@@ -118,7 +116,7 @@ class ApplicationContext {
 
     private fun initializeOppgaveInputProcessor(): Consumer<NokkelInput, OppgaveInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE, AIVEN)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
         val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
@@ -127,7 +125,7 @@ class ApplicationContext {
 
     private fun initializeInnboksLegacyProcessor(): Consumer<Nokkel, Innboks> {
         val consumerProps = Kafka.consumerPropsLegacy(environment, Eventtype.INNBOKS)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEventsLegacy(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS, ON_PREM)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducerLegacy, feilresponsKafkaProducer)
         val innboksTransformer = InnboksLegacyTransformer(serviceUserMapper)
@@ -138,7 +136,7 @@ class ApplicationContext {
 
     private fun initializeInnboksInputProcessor(): Consumer<NokkelInput, InnboksInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.INNBOKS)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS, AIVEN)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
         val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
@@ -147,7 +145,7 @@ class ApplicationContext {
 
     private fun initializeStatusoppdateringLegacyProcessor(): Consumer<Nokkel, Statusoppdatering> {
         val consumerProps = Kafka.consumerPropsLegacy(environment, Eventtype.STATUSOPPDATERING)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEventsLegacy(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING, ON_PREM)
         val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducerLegacy, feilresponsKafkaProducer)
         val statusoppdateringTransformer = StatusoppdateringLegacyTransformer(serviceUserMapper)
@@ -158,7 +156,7 @@ class ApplicationContext {
 
     private fun initializeStatusoppdateringInputProcessor(): Consumer<NokkelInput, StatusoppdateringInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING, AIVEN)
         val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
         val statusoppdateringEventService = StatusoppdateringInputEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
@@ -167,7 +165,7 @@ class ApplicationContext {
 
     private fun initializeDoneLegacyProcessor(): Consumer<Nokkel, Done> {
         val consumerProps = Kafka.consumerPropsLegacy(environment, Eventtype.DONE)
-        val handleDuplicateDoneEvents = HandleDuplicateDoneEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateDoneEvents = HandleDuplicateDoneEventsLegacy(Eventtype.DONE, brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE, ON_PREM)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducerLegacy, feilresponsKafkaProducer)
         val doneTransformer = DoneLegacyTransformer(serviceUserMapper)
@@ -178,7 +176,7 @@ class ApplicationContext {
 
     private fun initializeDoneInputProcessor(): Consumer<NokkelInput, DoneInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE, AIVEN)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
         val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, doneEventDispatcher)

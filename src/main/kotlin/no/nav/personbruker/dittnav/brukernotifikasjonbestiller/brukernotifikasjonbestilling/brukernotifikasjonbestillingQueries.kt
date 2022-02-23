@@ -42,6 +42,22 @@ fun Connection.getEventKeysByEventIds(eventIds: List<String>): List<Brukernotifi
                     it.executeQuery().mapList { toBrukernotifikasjonKey() }
                 }
 
+fun Connection.getExistingEventIdsExcludingDone(eventIds: List<String>): List<String> =
+        prepareStatement("""SELECT eventId FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) AND eventtype !=?""")
+                .use {
+                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
+                    it.setString(2, Eventtype.DONE.toString())
+                    it.executeQuery().mapList { toEventIdString() }
+                }
+
+fun Connection.getExistingEventIdsForDone(eventIds: List<String>): List<String> =
+        prepareStatement("""SELECT eventId FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) AND eventtype=?""")
+                .use {
+                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
+                    it.setString(2, Eventtype.DONE.toString())
+                    it.executeQuery().mapList { toEventIdString() }
+                }
+
 fun Connection.getEventsByIds(eventId: String, systembruker: String, eventtype: Eventtype): List<Brukernotifikasjonbestilling> =
         prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
                 .use {
@@ -67,6 +83,10 @@ fun ResultSet.toBrukernotifikasjonKey(): BrukernotifikasjonKey {
             systembruker = getString("systembruker"),
             eventtype = toEventtype(getString("eventtype"))
     )
+}
+
+fun ResultSet.toEventIdString(): String {
+    return getString("eventId")
 }
 
 fun ResultSet.toDoneKey(): DoneKey {

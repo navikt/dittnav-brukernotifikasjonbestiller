@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
@@ -27,7 +27,7 @@ internal class DoneLegacyEventServiceTest {
     private val metricsCollector = mockk<MetricsCollectorLegacy>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSessionLegacy>(relaxed = true)
     private val topic = "topic-done-test"
-    private val handleDuplicateEvents = mockk<HandleDuplicateDoneEvents>(relaxed = true)
+    private val handleDuplicateEvents = mockk<HandleDuplicateDoneEventsLegacy>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<DoneIntern>>(relaxed = true)
     private val internalEvents = AvroDoneInternObjectMother.giveMeANumberOfInternalDoneEvents(2, "eventId", "systembruker", "fodselsnummer")
     private val transformer = mockk<DoneLegacyTransformer>()

@@ -6,11 +6,8 @@ import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
@@ -23,7 +20,7 @@ internal class DoneInputEventServiceTest {
     private val metricsCollector = mockk<MetricsCollector>(relaxed = true)
     private val metricsSession = mockk<EventMetricsSession>(relaxed = true)
     private val topic = "topic-done-test"
-    private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
+    private val handleDuplicateEvents = mockk<HandleDuplicateDoneEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<DoneIntern>>(relaxed = true)
     private val internalEvents = AvroDoneInternObjectMother.giveMeANumberOfInternalDoneEvents(2, "systembruker", "eventId", "fodselsnummer")
 
