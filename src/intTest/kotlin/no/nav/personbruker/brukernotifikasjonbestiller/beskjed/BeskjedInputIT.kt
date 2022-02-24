@@ -200,6 +200,6 @@ class BeskjedInputIT {
     private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, BeskjedInput>>): Pair<NokkelInput, BeskjedInput> {
         val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
 
-        return return createNokkelInputWithEventId(existingEventId) to createBeskjedInput()
+        return createNokkelInputWithEventId(existingEventId) to createBeskjedInput()
     }
 }

@@ -199,6 +199,6 @@ class StatusoppdateringInputIT {
     private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, StatusoppdateringInput>>): Pair<NokkelInput, StatusoppdateringInput> {
         val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
 
-        return return createNokkelInputWithEventId(existingEventId) to createStatusoppdateringInput()
+        return createNokkelInputWithEventId(existingEventId) to createStatusoppdateringInput()
     }
 }

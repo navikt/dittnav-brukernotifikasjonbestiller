@@ -231,6 +231,6 @@ class DoneInputIT {
     private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, DoneInput>>): Pair<NokkelInput, DoneInput> {
         val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
 
-        return return AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
+        return AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
     }
 }

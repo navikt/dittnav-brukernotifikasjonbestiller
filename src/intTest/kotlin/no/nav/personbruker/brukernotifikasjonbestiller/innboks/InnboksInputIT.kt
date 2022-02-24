@@ -200,6 +200,6 @@ class InnboksInputIT {
     private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, InnboksInput>>): Pair<NokkelInput, InnboksInput> {
         val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
 
-        return return createNokkelInputWithEventId(existingEventId) to createInnboksInput()
+        return createNokkelInputWithEventId(existingEventId) to createInnboksInput()
     }
 }

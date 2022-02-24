@@ -200,6 +200,6 @@ class OppgaveInputIT {
     private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, OppgaveInput>>): Pair<NokkelInput, OppgaveInput> {
         val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
 
-        return return createNokkelInputWithEventId(existingEventId) to createOppgaveInput()
+        return createNokkelInputWithEventId(existingEventId) to createOppgaveInput()
     }
 }
