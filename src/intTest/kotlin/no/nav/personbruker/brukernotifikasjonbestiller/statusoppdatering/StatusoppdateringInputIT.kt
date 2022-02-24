@@ -2,38 +2,31 @@ package no.nav.personbruker.brukernotifikasjonbestiller.statusoppdatering
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.Statusoppdatering
+import no.nav.brukernotifikasjon.schemas.input.StatusoppdateringInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
-import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameScrubber
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelLegacyObjectMother.createNokkelLegacyWithEventIdAndSystembruker
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.AvroStatusoppdateringLegacyObjectMother.createStatusoppdateringLegacyWithGrupperingsId
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringLegacyEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringLegacyTransformer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother.createNokkelInputWithEventId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.shouldBeEqualTo
@@ -43,11 +36,13 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.util.*
+import kotlin.collections.ArrayList
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class StatusoppdateringIT {
+class StatusoppdateringInputIT {
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.statusoppdateringLegacyTopicName,
+            KafkaTestTopics.statusoppdateringInputTopicName,
             KafkaTestTopics.statusoppdateringInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
@@ -56,23 +51,19 @@ class StatusoppdateringIT {
     private val database = LocalPostgresDatabase()
 
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, StatusoppdateringIntern>>()
+
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
 
-    private val producerNameAlias = "dittnav"
-    private val client = getClient(producerNameAlias)
     private val metricsReporter = StubMetricsReporter()
-    private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
-    private val nameScrubber = ProducerNameScrubber(nameResolver)
-    private val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
-    private val producerServiceUser = "dummySystembruker"
-    private val producerNamespace = "namespace"
-    private val producerAppName = "appName"
-    private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
-    private val statusoppdateringTransformer = StatusoppdateringLegacyTransformer(mapper)
-    private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
+    private val metricsCollector = MetricsCollector(metricsReporter)
 
     private val goodEvents = createEvents(10)
-    private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
+    private val badEvents = listOf(
+        createEventWithTooLongGroupId(),
+        createEventWithInvalidEventId(),
+        createEventWithDuplicateId(goodEvents)
+    )
+
     private val statusoppdateringEvents = goodEvents.toMutableList().apply {
         addAll(badEvents)
     }.toMap()
@@ -95,7 +86,7 @@ class StatusoppdateringIT {
     @Test
     fun `Should read Statusoppdatering-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.statusoppdateringLegacyTopicName, statusoppdateringEvents)
+            KafkaTestUtil.produceEventsInput(testEnvironment, KafkaTestTopics.statusoppdateringInputTopicName, statusoppdateringEvents)
         } shouldBeEqualTo true
 
         `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`()
@@ -104,25 +95,24 @@ class StatusoppdateringIT {
         capturedErrorResponseRecords.size `should be equal to` badEvents.size
     }
 
-
     fun `Read all Statusoppdatering-events from our input-topic and verify that they have been sent to the main-topic`() {
         val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERING)
-        val kafkaConsumer = KafkaConsumer<Nokkel, Statusoppdatering>(consumerProps)
+        val kafkaConsumer = KafkaConsumer<NokkelInput, StatusoppdateringInput>(consumerProps)
 
-        val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, TopicSource.ON_PREM)
+        val statusoppdateringInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN, TopicSource.AIVEN)
         val internalKafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(statusoppdateringInternProducerProps)
         val internalEventProducer = Producer(KafkaTestTopics.statusoppdateringInternTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, TopicSource.ON_PREM)
+        val feilresponsProducerProps = Kafka.producerFeilresponsProps(testEnvironment, Eventtype.STATUSOPPDATERING, TopicSource.AIVEN)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository)
+        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val eventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = StatusoppdateringLegacyEventService(statusoppdateringTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.statusoppdateringLegacyTopicName, kafkaConsumer, eventService)
+        val eventService = StatusoppdateringInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.statusoppdateringInputTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
@@ -135,6 +125,7 @@ class StatusoppdateringIT {
             consumer.stopPolling()
         }
     }
+
 
     private fun `Wait until all statusoppdatering events have been received by target topic`() {
         val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.STATUSOPPDATERINGINTERN)
@@ -160,7 +151,6 @@ class StatusoppdateringIT {
 
         capturedInternalRecords.addAll(capturingProcessor.getEvents())
     }
-
 
     private fun `Wait until bad event has been received by error topic`() {
         val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS)
@@ -188,12 +178,27 @@ class StatusoppdateringIT {
     }
 
     private fun createEvents(number: Int) = (1..number).map {
-        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createStatusoppdateringLegacyWithGrupperingsId(it.toString())
+        val eventId = UUID.randomUUID().toString()
+
+        createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createStatusoppdateringInput()
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Statusoppdatering> {
+    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, StatusoppdateringInput> {
+        val eventId = UUID.randomUUID().toString()
         val groupId = "groupId".repeat(100)
 
-        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createStatusoppdateringLegacyWithGrupperingsId(groupId)
+        return createNokkelInputWithEventIdAndGroupId(eventId, groupId) to createStatusoppdateringInput()
+    }
+
+    private fun createEventWithInvalidEventId(): Pair<NokkelInput, StatusoppdateringInput> {
+        val eventId = "notUuidOrUlid"
+
+        return createNokkelInputWithEventId(eventId) to createStatusoppdateringInput()
+    }
+
+    private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, StatusoppdateringInput>>): Pair<NokkelInput, StatusoppdateringInput> {
+        val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
+
+        return createNokkelInputWithEventId(existingEventId) to createStatusoppdateringInput()
     }
 }

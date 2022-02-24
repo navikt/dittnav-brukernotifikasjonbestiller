@@ -1,10 +1,10 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.beskjed
+package no.nav.personbruker.brukernotifikasjonbestiller.done
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Beskjed
+import no.nav.brukernotifikasjon.schemas.Done
 import no.nav.brukernotifikasjon.schemas.Nokkel
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
+import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
@@ -15,12 +15,9 @@ import no.nav.personbruker.brukernotifikasjonbestiller.common.getClient
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaEmbed
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedLegacyObjectMother.createBeskjedLegacyWithGrupperingsId
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
@@ -28,6 +25,9 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuse
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Kafka
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother.createDoneLegacyWithGrupperingsId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsLegacyTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollectorLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.ProducerNameResolver
@@ -45,37 +45,35 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class BeskjedIT {
+class DoneLegacyIT {
     private val embeddedEnv = KafkaTestUtil.createDefaultKafkaEmbeddedInstance(listOf(
-            KafkaTestTopics.beskjedLegacyTopicName,
-            KafkaTestTopics.beskjedInternTopicName,
+            KafkaTestTopics.doneLegacyTopicName,
+            KafkaTestTopics.doneInternTopicName,
             KafkaTestTopics.feilresponsTopicName
     ))
     private val testEnvironment = KafkaTestUtil.createEnvironmentForEmbeddedKafka(embeddedEnv)
 
     private val database = LocalPostgresDatabase()
 
-    private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, BeskjedIntern>>()
-
+    private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, DoneIntern>>()
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()
-    private val producerNameAlias = "dittnav"
 
+    private val producerNameAlias = "dittnav"
     private val client = getClient(producerNameAlias)
     private val metricsReporter = StubMetricsReporter()
     private val nameResolver = ProducerNameResolver(client, testEnvironment.eventHandlerURL)
     private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
     private val producerServiceUser = "dummySystembruker"
-
     private val producerNamespace = "namespace"
     private val producerAppName = "appName"
     private val mapper = ServiceUserMapper(mapOf(producerServiceUser to NamespaceAppName(producerNamespace, producerAppName)))
-    private val beskjedTransformer = BeskjedLegacyTransformer(mapper)
+    private val doneTransformer = DoneLegacyTransformer(mapper)
     private val feilresponsTransformer = FeilresponsLegacyTransformer(mapper)
 
     private val goodEvents = createEvents(10)
     private val badEvents = listOf(createEventWithTooLongGroupId("bad"))
-    private val beskjedEvents = goodEvents.toMutableList().apply {
+    private val doneEvents = goodEvents.toMutableList().apply {
         addAll(badEvents)
     }.toMap()
 
@@ -95,55 +93,55 @@ class BeskjedIT {
     }
 
     @Test
-    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
+    fun `Should read Done-events and send to hoved-topic or error response topic as appropriate`() {
         runBlocking {
-            KafkaTestUtil.produceEvents(testEnvironment, KafkaTestTopics.beskjedLegacyTopicName, beskjedEvents)
+            KafkaTestUtil.produceEventsLegacy(testEnvironment, KafkaTestTopics.doneLegacyTopicName, doneEvents)
         } shouldBeEqualTo true
 
-        `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`()
+        `Read all Done-events from our legacy-topic and verify that they have been sent to the main-topic`()
 
         capturedInternalRecords.size `should be equal to` goodEvents.size
         capturedErrorResponseRecords.size `should be equal to` badEvents.size
     }
 
 
-    fun `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`() {
-        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJED)
-        val kafkaConsumer = KafkaConsumer<Nokkel, Beskjed>(consumerProps)
+    fun `Read all Done-events from our legacy-topic and verify that they have been sent to the main-topic`() {
+        val consumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONE)
+        val kafkaConsumer = KafkaConsumer<Nokkel, Done>(consumerProps)
 
-        val beskjedInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.BESKJEDINTERN, TopicSource.ON_PREM)
-        val internalKafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(beskjedInternProducerProps)
-        val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, internalKafkaProducer)
+        val doneInternProducerProps = Kafka.producerProps(testEnvironment, Eventtype.DONEINTERN, TopicSource.ON_PREM)
+        val internalKafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(doneInternProducerProps)
+        val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
 
-        val feilresponsProducerProps = Kafka.producerFeilresponsProps(testEnvironment, Eventtype.BESKJED, TopicSource.ON_PREM)
+        val feilresponsProducerProps = Kafka.producerProps(testEnvironment, Eventtype.FEILRESPONS, TopicSource.ON_PREM)
         val feilresponsKafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(feilresponsProducerProps)
         val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
         val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-        val handleDuplicateEvents = HandleDuplicateEvents(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
-        val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
+        val handleDuplicateEvents = HandleDuplicateDoneEventsLegacy(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+        val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
 
-        val eventService = BeskjedLegacyEventService(beskjedTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
-        val consumer = Consumer(KafkaTestTopics.beskjedLegacyTopicName, kafkaConsumer, eventService)
+        val eventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
+        val consumer = Consumer(KafkaTestTopics.doneLegacyTopicName, kafkaConsumer, eventService)
 
         internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
         runBlocking {
             consumer.startPolling()
 
-            `Wait until all beskjed events have been received by target topic`()
+            `Wait until all done events have been received by target topic`()
             `Wait until bad event has been received by error topic`()
 
             consumer.stopPolling()
         }
     }
 
-    private fun `Wait until all beskjed events have been received by target topic`() {
-        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.BESKJEDINTERN)
-        val targetKafkaConsumer = KafkaConsumer<NokkelIntern, BeskjedIntern>(targetConsumerProps)
-        val capturingProcessor = CapturingEventProcessor<NokkelIntern, BeskjedIntern>()
+    private fun `Wait until all done events have been received by target topic`() {
+        val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.DONEINTERN)
+        val targetKafkaConsumer = KafkaConsumer<NokkelIntern, DoneIntern>(targetConsumerProps)
+        val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
 
-        val targetConsumer = Consumer(KafkaTestTopics.beskjedInternTopicName, targetKafkaConsumer, capturingProcessor)
+        val targetConsumer = Consumer(KafkaTestTopics.doneInternTopicName, targetKafkaConsumer, capturingProcessor)
 
         var currentNumberOfRecords = 0
 
@@ -162,7 +160,8 @@ class BeskjedIT {
 
         capturedInternalRecords.addAll(capturingProcessor.getEvents())
     }
-    
+
+
     private fun `Wait until bad event has been received by error topic`() {
         val targetConsumerProps = KafkaEmbed.consumerProps(testEnvironment, Eventtype.FEILRESPONS)
         val targetKafkaConsumer = KafkaConsumer<NokkelFeilrespons, Feilrespons>(targetConsumerProps)
@@ -189,12 +188,12 @@ class BeskjedIT {
     }
 
     private fun createEvents(number: Int) = (1..number).map {
-        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createBeskjedLegacyWithGrupperingsId(it.toString())
+        createNokkelLegacyWithEventIdAndSystembruker(it.toString(), producerServiceUser) to createDoneLegacyWithGrupperingsId(it.toString())
     }
 
-    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Beskjed> {
+    private fun createEventWithTooLongGroupId(eventId: String): Pair<Nokkel, Done> {
         val groupId = "groupId".repeat(100)
 
-        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createBeskjedLegacyWithGrupperingsId(groupId)
+        return createNokkelLegacyWithEventIdAndSystembruker(eventId, producerServiceUser) to createDoneLegacyWithGrupperingsId(groupId)
     }
 }

@@ -15,6 +15,18 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         }
     }
 
+    suspend fun fetchExistingEventIdsExcludingDone(eventIds: List<String>): List<String> {
+        return database.queryWithExceptionTranslation {
+            getExistingEventIdsExcludingDone(eventIds)
+        }
+    }
+
+    suspend fun fetchExistingEventIdsForDone(eventIds: List<String>): List<String> {
+        return database.queryWithExceptionTranslation {
+            getExistingEventIdsForDone(eventIds)
+        }
+    }
+
     suspend fun fetchDoneKeysThatMatchEventIds(eventIds: List<String>): List<DoneKey> {
         return database.queryWithExceptionTranslation {
             getDoneKeysByEventIds(eventIds)

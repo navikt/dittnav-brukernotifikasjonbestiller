@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
@@ -25,7 +25,7 @@ class BeskjedLegacyEventService(
     private val beskjedTransformer: BeskjedLegacyTransformer,
     private val feilresponsTransformer: FeilresponsLegacyTransformer,
     private val metricsCollector: MetricsCollectorLegacy,
-    private val handleDuplicateEvents: HandleDuplicateEvents,
+    private val handleDuplicateEvents: HandleDuplicateEventsLegacy,
     private val eventDispatcher: EventDispatcher<BeskjedIntern>
 ) : EventBatchProcessorService<Nokkel, Beskjed> {
 

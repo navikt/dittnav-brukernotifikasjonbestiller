@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DuplicateCheckResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEventsLegacy
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneLegacyObjectMother
@@ -29,7 +29,7 @@ internal class StatusoppdateringLegacyEventServiceTest {
     private val topic = "topic-statusoppdatering-test"
     private val transformer = mockk<StatusoppdateringLegacyTransformer>()
     private val feilresponsTransformer = mockk<FeilresponsLegacyTransformer>()
-    private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
+    private val handleDuplicateEvents = mockk<HandleDuplicateEventsLegacy>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<StatusoppdateringIntern>>(relaxed = true)
     private val internalEvents = AvroStatusoppdateringInternObjectMother.giveMeANumberOfInternalStatusoppdateringEvents(2, "systembruker", "eventId", "fodselsnummer")
 
