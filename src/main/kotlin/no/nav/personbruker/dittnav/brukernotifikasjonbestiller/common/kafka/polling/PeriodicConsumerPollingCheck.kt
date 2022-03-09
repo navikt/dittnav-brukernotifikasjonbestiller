@@ -43,17 +43,37 @@ class PeriodicConsumerPollingCheck(
         val stoppedConsumers = mutableListOf<Eventtype>()
 
         if (appContext.beskjedLegacyConsumer.isStopped()) {
-            stoppedConsumers.add(Eventtype.BESKJED)
+            stoppedConsumers.add(Eventtype.BESKJED_LEGACY)
         }
         if (appContext.oppgaveLegacyConsumer.isStopped()) {
-            stoppedConsumers.add(Eventtype.OPPGAVE)
+            stoppedConsumers.add(Eventtype.OPPGAVE_LEGACY)
         }
         if (appContext.statusoppdateringLegacyConsumer.isStopped()) {
-            stoppedConsumers.add(Eventtype.STATUSOPPDATERING)
+            stoppedConsumers.add(Eventtype.STATUSOPPDATERING_LEGACY)
         }
         if (appContext.doneLegacyConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.DONE_LEGACY)
+        }
+        if (appContext.innboksLegacyConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.INNBOKS_LEGACY)
+        }
+
+        if (appContext.beskjedInputConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.BESKJED)
+        }
+        if (appContext.oppgaveInputConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.OPPGAVE)
+        }
+        if (appContext.statusoppdateringInputConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.STATUSOPPDATERING)
+        }
+        if (appContext.doneInputConsumer.isStopped()) {
             stoppedConsumers.add(Eventtype.DONE)
         }
+        if (appContext.innboksInputConsumer.isStopped()) {
+            stoppedConsumers.add(Eventtype.INNBOKS)
+        }
+
         return stoppedConsumers
     }
 
