@@ -17,7 +17,7 @@ class PeriodicConsumerPollingCheck(
         private val job: Job = Job()) : CoroutineScope {
 
     private val log: Logger = LoggerFactory.getLogger(PeriodicConsumerPollingCheck::class.java)
-    private val minutesToWait = Duration.ofMinutes(30)
+    private val minutesToWait = Duration.ofMinutes(5)
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + job

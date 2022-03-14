@@ -270,6 +270,41 @@ class ApplicationContext {
         } else {
             log.warn("doneLegacyConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
+
+        if (beskjedInputConsumer.isCompleted()) {
+            beskjedInputConsumer = initializeBeskjedInputProcessor()
+            log.info("beskjedInputConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("beskjedInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (oppgaveInputConsumer.isCompleted()) {
+            oppgaveInputConsumer = initializeOppgaveInputProcessor()
+            log.info("oppgaveInputConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("oppgaveInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (innboksInputConsumer.isCompleted()) {
+            innboksInputConsumer = initializeInnboksInputProcessor()
+            log.info("innboksInputConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("innboksInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (statusoppdateringInputConsumer.isCompleted()) {
+            statusoppdateringInputConsumer = initializeStatusoppdateringInputProcessor()
+            log.info("statusoppdateringInputConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("statusoppdateringInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
+
+        if (doneInputConsumer.isCompleted()) {
+            doneInputConsumer = initializeDoneInputProcessor()
+            log.info("doneInputConsumer har blitt reinstansiert.")
+        } else {
+            log.warn("doneInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+        }
     }
 
     private fun resolveMetricsReporter(environment: Environment): MetricsReporter {
