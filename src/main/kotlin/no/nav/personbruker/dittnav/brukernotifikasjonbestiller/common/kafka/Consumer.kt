@@ -21,7 +21,7 @@ import kotlin.coroutines.CoroutineContext
 
 class Consumer<K, V>(
         val topic: String,
-        val kafkaConsumer: KafkaConsumer<K, V>,
+        val kafkaConsumer: org.apache.kafka.clients.consumer.Consumer<K, V>,
         val eventBatchProcessorService: EventBatchProcessorService<K, V>,
         val job: Job = Job()
 ) : CoroutineScope, HealthCheck {
@@ -106,7 +106,9 @@ class Consumer<K, V>(
 
     private suspend fun rollbackOffset() {
         withContext(Dispatchers.IO) {
-            kafkaConsumer.rollbackToLastCommitted()
+            if (kafkaConsumer is KafkaConsumer) {
+                kafkaConsumer.rollbackToLastCommitted()
+            }
         }
     }
 

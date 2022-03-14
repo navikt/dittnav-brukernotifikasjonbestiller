@@ -1,5 +1,7 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
 
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeout
 import no.nav.brukernotifikasjon.schemas.Nokkel
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.common.JAASCredential
@@ -7,6 +9,11 @@ import no.nav.common.KafkaEnvironment
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Environment
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.SecurityConfig
 import org.apache.avro.generic.GenericRecord
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.MockConsumer
+import org.apache.kafka.clients.consumer.OffsetResetStrategy
+import org.apache.kafka.clients.producer.MockProducer
+import org.apache.kafka.common.TopicPartition
 import java.net.URL
 import java.util.*
 
@@ -26,6 +33,40 @@ object KafkaTestUtil {
                     put("KAFKA_TRANSACTION_STATE_LOG_MIN_ISR", "1")
                 }
         )
+    }
+
+    suspend fun <K, V> delayUntilCommittedOffset(
+        consumer: MockConsumer<K, V>,
+        topicName: String,
+        offset: Long
+    ) {
+        val partition = TopicPartition(topicName, 0)
+        withTimeout(1000) {
+            while ((consumer.committed(setOf(partition))[partition]?.offset() ?: 0) < offset) {
+                delay(10)
+            }
+        }
+    }
+
+    fun <K, V> loopbackRecords(producer: MockProducer<K, V>, consumer: MockConsumer<K, V>) {
+        var offset = 0L
+        producer.history().forEach { producerRecord ->
+            if (producerRecord.topic() in consumer.subscription()) {
+                val partition =
+                    TopicPartition(
+                        producerRecord.topic(),
+                        consumer.assignment().first { it.topic() == producerRecord.topic() }.partition()
+                    )
+                val consumerRecord = ConsumerRecord(
+                    producerRecord.topic(),
+                    partition.partition(),
+                    offset++,
+                    producerRecord.key(),
+                    producerRecord.value()
+                )
+                consumer.addRecord(consumerRecord)
+            }
+        }
     }
 
     fun createEnvironmentForEmbeddedKafka(embeddedEnv: KafkaEnvironment): Environment {
@@ -88,5 +129,22 @@ object KafkaTestUtil {
                 env.schemaRegistryUrl,
                 topicName,
                 events)
+    }
+
+    fun <K, V> createMockConsumer(topicName: String): MockConsumer<K, V> {
+        val partition = TopicPartition(topicName, 0)
+        return MockConsumer<K, V>(OffsetResetStrategy.EARLIEST).also {
+            it.subscribe(listOf(partition.topic()))
+            it.rebalance(listOf(partition))
+            it.updateBeginningOffsets(mapOf(partition to 0))
+        }
+    }
+
+    fun <K, V> createMockProducer(): MockProducer<K, V> {
+        return MockProducer(
+            false,
+            { _: String, _: K -> ByteArray(0) }, //Dummy serializers
+            { _: String, _: V -> ByteArray(0) }
+        )
     }
 }
