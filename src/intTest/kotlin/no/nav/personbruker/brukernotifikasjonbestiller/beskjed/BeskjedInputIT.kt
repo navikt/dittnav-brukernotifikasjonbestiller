@@ -55,7 +55,6 @@ class BeskjedInputIT {
 
     private val beskjedInternalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>()
     private val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, beskjedInternalProducerMock)
-
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 

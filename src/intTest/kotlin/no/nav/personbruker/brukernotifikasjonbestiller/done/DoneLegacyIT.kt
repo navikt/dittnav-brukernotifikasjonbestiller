@@ -67,7 +67,6 @@ class DoneLegacyIT {
 
     private val internalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
     private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalProducerMock)
-
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
