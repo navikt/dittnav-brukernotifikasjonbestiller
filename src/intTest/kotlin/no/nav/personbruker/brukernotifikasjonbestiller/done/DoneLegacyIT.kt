@@ -63,25 +63,24 @@ class DoneLegacyIT {
         addAll(badEvents)
     }.toMap()
 
-    private val legacyConsumerMock = KafkaTestUtil.createMockConsumer<Nokkel, Done>(KafkaTestTopics.doneLegacyTopicName)
-
-    private val internalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
-    private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalProducerMock)
+    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
+    private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
-    val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-    val handleDuplicateEvents = HandleDuplicateDoneEventsLegacy(Eventtype.DONE, brukernotifikasjonbestillingRepository)
-    val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
+    private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
+    private val handleDuplicateEvents = HandleDuplicateDoneEventsLegacy(Eventtype.DONE, brukernotifikasjonbestillingRepository)
+    private val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
+    private val eventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
 
-    val eventService = DoneLegacyEventService(doneTransformer, feilresponsTransformer, metricsCollector, handleDuplicateEvents, eventDispatcher)
-    val consumer = Consumer(KafkaTestTopics.doneLegacyTopicName, legacyConsumerMock, eventService)
+    private val legacyKafkaConsumer = KafkaTestUtil.createMockConsumer<Nokkel, Done>(KafkaTestTopics.doneLegacyTopicName)
+    private val legacyEventConsumer = Consumer(KafkaTestTopics.doneLegacyTopicName, legacyKafkaConsumer, eventService)
 
     @Test
     fun `Should read Done-events and send to hoved-topic or error response topic as appropriate`() {
         var i = 0
         doneEvents.forEach {
-            legacyConsumerMock.addRecord(
+            legacyKafkaConsumer.addRecord(
                 ConsumerRecord(
                     KafkaTestTopics.doneLegacyTopicName,
                     0,
@@ -101,22 +100,22 @@ class DoneLegacyIT {
 
     fun `Read all Done-events from our legacy-topic and verify that they have been sent to the main-topic`() {
 
-        internalProducerMock.initTransactions()
+        internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
         runBlocking {
-            consumer.startPolling()
+            legacyEventConsumer.startPolling()
 
-            KafkaTestUtil.delayUntilCommittedOffset(legacyConsumerMock, KafkaTestTopics.doneLegacyTopicName, doneEvents.size.toLong())
+            KafkaTestUtil.delayUntilCommittedOffset(legacyKafkaConsumer, KafkaTestTopics.doneLegacyTopicName, doneEvents.size.toLong())
             `Wait until all done events have been received by target topic`()
             `Wait until bad event has been received by error topic`()
 
-            consumer.stopPolling()
+            legacyEventConsumer.stopPolling()
         }
     }
 
     private fun `Wait until all done events have been received by target topic`() {
         val targetKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelIntern, DoneIntern>(KafkaTestTopics.doneInternTopicName)
-        KafkaTestUtil.loopbackRecords(internalProducerMock, targetKafkaConsumer)
+        KafkaTestUtil.loopbackRecords(internalKafkaProducer, targetKafkaConsumer)
 
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
         val targetConsumer = Consumer(KafkaTestTopics.doneInternTopicName, targetKafkaConsumer, capturingProcessor)

@@ -52,23 +52,24 @@ class DoneInputIT {
         addAll(badEvents)
     }.toMap()
 
-    private val internalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
-    private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalProducerMock)
+    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
+    private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
-    private val inputConsumerMock = KafkaTestUtil.createMockConsumer<NokkelInput, DoneInput>(KafkaTestTopics.doneInputTopicName)
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
     private val eventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-    private val consumer = Consumer(KafkaTestTopics.doneInputTopicName, inputConsumerMock, eventService)
+
+    private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, DoneInput>(KafkaTestTopics.doneInputTopicName)
+    private val inputEventConsumer = Consumer(KafkaTestTopics.doneInputTopicName, inputKafkaConsumer, eventService)
 
     @Test
     fun `Should read Done-events and send to hoved-topic or error response topic, and allow invalid eventIds for backwards-compatibility`() {
         var i = 0
         doneEvents.forEach {
-            inputConsumerMock.addRecord(
+            inputKafkaConsumer.addRecord(
                 ConsumerRecord(
                     KafkaTestTopics.doneInputTopicName,
                     0,
@@ -91,22 +92,22 @@ class DoneInputIT {
 
     fun `Read all Done-events from our input-topic and verify that they have been sent to the main-topic`() {
 
-        internalProducerMock.initTransactions()
+        internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
         runBlocking {
-            consumer.startPolling()
+            inputEventConsumer.startPolling()
 
-            KafkaTestUtil.delayUntilCommittedOffset(inputConsumerMock, KafkaTestTopics.doneInputTopicName, doneEvents.size.toLong())
+            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.doneInputTopicName, doneEvents.size.toLong())
             `Wait until all done events have been received by target topic`()
             `Wait until bad event has been received by error topic`()
 
-            consumer.stopPolling()
+            inputEventConsumer.stopPolling()
         }
     }
 
     private fun `Wait until all done events have been received by target topic`() {
         val targetKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelIntern, DoneIntern>(KafkaTestTopics.doneInternTopicName)
-        KafkaTestUtil.loopbackRecords(internalProducerMock, targetKafkaConsumer)
+        KafkaTestUtil.loopbackRecords(internalKafkaProducer, targetKafkaConsumer)
 
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, DoneIntern>()
         val targetConsumer = Consumer(KafkaTestTopics.doneInternTopicName, targetKafkaConsumer, capturingProcessor)

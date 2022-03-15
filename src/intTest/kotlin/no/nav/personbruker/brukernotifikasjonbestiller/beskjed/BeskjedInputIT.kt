@@ -51,25 +51,24 @@ class BeskjedInputIT {
         addAll(badEvents)
     }.toMap()
 
-    private val beskedInputConsumerMock = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
-
-    private val beskjedInternalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>()
-    private val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, beskjedInternalProducerMock)
+    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>()
+    private val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, internalKafkaProducer)
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
-
     private val eventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-    private val consumer = Consumer(KafkaTestTopics.beskjedInputTopicName, beskedInputConsumerMock, eventService)
+
+    private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
+    private val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
 
     @Test
     fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
         var i = 0
         beskjedEvents.forEach {
-            beskedInputConsumerMock.addRecord(ConsumerRecord(
+            inputKafkaConsumer.addRecord(ConsumerRecord(
                 KafkaTestTopics.beskjedInputTopicName,
                 0,
                 (i++).toLong(),
@@ -86,22 +85,22 @@ class BeskjedInputIT {
 
     fun `Read all Beskjed-events from our input-topic and verify that they have been sent to the main-topic`() {
 
-        beskjedInternalProducerMock.initTransactions()
+        internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
         runBlocking {
-            consumer.startPolling()
+            inputEventConsumer.startPolling()
 
-            KafkaTestUtil.delayUntilCommittedOffset(beskedInputConsumerMock, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
+            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
             `Verify all beskjed events have been received by target topic`()
             `Verify all bad event has been received by error topic`()
 
-            consumer.stopPolling()
+            inputEventConsumer.stopPolling()
         }
     }
 
     private fun `Verify all beskjed events have been received by target topic`() {
         val targetKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelIntern, BeskjedIntern>(KafkaTestTopics.beskjedInternTopicName)
-        KafkaTestUtil.loopbackRecords(beskjedInternalProducerMock, targetKafkaConsumer)
+        KafkaTestUtil.loopbackRecords(internalKafkaProducer, targetKafkaConsumer)
 
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, BeskjedIntern>()
         val targetConsumer = Consumer(KafkaTestTopics.beskjedInternTopicName, targetKafkaConsumer, capturingProcessor)

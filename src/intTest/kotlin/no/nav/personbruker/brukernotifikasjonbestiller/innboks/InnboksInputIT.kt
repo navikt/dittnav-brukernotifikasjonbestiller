@@ -51,23 +51,24 @@ class InnboksInputIT {
         addAll(badEvents)
     }.toMap()
 
-    private val internalProducerMock = KafkaTestUtil.createMockProducer<NokkelIntern, InnboksIntern>()
-    private val internalEventProducer = Producer(KafkaTestTopics.innboksInternTopicName, internalProducerMock)
+    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, InnboksIntern>()
+    private val internalEventProducer = Producer(KafkaTestTopics.innboksInternTopicName, internalKafkaProducer)
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
 
-    private val inputConsumerMock = KafkaTestUtil.createMockConsumer<NokkelInput, InnboksInput>(KafkaTestTopics.innboksInputTopicName)
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
     private val eventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
-    private val consumer = Consumer(KafkaTestTopics.innboksInputTopicName, inputConsumerMock, eventService)
+
+    private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, InnboksInput>(KafkaTestTopics.innboksInputTopicName)
+    private val inputEventConsumer = Consumer(KafkaTestTopics.innboksInputTopicName, inputKafkaConsumer, eventService)
 
     @Test
     fun `Should read Innboks-events and send to hoved-topic or error response topic as appropriate`() {
         var i = 0
         innboksEvents.forEach {
-            inputConsumerMock.addRecord(
+            inputKafkaConsumer.addRecord(
                 ConsumerRecord(
                 KafkaTestTopics.innboksInputTopicName,
                 0,
@@ -86,23 +87,23 @@ class InnboksInputIT {
 
     fun `Read all Innboks-events from our input-topic and verify that they have been sent to the main-topic`() {
 
-        internalProducerMock.initTransactions()
+        internalKafkaProducer.initTransactions()
         feilresponsKafkaProducer.initTransactions()
         runBlocking {
-            consumer.startPolling()
+            inputEventConsumer.startPolling()
 
-            KafkaTestUtil.delayUntilCommittedOffset(inputConsumerMock, KafkaTestTopics.innboksInputTopicName, innboksEvents.size.toLong())
+            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.innboksInputTopicName, innboksEvents.size.toLong())
             `Wait until all innboks events have been received by target topic`()
             `Wait until bad event has been received by error topic`()
 
-            consumer.stopPolling()
+            inputEventConsumer.stopPolling()
         }
     }
 
 
     private fun `Wait until all innboks events have been received by target topic`() {
         val targetKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelIntern, InnboksIntern>(KafkaTestTopics.innboksInternTopicName)
-        KafkaTestUtil.loopbackRecords(internalProducerMock, targetKafkaConsumer)
+        KafkaTestUtil.loopbackRecords(internalKafkaProducer, targetKafkaConsumer)
 
         val capturingProcessor = CapturingEventProcessor<NokkelIntern, InnboksIntern>()
         val targetConsumer = Consumer(KafkaTestTopics.innboksInternTopicName, targetKafkaConsumer, capturingProcessor)
