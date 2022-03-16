@@ -10,9 +10,6 @@ import org.apache.kafka.common.TopicPartition
 
 object KafkaTestUtil {
 
-    val username = "srvkafkaclient"
-    val password = "kafkaclient"
-
     suspend fun <K, V> delayUntilCommittedOffset(
         consumer: MockConsumer<K, V>,
         topicName: String,
