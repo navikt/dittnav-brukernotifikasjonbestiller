@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasj
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 object BrukernotifikasjonbestillingObjectMother {
 
@@ -10,7 +11,7 @@ object BrukernotifikasjonbestillingObjectMother {
                 eventId = eventId,
                 systembruker = systembruker,
                 eventtype = eventtype,
-                prosesserttidspunkt = LocalDateTime.now(),
+                prosesserttidspunkt = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS),
                 fodselsnummer = fodselsnummer
         )
     }
