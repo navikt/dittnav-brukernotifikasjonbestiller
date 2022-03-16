@@ -2,14 +2,13 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
-import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.KafkaException
 import org.slf4j.LoggerFactory
 
 class Producer<K, V>(
         private val destinationTopicName: String,
-        private val kafkaProducer: KafkaProducer<K, V>
+        private val kafkaProducer: org.apache.kafka.clients.producer.Producer<K, V>
 ) {
 
     val log = LoggerFactory.getLogger(Producer::class.java)

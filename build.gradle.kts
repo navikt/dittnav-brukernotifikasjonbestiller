@@ -63,7 +63,6 @@ dependencies {
     testImplementation(Ktor.clientMockJvm)
     testImplementation(Kluent.kluent)
     testImplementation(Mockk.mockk)
-    testImplementation(NAV.kafkaEmbedded)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
     testImplementation(TestContainers.postgresql)
