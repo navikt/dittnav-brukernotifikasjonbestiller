@@ -1,4 +1,4 @@
-FROM navikt/java:15-appdynamics
+FROM navikt/java:17-appdynamics
 COPY init.sh /init-scripts/init.sh
 COPY build/libs/dittnav-brukernotifikasjonbestiller-all.jar /app/app.jar
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 \
