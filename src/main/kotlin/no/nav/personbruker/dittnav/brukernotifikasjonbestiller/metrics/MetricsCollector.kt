@@ -30,6 +30,7 @@ class MetricsCollector(private val metricsReporter: MetricsReporter) {
             val eventTypeName = session.eventtype.toString()
 
             reportMetrics(KAFKA_EVENTS_SEEN, numberSeen, eventTypeName, producer)
+            PrometheusMetricsCollector.registerEventsSeen(numberSeen, eventTypeName, producer.appName)
         }
     }
 
@@ -40,6 +41,7 @@ class MetricsCollector(private val metricsReporter: MetricsReporter) {
 
             if (numberProcessed > 0) {
                 reportMetrics(KAFKA_EVENTS_PROCESSED, numberProcessed, eventTypeName, producer)
+                PrometheusMetricsCollector.registerEventsProcessed(numberProcessed, eventTypeName, producer.appName)
             }
         }
     }
@@ -51,6 +53,7 @@ class MetricsCollector(private val metricsReporter: MetricsReporter) {
 
             if (numberFailed > 0) {
                 reportMetrics(KAFKA_EVENTS_FAILED, numberFailed, eventTypeName, producer)
+                PrometheusMetricsCollector.registerEventsFailed(numberFailed, eventTypeName, producer.appName)
             }
         }
     }
