@@ -28,6 +28,7 @@ class MetricsCollectorLegacy(private val metricsReporter: MetricsReporter, priva
             val printableAlias = nameScrubber.getPublicAlias(systemUser)
 
             reportMetrics(KAFKA_EVENTS_SEEN, numberSeen, eventTypeName, printableAlias)
+            PrometheusMetricsCollector.registerEventsSeen(numberSeen, eventTypeName, printableAlias)
         }
     }
 
@@ -39,6 +40,7 @@ class MetricsCollectorLegacy(private val metricsReporter: MetricsReporter, priva
             if (numberProcessed > 0) {
                 val printableAlias = nameScrubber.getPublicAlias(systemUser)
                 reportMetrics(KAFKA_EVENTS_PROCESSED, numberProcessed, eventTypeName, printableAlias)
+                PrometheusMetricsCollector.registerEventsProcessed(numberProcessed, eventTypeName, printableAlias)
             }
         }
     }
@@ -51,6 +53,7 @@ class MetricsCollectorLegacy(private val metricsReporter: MetricsReporter, priva
             if (numberFailed > 0) {
                 val printableAlias = nameScrubber.getPublicAlias(systemUser)
                 reportMetrics(KAFKA_EVENTS_FAILED, numberFailed, eventTypeName, printableAlias)
+                PrometheusMetricsCollector.registerEventsFailed(numberFailed, eventTypeName, printableAlias)
             }
         }
     }
