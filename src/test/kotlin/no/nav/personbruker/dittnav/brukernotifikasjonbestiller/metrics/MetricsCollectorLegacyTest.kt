@@ -3,6 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.influx.*
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
@@ -20,6 +21,7 @@ internal class MetricsCollectorLegacyTest {
     @BeforeEach
     fun cleanup() {
         clearAllMocks()
+        mockkObject(PrometheusMetricsCollector)
     }
 
     @Test
@@ -101,6 +103,29 @@ internal class MetricsCollectorLegacyTest {
         capturedFieldsForProcessed.captured["counter"] `should be equal to` 2
         capturedFieldsForFailed.captured["counter"] `should be equal to` 1
         capturedNokkelWasNull.captured["counter"] `should be equal to` 1
+    }
+
+    @Test
+    internal fun `should register events to prometheus`() {
+        val producer = "producer"
+        val eventType = Eventtype.OPPGAVE
+        coEvery { producerNameResolver.getProducerNameAlias(any()) } returns producer
+        coEvery { metricsReporter.registerDataPoint(any(), any(), any()) } returns Unit
+        val nameScrubber = ProducerNameScrubber(producerNameResolver)
+        val metricsCollector = MetricsCollectorLegacy(metricsReporter, nameScrubber)
+
+        runBlocking {
+            metricsCollector.recordMetrics(eventType) {
+                countSuccessfulEventForProducer(producer)
+                countFailedEventForProducer(producer)
+            }
+        }
+
+        verify { PrometheusMetricsCollector.registerEventsSeen(2, eventType.toString(), producer) }
+        verify { PrometheusMetricsCollector.registerEventsProcessed(1, eventType.toString(), producer) }
+        verify { PrometheusMetricsCollector.registerEventsFailed(1, eventType.toString(), producer) }
+
+        confirmVerified(PrometheusMetricsCollector)
     }
 
 }
