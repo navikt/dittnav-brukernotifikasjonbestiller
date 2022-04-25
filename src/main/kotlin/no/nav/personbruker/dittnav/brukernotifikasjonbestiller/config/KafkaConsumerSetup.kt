@@ -14,41 +14,7 @@ object KafkaConsumerSetup {
     private val log: Logger = LoggerFactory.getLogger(KafkaConsumerSetup::class.java)
 
     fun startAllKafkaPollers(appContext: ApplicationContext) {
-
-        checkLegacyTopics(appContext)
         checkInputTopics(appContext)
-    }
-
-    private fun checkLegacyTopics(appContext: ApplicationContext) {
-        if(shouldPollBeskjedLegacy()) {
-            appContext.beskjedLegacyConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av beskjed-legacy")
-        }
-
-        if(shouldPollOppgaveLegacy()) {
-            appContext.oppgaveLegacyConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av oppgave-legacy")
-        }
-
-        if(shouldPollInnboksLegacy()) {
-            appContext.innboksLegacyConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av innboks-legacy")
-        }
-
-        if(shouldPollStatusoppdateringLegacy()) {
-            appContext.statusoppdateringLegacyConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av statusoppdatering-legacy")
-        }
-
-        if(shouldPollDoneLegacy()) {
-            appContext.doneLegacyConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av done-legacy")
-        }
     }
 
     fun checkInputTopics(appContext: ApplicationContext) {
@@ -87,15 +53,10 @@ object KafkaConsumerSetup {
         log.info("Begynner å stoppe kafka-pollerne...")
 
         stopPollingIfNotCompleted(
-            appContext.beskjedLegacyConsumer,
             appContext.beskjedInputConsumer,
-            appContext.oppgaveLegacyConsumer,
             appContext.oppgaveInputConsumer,
-            appContext.innboksLegacyConsumer,
             appContext.innboksInputConsumer,
-            appContext.statusoppdateringLegacyConsumer,
             appContext.statusoppdateringInputConsumer,
-            appContext.doneLegacyConsumer,
             appContext.doneInputConsumer
         )
 
@@ -108,11 +69,6 @@ object KafkaConsumerSetup {
                 consumer.stopPolling()
             }
         }
-    }
-
-    fun <T> setUpConsumerForLegacyTopic(topicName: String, kafkaProps: Properties, eventProcessor: EventBatchProcessorService<Nokkel, T>): Consumer<Nokkel, T> {
-        val kafkaConsumer = KafkaConsumer<Nokkel, T>(kafkaProps)
-        return Consumer(topicName, kafkaConsumer, eventProcessor)
     }
 
     fun <T> setUpConsumerForInputTopic(topicName: String, kafkaProps: Properties, eventProcessor: EventBatchProcessorService<NokkelInput, T>): Consumer<NokkelInput, T> {
