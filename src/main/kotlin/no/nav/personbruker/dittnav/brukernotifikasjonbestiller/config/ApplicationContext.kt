@@ -17,7 +17,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEve
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource.AIVEN
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringInputEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
@@ -39,11 +38,11 @@ class ApplicationContext {
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter)
 
-    var internBeskjedKafkaProducer = initializeInternBeskjedProducer(AIVEN)
-    var internOppgaveKafkaProducer = initializeInternOppgaveProducer(AIVEN)
-    var internInnboksKafkaProducer = initializeInternInnboksProducer(AIVEN)
-    var internDoneKafkaProducer = initializeInternDoneProducer(AIVEN)
-    var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer(AIVEN)
+    var internBeskjedKafkaProducer = initializeInternBeskjedProducer()
+    var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
+    var internInnboksKafkaProducer = initializeInternInnboksProducer()
+    var internDoneKafkaProducer = initializeInternDoneProducer()
+    var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer()
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
@@ -58,7 +57,7 @@ class ApplicationContext {
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED, AIVEN)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
         val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
@@ -67,7 +66,7 @@ class ApplicationContext {
     private fun initializeOppgaveInputProcessor(): Consumer<NokkelInput, OppgaveInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE, AIVEN)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
         val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
@@ -76,7 +75,7 @@ class ApplicationContext {
     private fun initializeInnboksInputProcessor(): Consumer<NokkelInput, InnboksInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.INNBOKS)
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS, AIVEN)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
         val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
@@ -85,7 +84,7 @@ class ApplicationContext {
     private fun initializeStatusoppdateringInputProcessor(): Consumer<NokkelInput, StatusoppdateringInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING, AIVEN)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING)
         val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
         val statusoppdateringEventService = StatusoppdateringInputEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.statusoppdateringInputTopicName, consumerProps, statusoppdateringEventService)
@@ -95,49 +94,49 @@ class ApplicationContext {
     private fun initializeDoneInputProcessor(): Consumer<NokkelInput, DoneInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
         val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE, AIVEN)
+        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
         val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, doneEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
     }
 
-    private fun initializeInternBeskjedProducer(eventSource: TopicSource): Producer<NokkelIntern, BeskjedIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.BESKJEDINTERN, eventSource)
+    private fun initializeInternBeskjedProducer(): Producer<NokkelIntern, BeskjedIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.BESKJEDINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.beskjedInternTopicName, kafkaProducer)
     }
 
-    private fun initializeInternOppgaveProducer(eventSource: TopicSource): Producer<NokkelIntern, OppgaveIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.OPPGAVEINTERN, eventSource)
+    private fun initializeInternOppgaveProducer(): Producer<NokkelIntern, OppgaveIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.OPPGAVEINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.oppgaveInternTopicName, kafkaProducer)
     }
 
-    private fun initializeInternInnboksProducer(eventSource: TopicSource): Producer<NokkelIntern, InnboksIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.INNBOKSINTERN, eventSource)
+    private fun initializeInternInnboksProducer(): Producer<NokkelIntern, InnboksIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.INNBOKSINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, InnboksIntern>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.innboksInternTopicName, kafkaProducer)
     }
 
-    private fun initializeInternDoneProducer(eventSource: TopicSource): Producer<NokkelIntern, DoneIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.DONEINTERN, eventSource)
+    private fun initializeInternDoneProducer(): Producer<NokkelIntern, DoneIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.DONEINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.doneInternTopicName, kafkaProducer)
     }
 
-    private fun initializeInternStatusoppdateringProducer(eventSource: TopicSource): Producer<NokkelIntern, StatusoppdateringIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.STATUSOPPDATERINGINTERN, eventSource)
+    private fun initializeInternStatusoppdateringProducer(): Producer<NokkelIntern, StatusoppdateringIntern> {
+        val producerProps = Kafka.producerProps(environment, Eventtype.STATUSOPPDATERINGINTERN)
         val kafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.statusoppdateringInternTopicName, kafkaProducer)
     }
 
-    private fun initializeFeilresponsProducer(eventtype: Eventtype, eventSource: TopicSource): Producer<NokkelFeilrespons, Feilrespons> {
-        val producerProps = Kafka.producerFeilresponsProps(environment, eventtype, eventSource)
+    private fun initializeFeilresponsProducer(eventtype: Eventtype, ): Producer<NokkelFeilrespons, Feilrespons> {
+        val producerProps = Kafka.producerFeilresponsProps(environment, eventtype)
         val kafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
         kafkaProducer.initTransactions()
         return Producer(environment.feilresponsTopicName, kafkaProducer)

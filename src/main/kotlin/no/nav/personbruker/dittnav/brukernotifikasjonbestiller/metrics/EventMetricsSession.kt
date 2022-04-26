@@ -72,10 +72,6 @@ class EventMetricsSession(val eventtype: Eventtype) {
         return countFailedEventsBySysUser.values.sum()
     }
 
-    fun getDuplicateKeys(): HashMap<NamespaceAppName, Int> {
-        return countDuplicateKeyBySysUser
-    }
-
     fun getNokkelWasNull(): Int {
         return countNokkelWasNull
     }

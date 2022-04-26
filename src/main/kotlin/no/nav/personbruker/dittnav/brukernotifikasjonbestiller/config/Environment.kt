@@ -7,13 +7,8 @@ import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVarAsLi
 import java.net.URL
 
 data class Environment(
-        val bootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS"),
-        val schemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS"),
-        val username: String = getEnvVar("SERVICEUSER_USERNAME"),
-        val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
         val groupId: String = getEnvVar("GROUP_ID"),
         val applicationName: String = "dittnav-brukernotifikasjonbestiller",
-        val eventHandlerURL: URL = URL(getEnvVar("EVENT_HANDLER_URL").trimEnd('/')),
         val clusterName: String = getEnvVar("NAIS_CLUSTER_NAME"),
         val namespace: String = getEnvVar("NAIS_NAMESPACE"),
         val influxdbHost: String = getEnvVar("INFLUXDB_HOST"),
@@ -67,16 +62,6 @@ data class SecurityVars(
 fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null
 }
-
-fun shouldPollBeskjedLegacy() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED", "false").toBoolean()
-
-fun shouldPollOppgaveLegacy() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE", "false").toBoolean()
-
-fun shouldPollInnboksLegacy() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS", "false").toBoolean()
-
-fun shouldPollStatusoppdateringLegacy() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING", "false").toBoolean()
-
-fun shouldPollDoneLegacy() = StringEnvVar.getOptionalEnvVar("POLL_DONE", "false").toBoolean()
 
 fun shouldPollBeskjedInput() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED_INPUT", "false").toBoolean()
 

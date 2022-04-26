@@ -39,6 +39,7 @@ dependencies {
     implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2022.01.20-12.20-9c37cb170dc9")
     implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)
+    implementation(DittNAV.Common.logging)
     implementation(Flyway.core)
     implementation(Hikari.cp)
     implementation(Kafka.Apache.clients)
