@@ -13,14 +13,11 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.D
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMapper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingParser
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource.AIVEN
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.TopicSource.ON_PREM
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringInputEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
@@ -39,19 +36,8 @@ class ApplicationContext {
     val database: Database = PostgresDatabase(environment)
     val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
-    private val httpClient = HttpClientBuilder.build()
-    private val nameResolver = ProducerNameResolver(httpClient, environment.eventHandlerURL)
-    private val nameScrubber = ProducerNameScrubber(nameResolver)
     private val metricsReporter = resolveMetricsReporter(environment)
-    private val metricsCollectorLegacy = MetricsCollectorLegacy(metricsReporter, nameScrubber)
     private val metricsCollector = MetricsCollector(metricsReporter)
-    private val serviceUserMapper = initializeServiceUserMapper(environment.serviceUserMapping)
-
-    var internBeskjedKafkaProducerLegacy = initializeInternBeskjedProducer(ON_PREM)
-    var internOppgaveKafkaProducerLegacy = initializeInternOppgaveProducer(ON_PREM)
-    var internInnboksKafkaProducerLegacy = initializeInternInnboksProducer(ON_PREM)
-    var internDoneKafkaProducerLegacy = initializeInternDoneProducer(ON_PREM)
-    var internStatusoppdateringKafkaProducerLegacy = initializeInternStatusoppdateringProducer(ON_PREM)
 
     var internBeskjedKafkaProducer = initializeInternBeskjedProducer(AIVEN)
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer(AIVEN)
@@ -159,12 +145,6 @@ class ApplicationContext {
 
     private fun initializePeriodicConsumerPollingCheck(): PeriodicConsumerPollingCheck {
         return PeriodicConsumerPollingCheck(this)
-    }
-
-    private fun initializeServiceUserMapper(mappingStrings: List<String>): ServiceUserMapper {
-        val mappings = ServiceUserMappingParser.parseMappingStrings(mappingStrings)
-
-        return ServiceUserMapper(mappings)
     }
 
     fun reinitializeConsumers() {

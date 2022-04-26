@@ -7,12 +7,11 @@ import io.mockk.verify
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.Beskjed
-import no.nav.brukernotifikasjon.schemas.Nokkel
+import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnvalidatableRecordException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.ServiceUserMappingException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.amshove.kluent.`should be equal to`
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -23,8 +22,8 @@ import java.time.Duration
 
 class ConsumerTest {
 
-    private val kafkaConsumer = mockk<KafkaConsumer<Nokkel, Beskjed>>(relaxUnitFun = true)
-    private val eventBatchProcessorService = mockk<EventBatchProcessorService<Nokkel, Beskjed>>(relaxed = true)
+    private val kafkaConsumer = mockk<KafkaConsumer<NokkelInput, BeskjedInput>>(relaxUnitFun = true)
+    private val eventBatchProcessorService = mockk<EventBatchProcessorService<NokkelInput, BeskjedInput>>(relaxed = true)
 
     @BeforeEach
     fun clearMocks() {
@@ -34,9 +33,9 @@ class ConsumerTest {
     @Test
     fun `Skal commit-e mot Kafka hvis ingen feil skjer`() {
         val topic = "dummyTopicNoErrors"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedLegacyRecords(1, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
 
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
@@ -51,10 +50,10 @@ class ConsumerTest {
     @Test
     fun `Skal ikke kvittere ut eventer som lest, hvis en ukjent feil skjer`() {
         val topic = "dummyTopicUkjentFeil"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedLegacyRecords(1, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
         coEvery { eventBatchProcessorService.processEvents(any()) } throws Exception("Simulert feil i en test")
 
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
@@ -68,10 +67,10 @@ class ConsumerTest {
     @Test
     fun `Skal ikke kvittere ut eventer som lest, hvis transformering av et eller flere eventer feiler`() {
         val topic = "dummyTopicUntransformable"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedLegacyRecords(1, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
         coEvery { eventBatchProcessorService.processEvents(any()) } throws UnvalidatableRecordException("Simulert feil i en test")
 
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
@@ -87,7 +86,7 @@ class ConsumerTest {
         val topic = "dummyTopicKafkaRetriable"
         val retriableKafkaException = DisconnectException("Simulert feil i en test")
         every { kafkaConsumer.poll(any<Duration>()) } throws retriableKafkaException
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
@@ -103,9 +102,9 @@ class ConsumerTest {
     @Test
     fun `Skal ikke commit-e mot kafka hvis det IKKE har blitt funnet noen event-er`() {
         val topic = "dummyTopicNoRecordsFound"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedLegacyRecords(0, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(0, topic)
 
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
@@ -122,27 +121,13 @@ class ConsumerTest {
         val topic = "dummyTopicCancellationException"
         val cancellationException = CancellationException("Simulert feil i en test")
         every { kafkaConsumer.poll(any<Duration>()) } throws cancellationException
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
+        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
         runBlocking {
             consumer.startPolling()
             delay(10)
         }
         verify(exactly = 0) { kafkaConsumer.commitSync() }
-    }
-
-    @Test
-    fun `skal stoppe polling etter en ServiceUserMappingException`() {
-        val topic = "dummyTopicServiceUserMappingException"
-        every { kafkaConsumer.poll(any<Duration>()) } throws ServiceUserMappingException("")
-        val consumer: Consumer<Nokkel, Beskjed> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
-
-        val jobActive = runBlocking {
-            consumer.startPolling()
-            consumer.`vent til inaktiv eller avbryt`(1000)
-        }
-        verify(exactly = 0) { kafkaConsumer.commitSync() }
-        jobActive `should be equal to` false
     }
 
     private suspend fun `Vent litt for aa bevise at det fortsettes aa polle`() {
