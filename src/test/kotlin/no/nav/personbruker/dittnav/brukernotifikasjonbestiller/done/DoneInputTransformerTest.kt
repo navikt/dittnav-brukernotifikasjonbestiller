@@ -1,24 +1,45 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import de.huxhorn.sulky.ulid.ULID
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.*
 
 internal class DoneInputTransformerTest {
 
     private val eventId = "11112222-1234-1234-1234-1234567890ab"
 
+    private val epochTimeMillis = Instant.now().toEpochMilli()
+
+    @BeforeEach
+    fun setupMock() {
+        mockkObject(CurrentTimeHelper)
+    }
+
+    @AfterEach
+    fun clearMock() {
+        unmockkObject(CurrentTimeHelper)
+    }
+
     @Test
     fun `should transform from external to internal`() {
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+
+        every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
         val (transformedNokkel, transformedDone) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
 
@@ -29,6 +50,7 @@ internal class DoneInputTransformerTest {
         transformedNokkel.getAppnavn() `should be equal to` externalNokkelInput.getAppnavn()
 
         transformedDone.getTidspunkt() `should be equal to` externalDoneInput.getTidspunkt()
+        transformedDone.getBehandlet() `should be equal to` epochTimeMillis
     }
 
     @Test

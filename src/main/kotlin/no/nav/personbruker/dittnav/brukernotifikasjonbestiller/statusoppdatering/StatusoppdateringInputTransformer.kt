@@ -7,6 +7,7 @@ import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.StatusoppdateringIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.createULID
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper.nowInEpochMillis
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelInputTransformer
 
@@ -20,6 +21,7 @@ object StatusoppdateringInputTransformer {
     private fun toStatusoppdateringInternal(externalStatusoppdatering: StatusoppdateringInput): StatusoppdateringIntern {
         return StatusoppdateringIntern.newBuilder()
             .setTidspunkt(externalStatusoppdatering.getTidspunkt())
+            .setBehandlet(nowInEpochMillis())
             .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalStatusoppdatering.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.STATUSOPPDATERING)))
             .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalStatusoppdatering.getSikkerhetsnivaa()))
             .setStatusGlobal(validateStatusGlobal(externalStatusoppdatering.getStatusGlobal()))

@@ -14,6 +14,7 @@ object AvroInnboksInternObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultNamespace = "namespace"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultBehandlet = Instant.now().toEpochMilli()
     private val defaultEksternVarsling = false
     private val defaultPrefererteKanaler = emptyList<String>()
 
@@ -33,20 +34,21 @@ object AvroInnboksInternObjectMother {
     }
 
     fun createInnboksIntern(): InnboksIntern {
-        return createInnboksIntern(defaultTidspunkt, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createInnboksIntern(defaultTidspunkt, defaultBehandlet, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createInnboksIntern(tidspunkt: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): InnboksIntern {
+    fun createInnboksIntern(tidspunkt: Long, behandlet: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternVarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): InnboksIntern {
         return InnboksIntern(
-                tidspunkt,
-                tekst,
-                link,
-                sikkerhetsnivaa,
-                eksternVarsling,
-                prefererteKanaler,
-                epostVarslingstekst,
-                epostVarslingstittel,
-                smsVarslingstekst
+            tidspunkt,
+            behandlet,
+            tekst,
+            link,
+            sikkerhetsnivaa,
+            eksternVarsling,
+            prefererteKanaler,
+            epostVarslingstekst,
+            epostVarslingstittel,
+            smsVarslingstekst
         )
     }
 }
