@@ -9,7 +9,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.deleteAllBrukernotifikasjonbestilling
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEventsLegacy
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.amshove.kluent.`should be equal to`
@@ -20,11 +20,9 @@ class BrukernotifikasjonbestillingRepositoryTest {
 
     private val database = LocalPostgresDatabase()
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-    private val handleDuplicateEvents = HandleDuplicateEventsLegacy(Eventtype.BESKJED, brukernotifikasjonbestillingRepository)
+    private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
 
     private val eventBeskjed_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED, fodselsnummer = "0")
-    private val eventBeskjed_1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
-    private val eventOppgave_0 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE, fodselsnummer = "123")
 
     @AfterEach
     fun tearDown() {

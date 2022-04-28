@@ -20,28 +20,6 @@ fun Connection.createBrukernotifikasjonbestilling(events: List<Brukernotifikasjo
             }
         }.toBatchPersistResult(events)
 
-
-fun <T> Connection.getEventsByEventId(events: List<Pair<NokkelIntern, T>>): List<Brukernotifikasjonbestilling> =
-        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
-                .use {
-                    it.setArray(1, toVarcharArray(events))
-                    it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
-                }
-
-fun Connection.getDoneKeysByEventIds(eventIds: List<String>): List<DoneKey> =
-        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
-                .use {
-                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
-                    it.executeQuery().mapList { toDoneKey() }
-                }
-
-fun Connection.getEventKeysByEventIds(eventIds: List<String>): List<BrukernotifikasjonKey> =
-        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) """)
-                .use {
-                    it.setArray(1, createArrayOf("VARCHAR", eventIds.toTypedArray()))
-                    it.executeQuery().mapList { toBrukernotifikasjonKey() }
-                }
-
 fun Connection.getExistingEventIdsExcludingDone(eventIds: List<String>): List<String> =
         prepareStatement("""SELECT eventId FROM brukernotifikasjonbestilling WHERE eventId= ANY(?) AND eventtype !=?""")
                 .use {
@@ -77,30 +55,8 @@ fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
     )
 }
 
-fun ResultSet.toBrukernotifikasjonKey(): BrukernotifikasjonKey {
-    return BrukernotifikasjonKey(
-            eventId = getString("eventId"),
-            systembruker = getString("systembruker"),
-            eventtype = toEventtype(getString("eventtype"))
-    )
-}
-
 fun ResultSet.toEventIdString(): String {
     return getString("eventId")
-}
-
-fun ResultSet.toDoneKey(): DoneKey {
-    return DoneKey(
-            eventId = getString("eventId"),
-            systembruker = getString("systembruker"),
-            eventtype = toEventtype(getString("eventtype")),
-            fodselsnummer = getString("fodselsnummer")
-    )
-}
-
-private fun <T> Connection.toVarcharArray(events: List<Pair<NokkelIntern, T>>): Array {
-    val eventIds = events.map { it.first.getEventId() }
-    return createArrayOf("VARCHAR", eventIds.toTypedArray())
 }
 
 private fun PreparedStatement.buildStatementForSingleRow(event: Brukernotifikasjonbestilling) {

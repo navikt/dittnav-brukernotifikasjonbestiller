@@ -31,27 +31,6 @@ class brukernotifikasjonbestillingQueriesTest {
     }
 
     @Test
-    fun `Finner event med samme eventId`() {
-        val eventsWithMatchOnEventId = giveMeANumberOfInternalEvents(2, "eventId", "systembruker")
-        runBlocking {
-            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
-            val result = database.dbQuery { getEventsByEventId(eventsWithMatchOnEventId) }
-            result.size `should be equal to` 2
-            result `should contain all` listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2)
-        }
-    }
-
-    @Test
-    fun `Returnerer tom liste hvis event med eventId ikke finnes`() {
-        val noEventsMatchEventId = giveMeANumberOfInternalEvents(1, "noMatchEventId", "systembruker")
-        runBlocking {
-            database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))
-            val result = database.dbQuery { getEventsByEventId(noEventsMatchEventId) }
-            result.`should be empty`()
-        }
-    }
-
-    @Test
     fun `Finner event med samme eventId, systembruker og eventtype`() {
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling_1, brukernotifikasjonbestilling_2))

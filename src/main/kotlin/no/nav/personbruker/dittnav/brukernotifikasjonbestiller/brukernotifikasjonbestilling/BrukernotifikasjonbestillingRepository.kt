@@ -9,12 +9,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 
 class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
-    suspend fun fetchBrukernotifikasjonKeysThatMatchEventIds(eventIds: List<String>): List<BrukernotifikasjonKey> {
-        return database.queryWithExceptionTranslation {
-            getEventKeysByEventIds(eventIds)
-        }
-    }
-
     suspend fun fetchExistingEventIdsExcludingDone(eventIds: List<String>): List<String> {
         return database.queryWithExceptionTranslation {
             getExistingEventIdsExcludingDone(eventIds)
@@ -24,12 +18,6 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
     suspend fun fetchExistingEventIdsForDone(eventIds: List<String>): List<String> {
         return database.queryWithExceptionTranslation {
             getExistingEventIdsForDone(eventIds)
-        }
-    }
-
-    suspend fun fetchDoneKeysThatMatchEventIds(eventIds: List<String>): List<DoneKey> {
-        return database.queryWithExceptionTranslation {
-            getDoneKeysByEventIds(eventIds)
         }
     }
 

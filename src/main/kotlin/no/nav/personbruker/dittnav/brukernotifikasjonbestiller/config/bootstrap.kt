@@ -29,11 +29,11 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
     environment.monitor.subscribe(ApplicationStopPreparing) {
         runBlocking {
             KafkaConsumerSetup.stopAllKafkaConsumers(appContext)
-            appContext.internBeskjedKafkaProducerLegacy.flushAndClose()
-            appContext.internOppgaveKafkaProducerLegacy.flushAndClose()
-            appContext.internInnboksKafkaProducerLegacy.flushAndClose()
-            appContext.internDoneKafkaProducerLegacy.flushAndClose()
-            appContext.internStatusoppdateringKafkaProducerLegacy.flushAndClose()
+            appContext.internBeskjedKafkaProducer.flushAndClose()
+            appContext.internOppgaveKafkaProducer.flushAndClose()
+            appContext.internInnboksKafkaProducer.flushAndClose()
+            appContext.internDoneKafkaProducer.flushAndClose()
+            appContext.internStatusoppdateringKafkaProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()
         }
         appContext.database.dataSource.close()

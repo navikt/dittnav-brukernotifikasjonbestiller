@@ -7,13 +7,8 @@ import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVarAsLi
 import java.net.URL
 
 data class Environment(
-        val bootstrapServers: String = getEnvVar("KAFKA_BOOTSTRAP_SERVERS"),
-        val schemaRegistryUrl: String = getEnvVar("KAFKA_SCHEMAREGISTRY_SERVERS"),
-        val username: String = getEnvVar("SERVICEUSER_USERNAME"),
-        val password: String = getEnvVar("SERVICEUSER_PASSWORD"),
         val groupId: String = getEnvVar("GROUP_ID"),
         val applicationName: String = "dittnav-brukernotifikasjonbestiller",
-        val eventHandlerURL: URL = URL(getEnvVar("EVENT_HANDLER_URL").trimEnd('/')),
         val clusterName: String = getEnvVar("NAIS_CLUSTER_NAME"),
         val namespace: String = getEnvVar("NAIS_NAMESPACE"),
         val influxdbHost: String = getEnvVar("INFLUXDB_HOST"),
@@ -31,11 +26,6 @@ data class Environment(
         val dbPort: String = getEnvVar("DB_PORT"),
         val dbName: String = getEnvVar("DB_DATABASE"),
         val dbUrl: String = getDbUrl(dbHost, dbPort, dbName),
-        val beskjedLegacyTopicName: String = getEnvVar("LEGACY_BESKJED_TOPIC"),
-        val oppgaveLegacyTopicName: String = getEnvVar("LEGACY_OPPGAVE_TOPIC"),
-        val innboksLegacyTopicName: String = getEnvVar("LEGACY_INNBOKS_TOPIC"),
-        val statusoppdateringLegacyTopicName: String = getEnvVar("LEGACY_STATUSOPPDATERING_TOPIC"),
-        val doneLegacyTopicName: String = getEnvVar("LEGACY_DONE_TOPIC"),
         val beskjedInternTopicName: String = getEnvVar("INTERN_BESKJED_TOPIC"),
         val oppgaveInternTopicName: String = getEnvVar("INTERN_OPPGAVE_TOPIC"),
         val innboksInternTopicName: String = getEnvVar("INTERN_INNBOKS_TOPIC"),
@@ -72,16 +62,6 @@ data class SecurityVars(
 fun isCurrentlyRunningOnNais(): Boolean {
     return System.getenv("NAIS_APP_NAME") != null
 }
-
-fun shouldPollBeskjedLegacy() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED", "false").toBoolean()
-
-fun shouldPollOppgaveLegacy() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE", "false").toBoolean()
-
-fun shouldPollInnboksLegacy() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS", "false").toBoolean()
-
-fun shouldPollStatusoppdateringLegacy() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING", "false").toBoolean()
-
-fun shouldPollDoneLegacy() = StringEnvVar.getOptionalEnvVar("POLL_DONE", "false").toBoolean()
 
 fun shouldPollBeskjedInput() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED_INPUT", "false").toBoolean()
 

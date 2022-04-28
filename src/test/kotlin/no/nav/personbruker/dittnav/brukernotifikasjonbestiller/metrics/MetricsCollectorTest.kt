@@ -2,10 +2,9 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

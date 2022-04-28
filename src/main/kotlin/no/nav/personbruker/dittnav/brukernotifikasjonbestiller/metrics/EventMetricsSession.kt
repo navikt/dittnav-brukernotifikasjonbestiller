@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -70,10 +70,6 @@ class EventMetricsSession(val eventtype: Eventtype) {
 
     fun getEventsFailed(): Int {
         return countFailedEventsBySysUser.values.sum()
-    }
-
-    fun getDuplicateKeys(): HashMap<NamespaceAppName, Int> {
-        return countDuplicateKeyBySysUser
     }
 
     fun getNokkelWasNull(): Int {

@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.serviceuser.NamespaceAppName
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.influx.*
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
