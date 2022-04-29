@@ -1,11 +1,9 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.brukernotifikasjonbestiller.common.database.deleteAllBrukernotifikasjonbestillinger
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.getAllBrukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test

@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.brukernotifikasjonbestilling.objectMother
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern

@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller
 
 import kotlinx.atomicfu.locks.ReentrantLock
 import kotlinx.atomicfu.locks.withLock
