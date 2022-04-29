@@ -36,7 +36,7 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DoneInputIT {
-    private val database = LocalPostgresDatabase()
+    private val database = LocalPostgresDatabase.cleanDb()
     private val metricsReporter = StubMetricsReporter()
     private val metricsCollector = MetricsCollector(metricsReporter)
 

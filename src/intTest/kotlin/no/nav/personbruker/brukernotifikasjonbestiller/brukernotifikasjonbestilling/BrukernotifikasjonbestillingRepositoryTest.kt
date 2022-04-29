@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test
 
 class BrukernotifikasjonbestillingRepositoryTest {
 
-    private val database = LocalPostgresDatabase()
+    private val database = LocalPostgresDatabase.cleanDb()
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
 

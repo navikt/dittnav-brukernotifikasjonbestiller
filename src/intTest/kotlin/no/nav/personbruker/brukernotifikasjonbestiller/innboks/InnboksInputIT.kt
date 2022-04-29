@@ -33,7 +33,7 @@ import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class InnboksInputIT {
-    private val database = LocalPostgresDatabase()
+    private val database = LocalPostgresDatabase.cleanDb()
 
     private val capturedInternalRecords = ArrayList<RecordKeyValueWrapper<NokkelIntern, InnboksIntern>>()
     private val capturedErrorResponseRecords = ArrayList<RecordKeyValueWrapper<NokkelFeilrespons, Feilrespons>>()

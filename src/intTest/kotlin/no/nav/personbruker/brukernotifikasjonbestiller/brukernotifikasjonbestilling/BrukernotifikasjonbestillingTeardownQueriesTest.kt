@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class BrukernotifikasjonbestillingTeardownQueriesTest {
 
-    private val database = LocalPostgresDatabase()
+    private val database = LocalPostgresDatabase.cleanDb()
 
     private val event1 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-001", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
     private val event2 = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "B-test-002", systembruker = "systembruker-2", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
