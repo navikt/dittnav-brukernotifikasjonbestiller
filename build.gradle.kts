@@ -50,11 +50,12 @@ dependencies {
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
-    testImplementation(Kluent.kluent)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
     testImplementation(TestContainers.postgresql)
+    testImplementation(Kotest.runnerJunit5)
+    testImplementation(Kotest.assertionsCore)
 
     testRuntimeOnly(Junit.engine)
 }

@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.common.database
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 
 import org.testcontainers.containers.PostgreSQLContainer
 

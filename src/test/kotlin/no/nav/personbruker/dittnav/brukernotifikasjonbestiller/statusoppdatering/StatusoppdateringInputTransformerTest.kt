@@ -1,15 +1,14 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.UUID
 
 internal class StatusoppdateringInputTransformerTest {
 
@@ -22,18 +21,18 @@ internal class StatusoppdateringInputTransformerTest {
 
         val (transformedNokkel, transformedStatusoppdatering) = StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` externalNokkelInput.getFodselsnummer()
-        transformedNokkel.getEventId() `should be equal to` externalNokkelInput.getEventId()
-        transformedNokkel.getGrupperingsId() `should be equal to` externalNokkelInput.getGrupperingsId()
-        transformedNokkel.getNamespace() `should be equal to` externalNokkelInput.getNamespace()
-        transformedNokkel.getAppnavn() `should be equal to` externalNokkelInput.getAppnavn()
+        transformedNokkel.getFodselsnummer() shouldBe externalNokkelInput.getFodselsnummer()
+        transformedNokkel.getEventId() shouldBe externalNokkelInput.getEventId()
+        transformedNokkel.getGrupperingsId() shouldBe externalNokkelInput.getGrupperingsId()
+        transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
+        transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedStatusoppdatering.getLink() `should be equal to` externalStatusoppdateringInput.getLink()
-        transformedStatusoppdatering.getSikkerhetsnivaa() `should be equal to` externalStatusoppdateringInput.getSikkerhetsnivaa()
-        transformedStatusoppdatering.getTidspunkt() `should be equal to` externalStatusoppdateringInput.getTidspunkt()
-        transformedStatusoppdatering.getStatusGlobal() `should be equal to` externalStatusoppdateringInput.getStatusGlobal()
-        transformedStatusoppdatering.getStatusIntern() `should be equal to` externalStatusoppdateringInput.getStatusIntern()
-        transformedStatusoppdatering.getSakstema() `should be equal to` externalStatusoppdateringInput.getSakstema()
+        transformedStatusoppdatering.getLink() shouldBe externalStatusoppdateringInput.getLink()
+        transformedStatusoppdatering.getSikkerhetsnivaa() shouldBe externalStatusoppdateringInput.getSikkerhetsnivaa()
+        transformedStatusoppdatering.getTidspunkt() shouldBe externalStatusoppdateringInput.getTidspunkt()
+        transformedStatusoppdatering.getStatusGlobal() shouldBe externalStatusoppdateringInput.getStatusGlobal()
+        transformedStatusoppdatering.getStatusIntern() shouldBe externalStatusoppdateringInput.getStatusIntern()
+        transformedStatusoppdatering.getSakstema() shouldBe externalStatusoppdateringInput.getSakstema()
     }
 
     @Test
@@ -45,7 +44,7 @@ internal class StatusoppdateringInputTransformerTest {
 
         val (transformedNokkel, _) = StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
 
-        transformedNokkel.getEventId() `should be equal to` uuidEventId
+        transformedNokkel.getEventId() shouldBe uuidEventId
     }
 
     @Test
@@ -57,7 +56,7 @@ internal class StatusoppdateringInputTransformerTest {
 
         val (transformedNokkel, _) = StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
 
-        transformedNokkel.getEventId() `should be equal to` ulidEventId
+        transformedNokkel.getEventId() shouldBe ulidEventId
     }
 
     @Test
@@ -66,11 +65,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(invalidEventId)
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "eventId"
+        }.message shouldContain "eventId"
     }
 
     @Test
@@ -79,11 +78,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -92,11 +91,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -105,11 +104,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, tooLongGrupperingsId)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
+        }.message shouldContain "grupperingsId"
     }
 
     @Test
@@ -118,11 +117,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithLink(tooLongLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -131,11 +130,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithLink(invalidLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -144,11 +143,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "Sikkerhetsnivaa"
+        }.message shouldContain "Sikkerhetsnivaa"
     }
 
     @Test
@@ -157,11 +156,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithStatusGlobal(invalidStatusGlobal)
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "StatusGlobal"
+        }.message shouldContain "StatusGlobal"
     }
 
     @Test
@@ -188,11 +187,11 @@ internal class StatusoppdateringInputTransformerTest {
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithStatusIntern(tooLongStatusIntern)
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "statusIntern"
+        }.message shouldContain "statusIntern"
     }
 
     @Test
@@ -210,10 +209,10 @@ internal class StatusoppdateringInputTransformerTest {
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInputWithSakstema(tooLongSakstema)
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "sakstema"
+        }.message shouldContain "sakstema"
     }
 }

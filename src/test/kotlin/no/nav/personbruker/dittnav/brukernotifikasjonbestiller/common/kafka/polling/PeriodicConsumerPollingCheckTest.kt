@@ -1,11 +1,16 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling
 
-import io.mockk.*
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.confirmVerified
+import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.ApplicationContext
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.KafkaConsumerSetup
-import org.amshove.kluent.`should be empty`
-import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,7 +44,7 @@ class PeriodicConsumerPollingCheckTest {
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
-            periodicConsumerPollingCheck.getConsumersThatHaveStopped().size `should be equal to` 2
+            periodicConsumerPollingCheck.getConsumersThatHaveStopped().size shouldBe 2
         }
     }
 
@@ -51,7 +56,7 @@ class PeriodicConsumerPollingCheckTest {
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
-            periodicConsumerPollingCheck.getConsumersThatHaveStopped().`should be empty`()
+            periodicConsumerPollingCheck.getConsumersThatHaveStopped().shouldBeEmpty()
         }
     }
 

@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -13,7 +14,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatch
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnvalidatableRecordException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
-import org.amshove.kluent.`should be equal to`
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.DisconnectException
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +41,7 @@ class ConsumerTest {
             consumer.startPolling()
             delay(300)
 
-            consumer.status().status `should be equal to` Status.OK
+            consumer.status().status shouldBe Status.OK
             consumer.stopPolling()
         }
         verify(atLeast = 1) { kafkaConsumer.commitSync() }
@@ -59,7 +59,7 @@ class ConsumerTest {
             consumer.startPolling()
             delay(10)
             consumer.job.join()
-            consumer.status().status `should be equal to` Status.ERROR
+            consumer.status().status shouldBe Status.ERROR
         }
         verify(exactly = 0) { kafkaConsumer.commitSync() }
     }
@@ -76,7 +76,7 @@ class ConsumerTest {
             consumer.startPolling()
             delay(10)
             consumer.job.join()
-            consumer.status().status `should be equal to` Status.ERROR
+            consumer.status().status shouldBe Status.ERROR
         }
         verify(exactly = 0) { kafkaConsumer.commitSync() }
     }
@@ -92,7 +92,7 @@ class ConsumerTest {
             consumer.startPolling()
             `Vent litt for aa bevise at det fortsettes aa polle`()
 
-            consumer.status().status `should be equal to` Status.OK
+            consumer.status().status shouldBe Status.OK
             consumer.stopPolling()
         }
         verify(exactly = 0) { kafkaConsumer.commitSync() }
@@ -110,7 +110,7 @@ class ConsumerTest {
             consumer.startPolling()
             delay(30)
 
-            consumer.status().status `should be equal to` Status.OK
+            consumer.status().status shouldBe Status.OK
             consumer.stopPolling()
         }
         verify(exactly = 0) { kafkaConsumer.commitSync() }

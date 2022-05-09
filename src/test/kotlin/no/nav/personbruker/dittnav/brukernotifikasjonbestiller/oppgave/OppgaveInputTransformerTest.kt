@@ -1,17 +1,16 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should be null`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.UUID
 
 internal class OppgaveInputTransformerTest {
 
@@ -24,19 +23,19 @@ internal class OppgaveInputTransformerTest {
 
         val (transformedNokkel, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` externalNokkelInput.getFodselsnummer()
-        transformedNokkel.getEventId() `should be equal to` externalNokkelInput.getEventId()
-        transformedNokkel.getGrupperingsId() `should be equal to` externalNokkelInput.getGrupperingsId()
-        transformedNokkel.getNamespace() `should be equal to` externalNokkelInput.getNamespace()
-        transformedNokkel.getAppnavn() `should be equal to` externalNokkelInput.getAppnavn()
+        transformedNokkel.getFodselsnummer() shouldBe externalNokkelInput.getFodselsnummer()
+        transformedNokkel.getEventId() shouldBe externalNokkelInput.getEventId()
+        transformedNokkel.getGrupperingsId() shouldBe externalNokkelInput.getGrupperingsId()
+        transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
+        transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedOppgave.getLink() `should be equal to` externalOppgaveInput.getLink()
-        transformedOppgave.getTekst() `should be equal to` externalOppgaveInput.getTekst()
-        transformedOppgave.getSikkerhetsnivaa() `should be equal to` externalOppgaveInput.getSikkerhetsnivaa()
-        transformedOppgave.getTidspunkt() `should be equal to` externalOppgaveInput.getTidspunkt()
-        transformedOppgave.getSynligFremTil() `should be equal to` externalOppgaveInput.getSynligFremTil()
-        transformedOppgave.getEksternVarsling() `should be equal to` externalOppgaveInput.getEksternVarsling()
-        transformedOppgave.getPrefererteKanaler() `should be equal to` externalOppgaveInput.getPrefererteKanaler()
+        transformedOppgave.getLink() shouldBe externalOppgaveInput.getLink()
+        transformedOppgave.getTekst() shouldBe externalOppgaveInput.getTekst()
+        transformedOppgave.getSikkerhetsnivaa() shouldBe externalOppgaveInput.getSikkerhetsnivaa()
+        transformedOppgave.getTidspunkt() shouldBe externalOppgaveInput.getTidspunkt()
+        transformedOppgave.getSynligFremTil() shouldBe externalOppgaveInput.getSynligFremTil()
+        transformedOppgave.getEksternVarsling() shouldBe externalOppgaveInput.getEksternVarsling()
+        transformedOppgave.getPrefererteKanaler() shouldBe externalOppgaveInput.getPrefererteKanaler()
     }
 
     @Test
@@ -48,7 +47,7 @@ internal class OppgaveInputTransformerTest {
 
         val (transformedNokkel, _) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedNokkel.getEventId() `should be equal to` uuidEventId
+        transformedNokkel.getEventId() shouldBe uuidEventId
     }
 
     @Test
@@ -60,7 +59,7 @@ internal class OppgaveInputTransformerTest {
 
         val (transformedNokkel, _) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedNokkel.getEventId() `should be equal to` ulidEventId
+        transformedNokkel.getEventId() shouldBe ulidEventId
     }
 
     @Test
@@ -69,11 +68,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(invalidEventId)
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "eventId"
+        }.message shouldContain "eventId"
     }
 
     @Test
@@ -82,11 +81,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -95,11 +94,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -109,7 +108,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, oppgaveUtenSynligTilSatt)
 
-        transformedOppgave.getSynligFremTil().`should be null`()
+        transformedOppgave.getSynligFremTil().shouldBeNull()
     }
 
     @Test
@@ -118,11 +117,11 @@ internal class OppgaveInputTransformerTest {
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, tooLongGrupperingsId)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
+        }.message shouldContain "grupperingsId"
     }
 
     @Test
@@ -142,11 +141,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithText(emptyText)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "tekst"
+        }.message shouldContain "tekst"
     }
 
     @Test
@@ -155,11 +154,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithText(tooLongText)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "tekst"
+        }.message shouldContain "tekst"
     }
 
     @Test
@@ -168,11 +167,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithLink(tooLongLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -181,11 +180,11 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithLink(invalidLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -194,33 +193,33 @@ internal class OppgaveInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "Sikkerhetsnivaa"
+        }.message shouldContain "Sikkerhetsnivaa"
     }
 
     @Test
     fun `do not allow prefererteKanaler if eksternVarsling is false`() {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = false, prefererteKanaler = listOf(PreferertKanal.SMS.toString()))
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+        }.message shouldContain "prefererteKanaler"
     }
 
     @Test
     fun `do not allow unknown preferert kanal`() {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = listOf("unknown"))
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+        }.message shouldContain "prefererteKanaler"
     }
 
     @Test
@@ -229,7 +228,7 @@ internal class OppgaveInputTransformerTest {
         val externalOppgaveInput = AvroOppgaveInputObjectMother.createOppgaveInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = emptyList())
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        externalOppgaveInput.getPrefererteKanaler() `should be equal to` transformedOppgave.getPrefererteKanaler()
+        externalOppgaveInput.getPrefererteKanaler() shouldBe transformedOppgave.getPrefererteKanaler()
     }
 
     @Test
@@ -242,7 +241,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getSmsVarslingstekst() `should be equal to` externalOppgaveInput.getSmsVarslingstekst()
+        transformedOppgave.getSmsVarslingstekst() shouldBe externalOppgaveInput.getSmsVarslingstekst()
     }
 
     @Test
@@ -255,7 +254,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getSmsVarslingstekst().`should be null`()
+        transformedOppgave.getSmsVarslingstekst().shouldBeNull()
     }
 
     @Test
@@ -265,11 +264,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = false,
             smsVarslingstekst = "L".repeat(160)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -279,11 +278,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             smsVarslingstekst = "L".repeat(161)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -293,11 +292,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             smsVarslingstekst = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -310,7 +309,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getEpostVarslingstekst() `should be equal to` externalOppgaveInput.getEpostVarslingstekst()
+        transformedOppgave.getEpostVarslingstekst() shouldBe externalOppgaveInput.getEpostVarslingstekst()
     }
 
     @Test
@@ -323,7 +322,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getEpostVarslingstekst().`should be null`()
+        transformedOppgave.getEpostVarslingstekst().shouldBeNull()
     }
 
     @Test
@@ -333,11 +332,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = false,
             epostVarslingstekst = "<p>Hei!</p>"
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -347,11 +346,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstekst = "L".repeat(4_001)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -361,11 +360,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstekst = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -378,7 +377,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getEpostVarslingstittel() `should be equal to` externalOppgaveInput.getEpostVarslingstittel()
+        transformedOppgave.getEpostVarslingstittel() shouldBe externalOppgaveInput.getEpostVarslingstittel()
     }
 
     @Test
@@ -391,7 +390,7 @@ internal class OppgaveInputTransformerTest {
 
         val (_, transformedOppgave) = OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
 
-        transformedOppgave.getEpostVarslingstittel().`should be null`()
+        transformedOppgave.getEpostVarslingstittel().shouldBeNull()
     }
 
     @Test
@@ -401,11 +400,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = false,
             epostVarslingstittel = "<p>Hei!</p>"
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 
     @Test
@@ -415,11 +414,11 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstittel = "L".repeat(41)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 
     @Test
@@ -429,10 +428,10 @@ internal class OppgaveInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstittel = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 OppgaveInputTransformer.toInternal(externalNokkelInput, externalOppgaveInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 }

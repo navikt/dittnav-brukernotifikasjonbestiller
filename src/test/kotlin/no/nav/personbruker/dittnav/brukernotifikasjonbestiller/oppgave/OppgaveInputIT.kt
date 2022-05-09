@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
@@ -8,14 +9,14 @@ import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
-import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
-import no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.CapturingEventProcessor
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.RecordKeyValueWrapper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -24,7 +25,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother.createOppgaveInput
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
-import org.amshove.kluent.`should be equal to`
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -80,8 +80,8 @@ class OppgaveInputIT {
 
         `Read all Oppgave-events from our input-topic and verify that they have been sent to the main-topic`()
 
-        capturedInternalRecords.size `should be equal to` goodEvents.size
-        capturedErrorResponseRecords.size `should be equal to` badEvents.size
+        capturedInternalRecords.size shouldBe goodEvents.size
+        capturedErrorResponseRecords.size shouldBe badEvents.size
     }
 
     fun `Read all Oppgave-events from our input-topic and verify that they have been sent to the main-topic`() {

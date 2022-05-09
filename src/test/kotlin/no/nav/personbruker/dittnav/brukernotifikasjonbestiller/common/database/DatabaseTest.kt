@@ -1,11 +1,9 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.common.database
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.RetriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.translateExternalExceptionsToInternalOnes
-import org.amshove.kluent.`should be`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
 import org.postgresql.util.PSQLState
@@ -20,52 +18,52 @@ class DatabaseTest {
         translateExternalExceptionsToInternalOnes {
             denneVariablelenSkalHaBlittFlippet = true
         }
-        denneVariablelenSkalHaBlittFlippet `should be` true
+        denneVariablelenSkalHaBlittFlippet shouldBe true
     }
 
     @Test
     fun `Skal haandtere ukjente exceptions, og mappe til intern exceptiontype`() {
-        invoking {
+        shouldThrow<UnretriableDatabaseException> {
             translateExternalExceptionsToInternalOnes {
                 throw Exception("Simulert exception")
             }
-        } `should throw` UnretriableDatabaseException::class
+        }
     }
 
     @Test
     fun `Skal haandtere SQLException, og mappe til intern exceptiontype`() {
-        invoking {
+        shouldThrow<UnretriableDatabaseException> {
             translateExternalExceptionsToInternalOnes {
                 throw SQLException("Simulert exception")
             }
-        } `should throw` UnretriableDatabaseException::class
+        }
     }
 
     @Test
     fun `Skal haandtere PSQLException, og mappe til intern exceptiontype`() {
-        invoking {
+        shouldThrow<UnretriableDatabaseException> {
             translateExternalExceptionsToInternalOnes {
                 throw PSQLException("Simulert exception", PSQLState.COMMUNICATION_ERROR)
             }
-        } `should throw` UnretriableDatabaseException::class
+        }
     }
 
     @Test
     fun `Skal haandtere SQLTransientException, og mappe til intern exceptiontype`() {
-        invoking {
+        shouldThrow<RetriableDatabaseException> {
             translateExternalExceptionsToInternalOnes {
                 throw SQLTransientException("Simulert exception")
             }
-        } `should throw` RetriableDatabaseException::class
+        }
     }
 
     @Test
     fun `Skal haandtere SQLRecoverableException, og mappe til intern exceptiontype`() {
-        invoking {
+        shouldThrow<RetriableDatabaseException> {
             translateExternalExceptionsToInternalOnes {
                 throw SQLTransientException("Simulert exception")
             }
-        } `should throw` RetriableDatabaseException::class
+        }
     }
 
 }

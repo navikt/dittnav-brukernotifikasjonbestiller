@@ -1,11 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.deleteAllBrukernotifikasjonbestillinger
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.deleteAllBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 
 class BrukernotifikasjonbestillingTeardownQueriesTest {
@@ -21,10 +21,10 @@ class BrukernotifikasjonbestillingTeardownQueriesTest {
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(event1, event2, event3))
             var result = database.dbQuery { getAllBrukernotifikasjonbestilling() }
-            result.size `should be equal to` 3
+            result.size shouldBe 3
             database.deleteAllBrukernotifikasjonbestillinger()
             result = database.dbQuery { getAllBrukernotifikasjonbestilling() }
-            result.isEmpty() `should be equal to` true
+            result.isEmpty() shouldBe true
         }
     }
 }

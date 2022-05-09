@@ -1,13 +1,13 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
-import no.nav.personbruker.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.createBrukernotifikasjonbestillinger
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.AvroNokkelInternObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
@@ -33,7 +33,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
         runBlocking {
             val toPersist = giveMeANumberOfInternalEvents(3, "eventId", "systembruker")
             val result = brukernotifikasjonbestillingRepository.persistInOneBatch(toPersist, Eventtype.BESKJED)
-            result.getPersistedEntitites().size `should be equal to` toPersist.size
+            result.getPersistedEntitites().size shouldBe toPersist.size
         }
     }
 
@@ -45,8 +45,8 @@ class BrukernotifikasjonbestillingRepositoryTest {
             val expectedPersistResult = mapToPersistWithOneDuplicateEvent.size - 1
 
             val result = brukernotifikasjonbestillingRepository.persistInOneBatch(mapToPersistWithOneDuplicateEvent, Eventtype.BESKJED)
-            result.getPersistedEntitites().size `should be equal to` expectedPersistResult
-            result.getConflictingEntities().size `should be equal to` 1
+            result.getPersistedEntitites().size shouldBe expectedPersistResult
+            result.getConflictingEntities().size shouldBe 1
         }
     }
 
@@ -65,9 +65,9 @@ class BrukernotifikasjonbestillingRepositoryTest {
             database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0))
 
             val duplicates = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents).duplicateEvents
-            duplicates.size `should be equal to` expectedEvent.size
-            duplicates[0].first.getEventId() `should be equal to` expectedEvent[0].first.getEventId()
-            duplicates[0].first.getSystembruker() `should be equal to` expectedEvent[0].first.getSystembruker()
+            duplicates.size shouldBe expectedEvent.size
+            duplicates[0].first.getEventId() shouldBe expectedEvent[0].first.getEventId()
+            duplicates[0].first.getSystembruker() shouldBe expectedEvent[0].first.getSystembruker()
         }
     }
 
@@ -90,7 +90,7 @@ class BrukernotifikasjonbestillingRepositoryTest {
             database.createBrukernotifikasjonbestillinger(listOf(eventBeskjed_0))
 
             val duplicates = handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents).duplicateEvents
-            duplicates.size `should be equal to` expectedEvent.size
+            duplicates.size shouldBe expectedEvent.size
         }
     }
 }

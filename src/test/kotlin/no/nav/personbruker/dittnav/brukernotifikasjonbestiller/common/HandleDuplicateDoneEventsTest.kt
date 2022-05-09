@@ -1,13 +1,13 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInternObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should contain`
 import org.junit.jupiter.api.Test
 
 internal class HandleDuplicateDoneEventsTest {
@@ -30,8 +30,8 @@ internal class HandleDuplicateDoneEventsTest {
             handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents)
         }
 
-        result.validEvents.size `should be equal to` expectedEventSize
-        result.duplicateEvents.size `should be equal to` 0
+        result.validEvents.size shouldBe expectedEventSize
+        result.duplicateEvents.size shouldBe 0
     }
 
     @Test
@@ -61,9 +61,9 @@ internal class HandleDuplicateDoneEventsTest {
             handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents)
         }
 
-        result.validEvents.size `should be equal to` expectedEvents.size
-        result.validEvents `should contain` normalEvent
-        result.duplicateEvents `should contain` eventWithDuplicate
+        result.validEvents.size shouldBe expectedEvents.size
+        result.validEvents shouldContain normalEvent
+        result.duplicateEvents shouldContain eventWithDuplicate
     }
 
     @Test
@@ -92,10 +92,10 @@ internal class HandleDuplicateDoneEventsTest {
             handleDuplicateEvents.checkForDuplicateEvents(successfullyValidatedEvents)
         }
 
-        result.validEvents.size `should be equal to` expectedEvents.size
-        result.validEvents `should contain` normalEvent
-        result.validEvents `should contain` eventWithDuplicate
-        result.duplicateEvents `should contain` eventWithDuplicate
+        result.validEvents.size shouldBe expectedEvents.size
+        result.validEvents shouldContain normalEvent
+        result.validEvents shouldContain eventWithDuplicate
+        result.duplicateEvents shouldContain eventWithDuplicate
     }
 
     fun createNokkelIntern(appnavn: String, eventId: String, fnr: String): NokkelIntern {

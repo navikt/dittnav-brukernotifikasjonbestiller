@@ -1,8 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health
 
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.LocalTime
@@ -26,7 +25,7 @@ internal class AppExpiryCheckerTest {
             appStartupTime = appStart,
         )
 
-        expiryChecker.isExpired() `should be equal to` true
+        expiryChecker.isExpired() shouldBe true
     }
 
     @Test
@@ -44,7 +43,7 @@ internal class AppExpiryCheckerTest {
             appStartupTime = appStart,
         )
 
-        expiryChecker.isExpired() `should be equal to` false
+        expiryChecker.isExpired() shouldBe false
     }
 
     @Test
@@ -62,7 +61,7 @@ internal class AppExpiryCheckerTest {
             appStartupTime = appStart,
         )
 
-        expiryChecker.isExpired() `should be equal to` false
+        expiryChecker.isExpired() shouldBe false
     }
 
     @Test
@@ -70,11 +69,11 @@ internal class AppExpiryCheckerTest {
         val windowDurationMinutes = 120
         val minLifetimeMinutes = 60
 
-        invoking {
+        shouldThrow<Exception> {
             AppExpiryChecker(
                 expiryWindowMinutes = windowDurationMinutes,
                 minimumExpiryDurationMinutes = minLifetimeMinutes
             )
-        } `should throw` Exception::class
+        }
     }
 }

@@ -1,8 +1,7 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.common.database
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.runBlocking
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import org.flywaydb.core.Flyway
 
 class LocalPostgresDatabase private constructor(): Database {

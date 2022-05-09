@@ -1,4 +1,4 @@
-package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
