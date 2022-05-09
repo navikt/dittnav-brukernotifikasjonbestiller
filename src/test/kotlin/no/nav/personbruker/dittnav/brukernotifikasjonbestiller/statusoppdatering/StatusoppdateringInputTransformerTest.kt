@@ -1,24 +1,45 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering
 
 import de.huxhorn.sulky.ulid.ULID
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import org.amshove.kluent.`should be equal to`
 import org.amshove.kluent.`should throw`
 import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Instant
 import java.util.*
 
 internal class StatusoppdateringInputTransformerTest {
 
     private val eventId = UUID.randomUUID().toString()
 
+    private val epochTimeMillis = Instant.now().toEpochMilli()
+
+    @BeforeEach
+    fun setupMock() {
+        mockkObject(CurrentTimeHelper)
+    }
+
+    @AfterEach
+    fun clearMock() {
+        unmockkObject(CurrentTimeHelper)
+    }
+
     @Test
     fun `should transform from external to internal`() {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
         val externalStatusoppdateringInput = AvroStatusoppdateringInputObjectMother.createStatusoppdateringInput()
+
+        every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
         val (transformedNokkel, transformedStatusoppdatering) = StatusoppdateringInputTransformer.toInternal(externalNokkelInput, externalStatusoppdateringInput)
 
@@ -31,6 +52,7 @@ internal class StatusoppdateringInputTransformerTest {
         transformedStatusoppdatering.getLink() `should be equal to` externalStatusoppdateringInput.getLink()
         transformedStatusoppdatering.getSikkerhetsnivaa() `should be equal to` externalStatusoppdateringInput.getSikkerhetsnivaa()
         transformedStatusoppdatering.getTidspunkt() `should be equal to` externalStatusoppdateringInput.getTidspunkt()
+        transformedStatusoppdatering.getBehandlet() `should be equal to` epochTimeMillis
         transformedStatusoppdatering.getStatusGlobal() `should be equal to` externalStatusoppdateringInput.getStatusGlobal()
         transformedStatusoppdatering.getStatusIntern() `should be equal to` externalStatusoppdateringInput.getStatusIntern()
         transformedStatusoppdatering.getSakstema() `should be equal to` externalStatusoppdateringInput.getSakstema()

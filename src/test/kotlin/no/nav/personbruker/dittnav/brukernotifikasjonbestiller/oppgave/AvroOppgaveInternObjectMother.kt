@@ -14,6 +14,7 @@ object AvroOppgaveInternObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultNamespace = "namespace"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultBehandlet = Instant.now().toEpochMilli()
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultEksternVarsling = false
     private val defaultPrefererteKanaler = emptyList<String>()
@@ -34,12 +35,13 @@ object AvroOppgaveInternObjectMother {
     }
 
     fun createOppgaveIntern(): OppgaveIntern {
-        return createOppgaveIntern(defaultTidspunkt, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createOppgaveIntern(defaultTidspunkt, defaultBehandlet, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createOppgaveIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): OppgaveIntern {
+    fun createOppgaveIntern(tidspunkt: Long, behandlet: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): OppgaveIntern {
         return OppgaveIntern(
             tidspunkt,
+            behandlet,
             synligFremTil,
             tekst,
             link,

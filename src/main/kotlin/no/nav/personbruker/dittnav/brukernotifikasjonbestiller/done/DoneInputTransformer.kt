@@ -4,6 +4,7 @@ import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper.nowInEpochMillis
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelInputTransformer
 
 object DoneInputTransformer {
@@ -15,7 +16,8 @@ object DoneInputTransformer {
 
     private fun toDoneInternal(externalDone: DoneInput): DoneIntern {
         return DoneIntern.newBuilder()
-                .setTidspunkt(externalDone.getTidspunkt())
-                .build()
+            .setTidspunkt(externalDone.getTidspunkt())
+            .setBehandlet(nowInEpochMillis())
+            .build()
     }
 }
