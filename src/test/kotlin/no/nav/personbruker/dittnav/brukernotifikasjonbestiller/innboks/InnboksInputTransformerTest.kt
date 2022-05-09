@@ -1,26 +1,23 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
 import de.huxhorn.sulky.ulid.ULID
-import io.mockk.every
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should be null`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 internal class InnboksInputTransformerTest {
 
@@ -57,7 +54,7 @@ internal class InnboksInputTransformerTest {
         transformedInnboks.getTekst() shouldBe externalInnboksInput.getTekst()
         transformedInnboks.getSikkerhetsnivaa() shouldBe externalInnboksInput.getSikkerhetsnivaa()
         transformedInnboks.getTidspunkt() shouldBe externalInnboksInput.getTidspunkt()
-        transformedInnboks.getBehandlet() `should be equal to` epochTimeMillis
+        transformedInnboks.getBehandlet() shouldBe epochTimeMillis
         transformedInnboks.getEksternVarsling() shouldBe externalInnboksInput.getEksternVarsling()
         transformedInnboks.getPrefererteKanaler() shouldBe externalInnboksInput.getPrefererteKanaler()
     }

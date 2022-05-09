@@ -10,14 +10,11 @@ import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.*
 import java.util.UUID
 
 internal class StatusoppdateringInputTransformerTest {
@@ -54,7 +51,7 @@ internal class StatusoppdateringInputTransformerTest {
         transformedStatusoppdatering.getLink() shouldBe externalStatusoppdateringInput.getLink()
         transformedStatusoppdatering.getSikkerhetsnivaa() shouldBe externalStatusoppdateringInput.getSikkerhetsnivaa()
         transformedStatusoppdatering.getTidspunkt() shouldBe externalStatusoppdateringInput.getTidspunkt()
-        transformedStatusoppdatering.getBehandlet() `should be equal to` epochTimeMillis
+        transformedStatusoppdatering.getBehandlet() shouldBe epochTimeMillis
         transformedStatusoppdatering.getStatusGlobal() shouldBe externalStatusoppdateringInput.getStatusGlobal()
         transformedStatusoppdatering.getStatusIntern() shouldBe externalStatusoppdateringInput.getStatusIntern()
         transformedStatusoppdatering.getSakstema() shouldBe externalStatusoppdateringInput.getSakstema()

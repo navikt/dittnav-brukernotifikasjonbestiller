@@ -1,14 +1,23 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.time.Instant
+import java.util.UUID
 
 internal class BeskjedInputTransformerTest {
 
@@ -41,14 +50,14 @@ internal class BeskjedInputTransformerTest {
         transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
         transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedBeskjed.getLink() `should be equal to` externalBeskjedInput.getLink()
-        transformedBeskjed.getTekst() `should be equal to` externalBeskjedInput.getTekst()
-        transformedBeskjed.getSikkerhetsnivaa() `should be equal to` externalBeskjedInput.getSikkerhetsnivaa()
-        transformedBeskjed.getTidspunkt() `should be equal to` externalBeskjedInput.getTidspunkt()
-        transformedBeskjed.getBehandlet() `should be equal to` epochTimeMillis
-        transformedBeskjed.getSynligFremTil() `should be equal to` externalBeskjedInput.getSynligFremTil()
-        transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjedInput.getEksternVarsling()
-        transformedBeskjed.getPrefererteKanaler() `should be equal to` externalBeskjedInput.getPrefererteKanaler()
+        transformedBeskjed.getLink() shouldBe externalBeskjedInput.getLink()
+        transformedBeskjed.getTekst() shouldBe externalBeskjedInput.getTekst()
+        transformedBeskjed.getSikkerhetsnivaa() shouldBe externalBeskjedInput.getSikkerhetsnivaa()
+        transformedBeskjed.getTidspunkt() shouldBe externalBeskjedInput.getTidspunkt()
+        transformedBeskjed.getBehandlet() shouldBe epochTimeMillis
+        transformedBeskjed.getSynligFremTil() shouldBe externalBeskjedInput.getSynligFremTil()
+        transformedBeskjed.getEksternVarsling() shouldBe externalBeskjedInput.getEksternVarsling()
+        transformedBeskjed.getPrefererteKanaler() shouldBe externalBeskjedInput.getPrefererteKanaler()
     }
 
     @Test

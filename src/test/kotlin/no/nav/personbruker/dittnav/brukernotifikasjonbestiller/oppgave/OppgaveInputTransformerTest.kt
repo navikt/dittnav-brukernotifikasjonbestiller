@@ -12,15 +12,12 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should be null`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 internal class OppgaveInputTransformerTest {
 
@@ -57,7 +54,7 @@ internal class OppgaveInputTransformerTest {
         transformedOppgave.getTekst() shouldBe externalOppgaveInput.getTekst()
         transformedOppgave.getSikkerhetsnivaa() shouldBe externalOppgaveInput.getSikkerhetsnivaa()
         transformedOppgave.getTidspunkt() shouldBe externalOppgaveInput.getTidspunkt()
-        transformedOppgave.getBehandlet() `should be equal to` epochTimeMillis
+        transformedOppgave.getBehandlet() shouldBe epochTimeMillis
         transformedOppgave.getSynligFremTil() shouldBe externalOppgaveInput.getSynligFremTil()
         transformedOppgave.getEksternVarsling() shouldBe externalOppgaveInput.getEksternVarsling()
         transformedOppgave.getPrefererteKanaler() shouldBe externalOppgaveInput.getPrefererteKanaler()

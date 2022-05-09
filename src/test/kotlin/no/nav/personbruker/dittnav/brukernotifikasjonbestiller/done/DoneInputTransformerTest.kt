@@ -1,18 +1,21 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.*
+import java.time.Instant
+import java.util.UUID
 
 internal class DoneInputTransformerTest {
 
@@ -45,8 +48,8 @@ internal class DoneInputTransformerTest {
         transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
         transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedDone.getTidspunkt() `should be equal to` externalDoneInput.getTidspunkt()
-        transformedDone.getBehandlet() `should be equal to` epochTimeMillis
+        transformedDone.getTidspunkt() shouldBe externalDoneInput.getTidspunkt()
+        transformedDone.getBehandlet() shouldBe epochTimeMillis
     }
 
     @Test
