@@ -1,22 +1,21 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.`should be equal to`
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 internal class DoneInputTransformerTest {
 
@@ -43,14 +42,14 @@ internal class DoneInputTransformerTest {
 
         val (transformedNokkel, transformedDone) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` externalNokkelInput.getFodselsnummer()
-        transformedNokkel.getEventId() `should be equal to` externalNokkelInput.getEventId()
-        transformedNokkel.getGrupperingsId() `should be equal to` externalNokkelInput.getGrupperingsId()
-        transformedNokkel.getNamespace() `should be equal to` externalNokkelInput.getNamespace()
-        transformedNokkel.getAppnavn() `should be equal to` externalNokkelInput.getAppnavn()
+        transformedNokkel.getFodselsnummer() shouldBe externalNokkelInput.getFodselsnummer()
+        transformedNokkel.getEventId() shouldBe externalNokkelInput.getEventId()
+        transformedNokkel.getGrupperingsId() shouldBe externalNokkelInput.getGrupperingsId()
+        transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
+        transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedDone.getTidspunkt() `should be equal to` externalDoneInput.getTidspunkt()
-        transformedDone.getBehandlet() `should be equal to` epochTimeMillis
+        transformedDone.getTidspunkt() shouldBe externalDoneInput.getTidspunkt()
+        transformedDone.getBehandlet() shouldBe epochTimeMillis
     }
 
     @Test
@@ -62,7 +61,7 @@ internal class DoneInputTransformerTest {
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
 
-        transformedNokkel.getEventId() `should be equal to` uuidEventId
+        transformedNokkel.getEventId() shouldBe uuidEventId
     }
 
     @Test
@@ -74,7 +73,7 @@ internal class DoneInputTransformerTest {
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
 
-        transformedNokkel.getEventId() `should be equal to` ulidEventId
+        transformedNokkel.getEventId() shouldBe ulidEventId
     }
 
     @Test
@@ -85,7 +84,7 @@ internal class DoneInputTransformerTest {
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
 
-        transformedNokkel.getEventId() `should be equal to` legacyEventId
+        transformedNokkel.getEventId() shouldBe legacyEventId
     }
 
     @Test
@@ -94,11 +93,11 @@ internal class DoneInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -107,10 +106,10 @@ internal class DoneInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 }

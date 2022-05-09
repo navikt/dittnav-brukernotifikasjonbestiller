@@ -1,13 +1,14 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.Brukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
@@ -17,8 +18,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exce
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.NokkelEventPairObjectMother.createANumberOfValidEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsObjectMother.createANumberOfProblematicEvents
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.junit.jupiter.api.Test
 
 
@@ -63,11 +62,11 @@ internal class EventDispatcherTest {
 
         coEvery { repository.persistInOneBatch(validatedEvents, any()) } returns peristMock
 
-        invoking {
+        shouldThrow<RetriableKafkaException> {
             runBlocking {
                 dispatcher.dispatchValidAndProblematicEvents(validatedEvents, problematicEvents)
             }
-        } `should throw` RetriableKafkaException::class
+        }
 
         verify(exactly = 1) { internalEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
         verify(exactly = 0) { feilresponsEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
@@ -86,11 +85,11 @@ internal class EventDispatcherTest {
 
         coEvery { repository.persistInOneBatch(validatedEvents, any()) } returns peristMock
 
-        invoking {
+        shouldThrow<RetriableKafkaException> {
             runBlocking {
                 dispatcher.dispatchValidAndProblematicEvents(validatedEvents, problematicEvents)
             }
-        } `should throw` RetriableKafkaException::class
+        }
 
         verify(exactly = 1) { internalEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
         verify(exactly = 1) { feilresponsEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
@@ -109,11 +108,11 @@ internal class EventDispatcherTest {
 
         coEvery { repository.persistInOneBatch(validatedEvents, any()) } throws RetriableDatabaseException("")
 
-        invoking {
+        shouldThrow<RetriableDatabaseException> {
             runBlocking {
                 dispatcher.dispatchValidAndProblematicEvents(validatedEvents, problematicEvents)
             }
-        } `should throw` RetriableDatabaseException::class
+        }
 
         verify(exactly = 1) { internalEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
         verify(exactly = 1) { feilresponsEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
@@ -145,11 +144,11 @@ internal class EventDispatcherTest {
 
         coEvery { repository.persistInOneBatch(validatedEvents, any()) } returns peristMock
 
-        invoking {
+        shouldThrow<RetriableKafkaException> {
             runBlocking {
                 dispatcher.dispatchValidEventsOnly(validatedEvents)
             }
-        } `should throw` RetriableKafkaException::class
+        }
 
         verify(exactly = 1) { internalEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
         verify(exactly = 1) { internalEventProducer.abortCurrentTransaction() }
@@ -164,11 +163,11 @@ internal class EventDispatcherTest {
 
         coEvery { repository.persistInOneBatch(validatedEvents, any()) } throws RetriableDatabaseException("")
 
-        invoking {
+        shouldThrow<RetriableDatabaseException> {
             runBlocking {
                 dispatcher.dispatchValidEventsOnly(validatedEvents)
             }
-        } `should throw` RetriableDatabaseException::class
+        }
 
         verify(exactly = 1) { internalEventProducer.sendEventsAndLeaveTransactionOpen(any()) }
         verify(exactly = 1) { internalEventProducer.abortCurrentTransaction() }

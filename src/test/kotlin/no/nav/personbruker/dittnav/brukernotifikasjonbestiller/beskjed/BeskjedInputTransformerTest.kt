@@ -1,6 +1,10 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import de.huxhorn.sulky.ulid.ULID
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
@@ -8,14 +12,12 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
-import org.amshove.kluent.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 internal class BeskjedInputTransformerTest {
 
@@ -42,20 +44,20 @@ internal class BeskjedInputTransformerTest {
 
         val (transformedNokkel, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedNokkel.getFodselsnummer() `should be equal to` externalNokkelInput.getFodselsnummer()
-        transformedNokkel.getEventId() `should be equal to` externalNokkelInput.getEventId()
-        transformedNokkel.getGrupperingsId() `should be equal to` externalNokkelInput.getGrupperingsId()
-        transformedNokkel.getNamespace() `should be equal to` externalNokkelInput.getNamespace()
-        transformedNokkel.getAppnavn() `should be equal to` externalNokkelInput.getAppnavn()
+        transformedNokkel.getFodselsnummer() shouldBe externalNokkelInput.getFodselsnummer()
+        transformedNokkel.getEventId() shouldBe externalNokkelInput.getEventId()
+        transformedNokkel.getGrupperingsId() shouldBe externalNokkelInput.getGrupperingsId()
+        transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
+        transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedBeskjed.getLink() `should be equal to` externalBeskjedInput.getLink()
-        transformedBeskjed.getTekst() `should be equal to` externalBeskjedInput.getTekst()
-        transformedBeskjed.getSikkerhetsnivaa() `should be equal to` externalBeskjedInput.getSikkerhetsnivaa()
-        transformedBeskjed.getTidspunkt() `should be equal to` externalBeskjedInput.getTidspunkt()
-        transformedBeskjed.getBehandlet() `should be equal to` epochTimeMillis
-        transformedBeskjed.getSynligFremTil() `should be equal to` externalBeskjedInput.getSynligFremTil()
-        transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjedInput.getEksternVarsling()
-        transformedBeskjed.getPrefererteKanaler() `should be equal to` externalBeskjedInput.getPrefererteKanaler()
+        transformedBeskjed.getLink() shouldBe externalBeskjedInput.getLink()
+        transformedBeskjed.getTekst() shouldBe externalBeskjedInput.getTekst()
+        transformedBeskjed.getSikkerhetsnivaa() shouldBe externalBeskjedInput.getSikkerhetsnivaa()
+        transformedBeskjed.getTidspunkt() shouldBe externalBeskjedInput.getTidspunkt()
+        transformedBeskjed.getBehandlet() shouldBe epochTimeMillis
+        transformedBeskjed.getSynligFremTil() shouldBe externalBeskjedInput.getSynligFremTil()
+        transformedBeskjed.getEksternVarsling() shouldBe externalBeskjedInput.getEksternVarsling()
+        transformedBeskjed.getPrefererteKanaler() shouldBe externalBeskjedInput.getPrefererteKanaler()
     }
 
     @Test
@@ -67,7 +69,7 @@ internal class BeskjedInputTransformerTest {
 
         val (transformedNokkel, _) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedNokkel.getEventId() `should be equal to` uuidEventId
+        transformedNokkel.getEventId() shouldBe uuidEventId
     }
 
     @Test
@@ -79,7 +81,7 @@ internal class BeskjedInputTransformerTest {
 
         val (transformedNokkel, _) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedNokkel.getEventId() `should be equal to` ulidEventId
+        transformedNokkel.getEventId() shouldBe ulidEventId
     }
 
     @Test
@@ -88,11 +90,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(invalidEventId)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "eventId"
+        }.message shouldContain "eventId"
     }
 
     @Test
@@ -101,11 +103,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -114,11 +116,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "fodselsnummer"
+        }.message shouldContain "fodselsnummer"
     }
 
     @Test
@@ -128,7 +130,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, beskjedUtenSynligTilSatt)
 
-        transformedBeskjed.getSynligFremTil().`should be null`()
+        transformedBeskjed.getSynligFremTil().shouldBeNull()
     }
 
     @Test
@@ -137,11 +139,11 @@ internal class BeskjedInputTransformerTest {
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, tooLongGrupperingsId)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "grupperingsId"
+        }.message shouldContain "grupperingsId"
     }
 
     @Test
@@ -161,11 +163,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithText(emptyText)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "tekst"
+        }.message shouldContain "tekst"
     }
 
     @Test
@@ -174,11 +176,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithText(tooLongText)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "tekst"
+        }.message shouldContain "tekst"
     }
 
     @Test
@@ -187,11 +189,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(tooLongLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -200,11 +202,11 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(invalidLink)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "link"
+        }.message shouldContain "link"
     }
 
     @Test
@@ -214,7 +216,7 @@ internal class BeskjedInputTransformerTest {
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(emptyLink)
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        externalBeskjedInput.getLink() `should be equal to` transformedBeskjed.getLink()
+        externalBeskjedInput.getLink() shouldBe transformedBeskjed.getLink()
     }
 
     @Test
@@ -223,33 +225,33 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
 
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "Sikkerhetsnivaa"
+        }.message shouldContain "Sikkerhetsnivaa"
     }
 
     @Test
     fun `do not allow prefererteKanaler if eksternVarsling is false`() {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = false, prefererteKanaler = listOf(PreferertKanal.SMS.toString()))
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+        }.message shouldContain "prefererteKanaler"
     }
 
     @Test
     fun `do not allow unknown preferert kanal`() {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = listOf("unknown"))
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "prefererteKanaler"
+        }.message shouldContain "prefererteKanaler"
     }
 
     @Test
@@ -258,7 +260,7 @@ internal class BeskjedInputTransformerTest {
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = emptyList())
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        externalBeskjedInput.getPrefererteKanaler() `should be equal to` transformedBeskjed.getPrefererteKanaler()
+        externalBeskjedInput.getPrefererteKanaler() shouldBe transformedBeskjed.getPrefererteKanaler()
     }
 
     @Test
@@ -271,7 +273,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        externalBeskjedInput.getSmsVarslingstekst() `should be equal to` transformedBeskjed.getSmsVarslingstekst()
+        externalBeskjedInput.getSmsVarslingstekst() shouldBe transformedBeskjed.getSmsVarslingstekst()
     }
 
     @Test
@@ -284,7 +286,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedBeskjed.getSmsVarslingstekst().`should be null`()
+        transformedBeskjed.getSmsVarslingstekst().shouldBeNull()
     }
 
     @Test
@@ -294,11 +296,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = false,
             smsVarslingstekst = "L".repeat(160)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -308,11 +310,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             smsVarslingstekst = "L".repeat(161)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -322,11 +324,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             smsVarslingstekst = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "smsVarslingstekst"
+        }.message shouldContain "smsVarslingstekst"
     }
 
     @Test
@@ -339,7 +341,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        externalBeskjedInput.getEpostVarslingstekst() `should be equal to` transformedBeskjed.getEpostVarslingstekst()
+        externalBeskjedInput.getEpostVarslingstekst() shouldBe transformedBeskjed.getEpostVarslingstekst()
     }
 
     @Test
@@ -352,7 +354,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedBeskjed.getEpostVarslingstekst().`should be null`()
+        transformedBeskjed.getEpostVarslingstekst().shouldBeNull()
     }
 
     @Test
@@ -362,11 +364,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = false,
             epostVarslingstekst = "<p>Hei!</p>"
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -376,11 +378,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstekst = "L".repeat(4_001)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -390,11 +392,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstekst = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstekst"
+        }.message shouldContain "epostVarslingstekst"
     }
 
     @Test
@@ -407,7 +409,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        externalBeskjedInput.getEpostVarslingstittel() `should be equal to` transformedBeskjed.getEpostVarslingstittel()
+        externalBeskjedInput.getEpostVarslingstittel() shouldBe transformedBeskjed.getEpostVarslingstittel()
     }
 
     @Test
@@ -420,7 +422,7 @@ internal class BeskjedInputTransformerTest {
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
-        transformedBeskjed.getEpostVarslingstittel().`should be null`()
+        transformedBeskjed.getEpostVarslingstittel().shouldBeNull()
     }
 
     @Test
@@ -430,11 +432,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = false,
             epostVarslingstittel = "<p>Hei!</p>"
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 
     @Test
@@ -444,11 +446,11 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstittel = "L".repeat(41)
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 
     @Test
@@ -458,10 +460,10 @@ internal class BeskjedInputTransformerTest {
             eksternVarsling = true,
             epostVarslingstittel = " "
         )
-        invoking {
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }
-        } `should throw` FieldValidationException::class `with message containing` "epostVarslingstittel"
+        }.message shouldContain "epostVarslingstittel"
     }
 }

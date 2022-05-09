@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -7,8 +8,6 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
-import org.amshove.kluent.`should throw`
-import org.amshove.kluent.invoking
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.common.KafkaException
 import org.junit.jupiter.api.AfterEach
@@ -52,11 +51,11 @@ internal class ProducerTest {
         every { kafkaProducer.beginTransaction() } returns Unit
         every { kafkaProducer.abortTransaction() } returns Unit
 
-        invoking {
+        shouldThrow<RetriableKafkaException> {
             runBlocking {
                 producer.sendEventsTransactionally(records)
             }
-        } `should throw` RetriableKafkaException::class
+        }
 
 
         verify(exactly = 1) { kafkaProducer.beginTransaction() }
@@ -69,11 +68,11 @@ internal class ProducerTest {
         every { kafkaProducer.beginTransaction() } returns Unit
         every { kafkaProducer.close() } returns Unit
 
-        invoking {
+        shouldThrow<UnretriableKafkaException> {
             runBlocking {
                 producer.sendEventsTransactionally(records)
             }
-        } `should throw` UnretriableKafkaException::class
+        }
 
         verify(exactly = 1) { kafkaProducer.beginTransaction() }
         verify(exactly = 1) { kafkaProducer.close() }

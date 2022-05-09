@@ -22,18 +22,6 @@ repositories {
     mavenLocal()
 }
 
-sourceSets {
-    create("intTest") {
-        compileClasspath += sourceSets.main.get().output + sourceSets.test.get().output
-        runtimeClasspath += sourceSets.main.get().output + sourceSets.test.get().output
-    }
-}
-
-val intTestImplementation by configurations.getting {
-    extendsFrom(configurations.testImplementation.get())
-}
-configurations["intTestRuntimeOnly"].extendsFrom(configurations.testRuntimeOnly.get())
-
 dependencies {
     implementation("com.github.navikt:brukernotifikasjon-schemas:1.2022.04.26-11.25-7155b5142c85")
     implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2022.04.27-11.14-a4039fef5785")
@@ -62,15 +50,14 @@ dependencies {
     testImplementation(Junit.api)
     testImplementation(Ktor.clientMock)
     testImplementation(Ktor.clientMockJvm)
-    testImplementation(Kluent.kluent)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
     testImplementation(TestContainers.postgresql)
+    testImplementation(Kotest.runnerJunit5)
+    testImplementation(Kotest.assertionsCore)
 
     testRuntimeOnly(Junit.engine)
-
-    intTestImplementation(Junit.engine)
 }
 
 application {
@@ -104,16 +91,5 @@ tasks {
         classpath = sourceSets["main"].runtimeClasspath
     }
 }
-
-val integrationTest = task<Test>("integrationTest") {
-    description = "Runs integration tests."
-    group = "verification"
-
-    testClassesDirs = sourceSets["intTest"].output.classesDirs
-    classpath = sourceSets["intTest"].runtimeClasspath
-    shouldRunAfter("test")
-}
-
-tasks.check { dependsOn(integrationTest) }
 
 apply(plugin = Shadow.pluginId)

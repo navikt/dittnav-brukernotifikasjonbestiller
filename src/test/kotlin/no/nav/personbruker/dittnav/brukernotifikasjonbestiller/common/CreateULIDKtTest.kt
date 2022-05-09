@@ -1,8 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
+import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.amshove.kluent.`should be equal to`
 import org.junit.jupiter.api.Test
 
 internal class CreateULIDKtTest {
@@ -19,9 +19,9 @@ internal class CreateULIDKtTest {
             val sortedUlids = mutableListOf(ulid_2, ulid_1, ulid_3)
             sortedUlids.sortBy { it }
 
-            sortedUlids.get(0) `should be equal to` ulid_1
-            sortedUlids.get(1) `should be equal to` ulid_2
-            sortedUlids.get(2) `should be equal to` ulid_3
+            sortedUlids.get(0) shouldBe ulid_1
+            sortedUlids.get(1) shouldBe ulid_2
+            sortedUlids.get(2) shouldBe ulid_3
         }
     }
 
