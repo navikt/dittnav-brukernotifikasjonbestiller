@@ -6,6 +6,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DoneKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
@@ -35,7 +37,7 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
                             eventId = event.first.getEventId(),
                             systembruker = event.first.getSystembruker(),
                             eventtype = eventtype,
-                            prosesserttidspunkt = java.time.LocalDateTime.now(),
+                            prosesserttidspunkt = LocalDateTime.now(ZoneId.of("UTC")),
                             fodselsnummer = event.first.getFodselsnummer()
                     )
             )

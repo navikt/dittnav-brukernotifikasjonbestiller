@@ -16,6 +16,7 @@ object AvroBeskjedInternObjectMother {
     private val defaultNamespace = "namespace"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultBehandlet = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
 
     fun giveMeANumberOfInternalBeskjedEvents(numberOfEvents: Int, systembruker: String, eventId: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, BeskjedIntern>> {
@@ -34,21 +35,22 @@ object AvroBeskjedInternObjectMother {
     }
 
     fun createBeskjedIntern(): BeskjedIntern {
-        return createBeskjedIntern(defaultTidspunkt, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
+        return createBeskjedIntern(defaultTidspunkt, defaultBehandlet, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createBeskjedIntern(tidspunkt: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): BeskjedIntern {
+    fun createBeskjedIntern(tidspunkt: Long, behandlet: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): BeskjedIntern {
         return BeskjedIntern(
-                tidspunkt,
-                synligFremTil,
-                tekst,
-                link,
-                sikkerhetsnivaa,
-                eksternvarsling,
-                prefererteKanaler,
-                epostVarslingstekst,
-                epostVarslingstittel,
-                smsVarslingstekst
+            tidspunkt,
+            behandlet,
+            synligFremTil,
+            tekst,
+            link,
+            sikkerhetsnivaa,
+            eksternvarsling,
+            prefererteKanaler,
+            epostVarslingstekst,
+            epostVarslingstittel,
+            smsVarslingstekst
         )
     }
 }

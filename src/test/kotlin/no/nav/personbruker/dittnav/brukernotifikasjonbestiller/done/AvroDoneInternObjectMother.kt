@@ -7,6 +7,7 @@ import java.time.Instant
 object AvroDoneInternObjectMother {
     private val defaultUlid = "123"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultBehandlet = Instant.now().toEpochMilli()
     private val defaultNamespace = "namespace"
 
     fun giveMeANumberOfInternalDoneEvents(numberOfEvents: Int, eventId: String, systembruker: String, fodselsnummer: String): MutableList<Pair<NokkelIntern, DoneIntern>> {
@@ -22,19 +23,20 @@ object AvroDoneInternObjectMother {
 
     fun createNokkelIntern(eventId: String, grupperingsId: String, fodselsnummer: String, systembruker: String): NokkelIntern {
         return NokkelIntern(
-                defaultUlid,
-                eventId,
-                grupperingsId,
-                fodselsnummer,
-                defaultNamespace,
-                "$systembruker-app",
-                systembruker
+            defaultUlid,
+            eventId,
+            grupperingsId,
+            fodselsnummer,
+            defaultNamespace,
+            "$systembruker-app",
+            systembruker
         )
     }
 
     fun createDoneIntern(): DoneIntern {
         return DoneIntern(
-                defaultTidspunkt
+            defaultTidspunkt,
+            defaultBehandlet
         )
     }
 }

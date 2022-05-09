@@ -12,6 +12,7 @@ object AvroStatusoppdateringInternObjectMother {
     private val defaultGrupperingsid = "123"
     private val defaultNamespace = "namespace"
     private val defaultTidspunkt = Instant.now().toEpochMilli()
+    private val defaultBehandlet = Instant.now().toEpochMilli()
     private val defaultStatusGlobal = "statusglobal"
     private val defaultStatusIntern = "statusintern"
     private val defaultSakstema = "sakstema"
@@ -33,17 +34,18 @@ object AvroStatusoppdateringInternObjectMother {
     }
 
     fun createStatusoppdateringIntern(): StatusoppdateringIntern {
-        return createStatusoppdateringIntern(defaultTidspunkt, defaultLink, defaultSikkerhetsnivaa, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
+        return createStatusoppdateringIntern(defaultTidspunkt, defaultBehandlet, defaultLink, defaultSikkerhetsnivaa, defaultStatusGlobal, defaultStatusIntern, defaultSakstema)
     }
 
-    fun createStatusoppdateringIntern(tidspunkt: Long, link: String, sikkerhetsnivaa: Int, statusGlobal: String, statusIntern: String, sakstema: String): StatusoppdateringIntern {
+    fun createStatusoppdateringIntern(tidspunkt: Long, behandlet: Long, link: String, sikkerhetsnivaa: Int, statusGlobal: String, statusIntern: String, sakstema: String): StatusoppdateringIntern {
         return StatusoppdateringIntern(
-                tidspunkt,
-                link,
-                sikkerhetsnivaa,
-                statusGlobal,
-                statusIntern,
-                sakstema
+            tidspunkt,
+            behandlet,
+            link,
+            sikkerhetsnivaa,
+            statusGlobal,
+            statusIntern,
+            sakstema
         )
     }
 }

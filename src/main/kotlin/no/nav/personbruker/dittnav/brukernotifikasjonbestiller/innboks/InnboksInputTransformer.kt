@@ -6,6 +6,7 @@ import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper.nowInEpochMillis
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelInputTransformer
 
@@ -18,15 +19,16 @@ object InnboksInputTransformer {
 
     private fun toInnboksInternal(externalInnboks: InnboksInput): InnboksIntern {
         return InnboksIntern.newBuilder()
-                .setTidspunkt(externalInnboks.getTidspunkt())
-                .setTekst(validateNonNullFieldMaxLength(externalInnboks.getTekst(), "tekst", MAX_LENGTH_TEXT_INNBOKS))
-                .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalInnboks.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.INNBOKS)))
-                .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalInnboks.getSikkerhetsnivaa()))
-                .setEksternVarsling(externalInnboks.getEksternVarsling())
-                .setPrefererteKanaler(validatePrefererteKanaler(externalInnboks.getEksternVarsling(), externalInnboks.getPrefererteKanaler()))
-                .setEpostVarslingstekst(validateEpostVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstekst()))
-                .setEpostVarslingstittel(validateEpostVarslingstittel(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstittel()))
-                .setSmsVarslingstekst(validateSmsVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getSmsVarslingstekst()))
-                .build()
+            .setTidspunkt(externalInnboks.getTidspunkt())
+            .setBehandlet(nowInEpochMillis())
+            .setTekst(validateNonNullFieldMaxLength(externalInnboks.getTekst(), "tekst", MAX_LENGTH_TEXT_INNBOKS))
+            .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalInnboks.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.INNBOKS)))
+            .setSikkerhetsnivaa(validateSikkerhetsnivaa(externalInnboks.getSikkerhetsnivaa()))
+            .setEksternVarsling(externalInnboks.getEksternVarsling())
+            .setPrefererteKanaler(validatePrefererteKanaler(externalInnboks.getEksternVarsling(), externalInnboks.getPrefererteKanaler()))
+            .setEpostVarslingstekst(validateEpostVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstekst()))
+            .setEpostVarslingstittel(validateEpostVarslingstittel(externalInnboks.getEksternVarsling(), externalInnboks.getEpostVarslingstittel()))
+            .setSmsVarslingstekst(validateSmsVarslingstekst(externalInnboks.getEksternVarsling(), externalInnboks.getSmsVarslingstekst()))
+            .build()
     }
 }

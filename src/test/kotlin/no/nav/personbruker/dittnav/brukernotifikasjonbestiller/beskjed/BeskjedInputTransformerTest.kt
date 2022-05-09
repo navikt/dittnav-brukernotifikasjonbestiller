@@ -1,25 +1,37 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import de.huxhorn.sulky.ulid.ULID
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import org.amshove.kluent.*
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 internal class BeskjedInputTransformerTest {
 
     private val eventId = "11112222-1234-1234-1234-1234567890ab"
 
+    private val epochTimeMillis = Instant.now().toEpochMilli()
+
+    @BeforeEach
+    fun setupMock() {
+        mockkObject(CurrentTimeHelper)
+    }
+
+    @AfterEach
+    fun clearMock() {
+        unmockkObject(CurrentTimeHelper)
+    }
+
     @Test
     fun `should transform from external to internal`() {
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+
+        every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
         val (transformedNokkel, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
@@ -29,13 +41,14 @@ internal class BeskjedInputTransformerTest {
         transformedNokkel.getNamespace() shouldBe externalNokkelInput.getNamespace()
         transformedNokkel.getAppnavn() shouldBe externalNokkelInput.getAppnavn()
 
-        transformedBeskjed.getLink() shouldBe externalBeskjedInput.getLink()
-        transformedBeskjed.getTekst() shouldBe externalBeskjedInput.getTekst()
-        transformedBeskjed.getSikkerhetsnivaa() shouldBe externalBeskjedInput.getSikkerhetsnivaa()
-        transformedBeskjed.getTidspunkt() shouldBe externalBeskjedInput.getTidspunkt()
-        transformedBeskjed.getSynligFremTil() shouldBe externalBeskjedInput.getSynligFremTil()
-        transformedBeskjed.getEksternVarsling() shouldBe externalBeskjedInput.getEksternVarsling()
-        transformedBeskjed.getPrefererteKanaler() shouldBe externalBeskjedInput.getPrefererteKanaler()
+        transformedBeskjed.getLink() `should be equal to` externalBeskjedInput.getLink()
+        transformedBeskjed.getTekst() `should be equal to` externalBeskjedInput.getTekst()
+        transformedBeskjed.getSikkerhetsnivaa() `should be equal to` externalBeskjedInput.getSikkerhetsnivaa()
+        transformedBeskjed.getTidspunkt() `should be equal to` externalBeskjedInput.getTidspunkt()
+        transformedBeskjed.getBehandlet() `should be equal to` epochTimeMillis
+        transformedBeskjed.getSynligFremTil() `should be equal to` externalBeskjedInput.getSynligFremTil()
+        transformedBeskjed.getEksternVarsling() `should be equal to` externalBeskjedInput.getEksternVarsling()
+        transformedBeskjed.getPrefererteKanaler() `should be equal to` externalBeskjedInput.getPrefererteKanaler()
     }
 
     @Test
@@ -68,7 +81,7 @@ internal class BeskjedInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(invalidEventId)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
-        shouldThrow<FieldValidationException> { 
+        shouldThrow<FieldValidationException> {
             runBlocking {
                 BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
             }

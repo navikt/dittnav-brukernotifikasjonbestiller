@@ -6,6 +6,7 @@ import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper.nowInEpochMillis
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.validation.validatePrefererteKanaler
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelInputTransformer
 
@@ -19,6 +20,7 @@ object OppgaveInputTransformer {
     private fun toOppgaveInternal(externalOppgave: OppgaveInput): OppgaveIntern {
         return OppgaveIntern.newBuilder()
             .setTidspunkt(externalOppgave.getTidspunkt())
+            .setBehandlet(nowInEpochMillis())
             .setSynligFremTil(externalOppgave.getSynligFremTil())
             .setTekst(validateNonNullFieldMaxLength(externalOppgave.getTekst(), "tekst", MAX_LENGTH_TEXT_OPPGAVE))
             .setLink(validateLinkAndConvertToString(validateLinkAndConvertToURL(externalOppgave.getLink()), "link", MAX_LENGTH_LINK, isLinkRequired(Eventtype.OPPGAVE)))

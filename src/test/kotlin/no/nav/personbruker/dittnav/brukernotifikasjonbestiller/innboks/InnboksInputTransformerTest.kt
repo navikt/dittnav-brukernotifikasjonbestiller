@@ -1,6 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
 import de.huxhorn.sulky.ulid.ULID
+import io.mockk.every
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -8,18 +11,39 @@ import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.`with message containing`
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import org.amshove.kluent.`should be equal to`
+import org.amshove.kluent.`should be null`
+import org.amshove.kluent.`should throw`
+import org.amshove.kluent.invoking
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.time.Instant
+import java.util.*
 
 internal class InnboksInputTransformerTest {
 
     private val eventId = "11112222-1234-1234-1234-1234567890ab"
 
+    private val epochTimeMillis = Instant.now().toEpochMilli()
+
+    @BeforeEach
+    fun setupMock() {
+        mockkObject(CurrentTimeHelper)
+    }
+
+    @AfterEach
+    fun clearMock() {
+        unmockkObject(CurrentTimeHelper)
+    }
+
     @Test
     fun `should transform from external to internal`() {
         val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput()
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+
+        every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
         val (transformedNokkel, transformedInnboks) = InnboksInputTransformer.toInternal(externalNokkelInput, externalInnboksInput)
 
@@ -33,6 +57,7 @@ internal class InnboksInputTransformerTest {
         transformedInnboks.getTekst() shouldBe externalInnboksInput.getTekst()
         transformedInnboks.getSikkerhetsnivaa() shouldBe externalInnboksInput.getSikkerhetsnivaa()
         transformedInnboks.getTidspunkt() shouldBe externalInnboksInput.getTidspunkt()
+        transformedInnboks.getBehandlet() `should be equal to` epochTimeMillis
         transformedInnboks.getEksternVarsling() shouldBe externalInnboksInput.getEksternVarsling()
         transformedInnboks.getPrefererteKanaler() shouldBe externalInnboksInput.getPrefererteKanaler()
     }
