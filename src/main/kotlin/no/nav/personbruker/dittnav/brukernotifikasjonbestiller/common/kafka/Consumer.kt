@@ -81,6 +81,7 @@ class Consumer<K, V>(
 
         } catch (rde: RetriableDatabaseException) {
             log.warn("Klarte ikke å skrive til databasen, prøver igjen senrere. Topic: $topic", rde)
+            rollbackOffset()
 
         } catch (ude: UnretriableDatabaseException) {
             log.error("Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic", ude)
@@ -88,6 +89,7 @@ class Consumer<K, V>(
 
         }  catch (re: RetriableException) {
             log.warn("Polling mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
+            rollbackOffset()
 
         } catch (ce: CancellationException) {
             log.info("Denne coroutine-en ble stoppet. ${ce.message}", ce)
