@@ -22,7 +22,7 @@ import java.time.Duration
 
 class ConsumerTest {
 
-    private val kafkaConsumer = mockk<KafkaConsumer<NokkelInput, BeskjedInput>>(relaxUnitFun = true)
+    private val kafkaConsumer = mockk<KafkaConsumer<NokkelInput, BeskjedInput>>(relaxed = true)
     private val eventBatchProcessorService = mockk<EventBatchProcessorService<NokkelInput, BeskjedInput>>(relaxed = true)
 
     @BeforeEach
