@@ -4,7 +4,6 @@ import no.nav.personbruker.dittnav.common.util.config.IntEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
 import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVarAsList
-import java.net.URL
 
 data class Environment(
         val groupId: String = getEnvVar("GROUP_ID"),
@@ -29,12 +28,10 @@ data class Environment(
         val beskjedInternTopicName: String = getEnvVar("INTERN_BESKJED_TOPIC"),
         val oppgaveInternTopicName: String = getEnvVar("INTERN_OPPGAVE_TOPIC"),
         val innboksInternTopicName: String = getEnvVar("INTERN_INNBOKS_TOPIC"),
-        val statusoppdateringInternTopicName: String = getEnvVar("INTERN_STATUSOPPDATERING_TOPIC"),
         val doneInternTopicName: String = getEnvVar("INTERN_DONE_TOPIC"),
         val beskjedInputTopicName: String = getEnvVar("OPEN_INPUT_BESKJED_TOPIC"),
         val oppgaveInputTopicName: String = getEnvVar("OPEN_INPUT_OPPGAVE_TOPIC"),
         val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
-        val statusoppdateringInputTopicName: String = getEnvVar("OPEN_INPUT_STATUSOPPDATERING_TOPIC"),
         val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
         val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC"),
         val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING")
@@ -68,8 +65,6 @@ fun shouldPollBeskjedInput() = StringEnvVar.getOptionalEnvVar("POLL_BESKJED_INPU
 fun shouldPollOppgaveInput() = StringEnvVar.getOptionalEnvVar("POLL_OPPGAVE_INPUT", "false").toBoolean()
 
 fun shouldPollInnboksInput() = StringEnvVar.getOptionalEnvVar("POLL_INNBOKS_INPUT", "false").toBoolean()
-
-fun shouldPollStatusoppdateringInput() = StringEnvVar.getOptionalEnvVar("POLL_STATUSOPPDATERING_INPUT", "false").toBoolean()
 
 fun shouldPollDoneInput() = StringEnvVar.getOptionalEnvVar("POLL_DONE_INPUT", "false").toBoolean()
 

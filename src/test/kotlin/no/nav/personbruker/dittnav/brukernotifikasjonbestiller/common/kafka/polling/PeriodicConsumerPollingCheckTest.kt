@@ -40,7 +40,6 @@ class PeriodicConsumerPollingCheckTest {
     fun `Skal returnere en liste med konsumenter som har stoppet aa polle`() {
         coEvery { appContext.beskjedInputConsumer.isStopped() } returns true
         coEvery { appContext.oppgaveInputConsumer.isStopped() } returns true
-        coEvery { appContext.statusoppdateringInputConsumer.isStopped() } returns false
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
@@ -52,7 +51,6 @@ class PeriodicConsumerPollingCheckTest {
     fun `Skal returnere en tom liste hvis alle konsumenter kjorer som normalt`() {
         coEvery { appContext.beskjedInputConsumer.isStopped() } returns false
         coEvery { appContext.oppgaveInputConsumer.isStopped() } returns false
-        coEvery { appContext.statusoppdateringInputConsumer.isStopped() } returns false
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
@@ -64,7 +62,6 @@ class PeriodicConsumerPollingCheckTest {
     fun `Skal kalle paa restartPolling hvis en eller flere konsumere har sluttet aa kjore`() {
         coEvery { appContext.beskjedInputConsumer.isStopped() } returns true
         coEvery { appContext.oppgaveInputConsumer.isStopped() } returns true
-        coEvery { appContext.statusoppdateringInputConsumer.isStopped() } returns false
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
@@ -79,7 +76,6 @@ class PeriodicConsumerPollingCheckTest {
     fun `Skal ikke restarte polling hvis alle konsumere kjorer`() {
         coEvery { appContext.beskjedInputConsumer.isStopped() } returns false
         coEvery { appContext.oppgaveInputConsumer.isStopped() } returns false
-        coEvery { appContext.statusoppdateringInputConsumer.isStopped() } returns false
         coEvery { appContext.doneInputConsumer.isStopped() } returns false
 
         runBlocking {
