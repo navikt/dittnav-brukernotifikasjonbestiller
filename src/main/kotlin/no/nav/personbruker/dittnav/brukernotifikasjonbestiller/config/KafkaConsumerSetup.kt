@@ -35,12 +35,6 @@ object KafkaConsumerSetup {
             log.info("Unnlater å starte polling av innboks-input")
         }
 
-        if(shouldPollStatusoppdateringInput()) {
-            appContext.statusoppdateringInputConsumer.startPolling()
-        } else {
-            log.info("Unnlater å starte polling av statusoppdatering-input")
-        }
-
         if(shouldPollDoneInput()) {
             appContext.doneInputConsumer.startPolling()
         } else {
@@ -55,7 +49,6 @@ object KafkaConsumerSetup {
             appContext.beskjedInputConsumer,
             appContext.oppgaveInputConsumer,
             appContext.innboksInputConsumer,
-            appContext.statusoppdateringInputConsumer,
             appContext.doneInputConsumer
         )
 

@@ -18,7 +18,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthServ
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.statusoppdatering.StatusoppdateringInputEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
@@ -42,12 +41,10 @@ class ApplicationContext {
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
     var internInnboksKafkaProducer = initializeInternInnboksProducer()
     var internDoneKafkaProducer = initializeInternDoneProducer()
-    var internStatusoppdateringKafkaProducer = initializeInternStatusoppdateringProducer()
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
     var innboksInputConsumer = initializeInnboksInputProcessor()
-    var statusoppdateringInputConsumer = initializeStatusoppdateringInputProcessor()
     var doneInputConsumer = initializeDoneInputProcessor()
 
     var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
@@ -80,16 +77,6 @@ class ApplicationContext {
         val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
     }
-
-    private fun initializeStatusoppdateringInputProcessor(): Consumer<NokkelInput, StatusoppdateringInput> {
-        val consumerProps = Kafka.consumerProps(environment, Eventtype.STATUSOPPDATERING)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.STATUSOPPDATERING)
-        val statusoppdateringEventDispatcher = EventDispatcher(Eventtype.STATUSOPPDATERING, brukernotifikasjonbestillingRepository, internStatusoppdateringKafkaProducer, feilresponsKafkaProducer)
-        val statusoppdateringEventService = StatusoppdateringInputEventService(metricsCollector, handleDuplicateEvents, statusoppdateringEventDispatcher)
-        return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.statusoppdateringInputTopicName, consumerProps, statusoppdateringEventService)
-    }
-
 
     private fun initializeDoneInputProcessor(): Consumer<NokkelInput, DoneInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
@@ -128,14 +115,7 @@ class ApplicationContext {
         return Producer(environment.doneInternTopicName, kafkaProducer)
     }
 
-    private fun initializeInternStatusoppdateringProducer(): Producer<NokkelIntern, StatusoppdateringIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.STATUSOPPDATERINGINTERN)
-        val kafkaProducer = KafkaProducer<NokkelIntern, StatusoppdateringIntern>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.statusoppdateringInternTopicName, kafkaProducer)
-    }
-
-    private fun initializeFeilresponsProducer(eventtype: Eventtype, ): Producer<NokkelFeilrespons, Feilrespons> {
+    private fun initializeFeilresponsProducer(eventtype: Eventtype): Producer<NokkelFeilrespons, Feilrespons> {
         val producerProps = Kafka.producerFeilresponsProps(environment, eventtype)
         val kafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
         kafkaProducer.initTransactions()
@@ -166,13 +146,6 @@ class ApplicationContext {
             log.info("innboksInputConsumer har blitt reinstansiert.")
         } else {
             log.warn("innboksInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
-        }
-
-        if (statusoppdateringInputConsumer.isCompleted()) {
-            statusoppdateringInputConsumer = initializeStatusoppdateringInputProcessor()
-            log.info("statusoppdateringInputConsumer har blitt reinstansiert.")
-        } else {
-            log.warn("statusoppdateringInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
 
         if (doneInputConsumer.isCompleted()) {
