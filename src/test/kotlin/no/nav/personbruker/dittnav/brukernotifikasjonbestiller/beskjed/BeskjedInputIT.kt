@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
@@ -56,7 +57,7 @@ class BeskjedInputIT {
         metricsCollector,
         handleDuplicateEvents,
         eventDispatcher,
-        BeskjedRapidProducer()
+        BeskjedRapidProducer(mockk(relaxed = true), "rapid")
     )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
