@@ -52,7 +52,12 @@ class BeskjedInputIT {
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
-    private val eventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+    private val eventService = BeskjedInputEventService(
+        metricsCollector,
+        handleDuplicateEvents,
+        eventDispatcher,
+        BeskjedRapidProducer()
+    )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
     private val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
