@@ -1,9 +1,13 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
+import io.confluent.kafka.serializers.KafkaAvroSerializer
+import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
+import io.netty.util.NetUtil
 import no.nav.brukernotifikasjon.schemas.input.*
 import no.nav.brukernotifikasjon.schemas.internal.*
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -24,7 +28,10 @@ import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxMetricsReporter
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.slf4j.LoggerFactory
+import java.net.InetSocketAddress
+import java.util.Properties
 
 class ApplicationContext {
 
@@ -50,7 +57,21 @@ class ApplicationContext {
 
     var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
 
-
+    val beskjedRapidProducer = BeskjedRapidProducer(
+        KafkaProducer(
+            Properties().apply {
+                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
+                put(ProducerConfig.CLIENT_ID_CONFIG, environment.groupId + "Beskjed" + NetUtil.getHostname(InetSocketAddress(0)))
+                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, String::class.java)
+                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, String::class.java)
+                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+                put(ProducerConfig.ACKS_CONFIG, "all")
+                put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+                    putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
+            }
+        ),
+        environment.rapidTopic
+    )
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
@@ -61,7 +82,7 @@ class ApplicationContext {
             metricsCollector,
             handleDuplicateEvents,
             beskjedEventDispatcher,
-            BeskjedRapidProducer()
+            beskjedRapidProducer
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }

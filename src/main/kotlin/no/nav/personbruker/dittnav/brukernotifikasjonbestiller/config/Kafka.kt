@@ -73,7 +73,7 @@ object Kafka {
         }
     }
 
-    private fun credentialPropsAiven(securityVars: SecurityVars): Properties {
+    fun credentialPropsAiven(securityVars: SecurityVars): Properties {
         return Properties().apply {
             put(KafkaAvroSerializerConfig.USER_INFO_CONFIG, "${securityVars.aivenSchemaRegistryUser}:${securityVars.aivenSchemaRegistryPassword}")
             put(KafkaAvroSerializerConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO")
