@@ -28,13 +28,19 @@ internal class BeskjedInputEventServiceTest {
 
     private val eventId = UUID.randomUUID().toString()
 
+    private val beskjedEventService = BeskjedInputEventService(
+        metricsCollector,
+        handleDuplicateEvents,
+        eventDispatcher,
+        BeskjedRapidProducer()
+    )
+
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
         val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
         val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) } returns Unit
@@ -63,7 +69,6 @@ internal class BeskjedInputEventServiceTest {
         val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNullNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -88,7 +93,6 @@ internal class BeskjedInputEventServiceTest {
         val externalBeskjedWithTooLongText = AvroBeskjedInputObjectMother.createBeskjedInputWithText("1234567890".repeat(50))
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjedWithTooLongText, topic)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -112,7 +116,6 @@ internal class BeskjedInputEventServiceTest {
         val externalUnexpectedBeskjed = mockk<BeskjedInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -140,7 +143,6 @@ internal class BeskjedInputEventServiceTest {
         val duplicateEvents = listOf(internalEvents[1])
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjed, topic)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) } returns Unit
@@ -174,7 +176,6 @@ internal class BeskjedInputEventServiceTest {
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
 
         val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelInput, BeskjedInput>
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -190,5 +191,37 @@ internal class BeskjedInputEventServiceTest {
         coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) }
         coVerify(exactly = 1) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
         coVerify(exactly = 1) { metricsSession.countFailedEventForProducer(any()) }
+    }
+
+    @Test
+    fun `sender beskjed til rapid hvis flagg er på`() {
+        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
+
+        val beskjedRapidProducer: BeskjedRapidProducer = mockk(relaxed = true)
+        val beskjedEventService = BeskjedInputEventService(
+            metricsCollector = metricsCollector,
+            handleDuplicateEvents = handleDuplicateEvents,
+            eventDispatcher = eventDispatcher,
+            beskjedRapidProducer = beskjedRapidProducer,
+            produceToRapid = true
+        )
+
+        coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
+        coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>(), any()) } returns Unit
+        coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
+        coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
+
+        val slot = slot<suspend EventMetricsSession.() -> Unit>()
+        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
+            slot.captured.invoke(metricsSession)
+        }
+
+        val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjed, topic)
+        runBlocking {
+            beskjedEventService.processEvents(externalEvents)
+        }
+
+        verify(exactly = 1) { beskjedRapidProducer.produce(any()) }
     }
 }

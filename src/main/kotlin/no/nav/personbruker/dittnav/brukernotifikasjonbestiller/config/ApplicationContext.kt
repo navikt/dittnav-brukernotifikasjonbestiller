@@ -5,6 +5,7 @@ import no.nav.brukernotifikasjon.schemas.internal.*
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -56,7 +57,12 @@ class ApplicationContext {
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
         val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
-        val beskjedEventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, beskjedEventDispatcher)
+        val beskjedEventService = BeskjedInputEventService(
+            metricsCollector,
+            handleDuplicateEvents,
+            beskjedEventDispatcher,
+            BeskjedRapidProducer()
+        )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }
 
