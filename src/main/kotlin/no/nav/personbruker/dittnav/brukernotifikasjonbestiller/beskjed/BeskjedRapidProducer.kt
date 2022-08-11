@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.enableDittNavJsonConfig
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -12,7 +13,9 @@ class BeskjedRapidProducer(
         val objectMapper = ObjectMapper()
         objectMapper.enableDittNavJsonConfig()
         beskjeder.forEach {
-            val producerRecord = ProducerRecord(topicName, it.eventId, objectMapper.writeValueAsString(it))
+            val objectNode = objectMapper.valueToTree<ObjectNode>(it)
+            objectNode.put("@event_name", "beskjed")
+            val producerRecord = ProducerRecord(topicName, it.eventId, objectNode.toString())
             kafkaProducer.send(producerRecord)
         }
     }
