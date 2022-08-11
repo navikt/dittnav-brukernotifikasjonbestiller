@@ -34,7 +34,9 @@ data class Environment(
         val innboksInputTopicName: String = getEnvVar("OPEN_INPUT_INNBOKS_TOPIC"),
         val doneInputTopicName: String = getEnvVar("OPEN_INPUT_DONE_TOPIC"),
         val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC"),
-        val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING")
+        val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING"),
+
+        val rapidTopic: String = "min-side.rapid.v1"
 )
 
 data class SecurityConfig(

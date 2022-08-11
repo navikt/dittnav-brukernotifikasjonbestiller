@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
@@ -28,6 +29,7 @@ import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.lang.Thread.sleep
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -62,7 +64,7 @@ class BeskjedInputIT {
         metricsCollector,
         handleDuplicateEvents,
         eventDispatcher,
-        BeskjedRapidProducer()
+        BeskjedRapidProducer(mockk(relaxed = true), "")
     )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
