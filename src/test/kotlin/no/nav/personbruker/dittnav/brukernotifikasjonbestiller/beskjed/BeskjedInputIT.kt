@@ -103,9 +103,9 @@ class BeskjedInputIT {
         val beskjedAvroKey = beskjedEvents.first().first
         val beskjedAvroValue = beskjedEvents.first().second
         val beskjedJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
+
         beskjedJson.has("@event_name") shouldBe true
         beskjedJson["@event_name"].asText() shouldBe "beskjed"
-
         beskjedJson["fodselsnummer"].asText() shouldBe beskjedAvroKey.getFodselsnummer()
         beskjedJson["namespace"].asText() shouldBe beskjedAvroKey.getNamespace()
         beskjedJson["appnavn"].asText() shouldBe beskjedAvroKey.getAppnavn()

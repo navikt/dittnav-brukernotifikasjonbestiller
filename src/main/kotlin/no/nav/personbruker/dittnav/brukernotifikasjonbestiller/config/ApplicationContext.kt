@@ -1,13 +1,18 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import io.confluent.kafka.serializers.KafkaAvroSerializer
-import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.netty.util.NetUtil
-import no.nav.brukernotifikasjon.schemas.input.*
-import no.nav.brukernotifikasjon.schemas.internal.*
+import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
+import no.nav.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
+import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
+import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
+import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -21,7 +26,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.poll
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.*
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
@@ -67,7 +72,7 @@ class ApplicationContext {
                 put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
                 put(ProducerConfig.ACKS_CONFIG, "all")
                 put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-                    putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
+                putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
             }
         ),
         environment.rapidTopic
