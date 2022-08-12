@@ -24,7 +24,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.UUID
@@ -67,18 +67,11 @@ class BeskjedInputIT {
         produceToRapid = true
     )
 
-    @BeforeEach
-    fun reset() {
-        feilresponsKafkaProducer.clear()
-        internalKafkaProducer.clear()
-        rapidKafkaProducer.clear()
-    }
+    private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
+    private val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
 
-    @Test
-    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
-        val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
-        val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
-
+    @BeforeAll
+    fun setup() {
         beskjedEvents.forEachIndexed { index, (key, value) ->
             inputKafkaConsumer.addRecord(ConsumerRecord(
                 KafkaTestTopics.beskjedInputTopicName,
@@ -94,34 +87,16 @@ class BeskjedInputIT {
             KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
             inputEventConsumer.stopPolling()
         }
+    }
 
+    @Test
+    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
         internalKafkaProducer.history().size shouldBe goodEvents.size
         feilresponsKafkaProducer.history().size shouldBe badEvents.size
     }
 
     @Test
     fun `Sender beskjeder på rapid-format`() {
-        val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
-        val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
-
-        val beskjeder = createEvents(5)
-        beskjeder.forEachIndexed { index, (key, value) ->
-            inputKafkaConsumer.addRecord(ConsumerRecord(
-                KafkaTestTopics.beskjedInputTopicName,
-                0,
-                index.toLong(),
-                key,
-                value
-            ))
-        }
-
-        runBlocking {
-            inputEventConsumer.startPolling()
-            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjeder.size.toLong())
-            inputEventConsumer.stopPolling()
-        }
-
-        rapidKafkaProducer.history().size shouldBe beskjeder.size
         val beskjedJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
         beskjedJson.has("@event_name") shouldBe true
         beskjedJson["@event_name"].asText() shouldBe "beskjed"
@@ -129,28 +104,8 @@ class BeskjedInputIT {
 
     @Test
     fun `Sender beskjeder til rapid i tillegg til gammelt topic`() {
-        val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
-        val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
-
-        val beskjeder = createEvents(5)
-        beskjeder.forEachIndexed { index, (key, value) ->
-            inputKafkaConsumer.addRecord(ConsumerRecord(
-                KafkaTestTopics.beskjedInputTopicName,
-                0,
-                index.toLong(),
-                key,
-                value
-            ))
-        }
-
-        runBlocking {
-            inputEventConsumer.startPolling()
-            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjeder.size.toLong())
-            inputEventConsumer.stopPolling()
-        }
-
-        internalKafkaProducer.history().size shouldBe beskjeder.size
-        rapidKafkaProducer.history().size shouldBe beskjeder.size
+        internalKafkaProducer.history().size shouldBe goodEvents.size
+        rapidKafkaProducer.history().size shouldBe goodEvents.size
     }
 
     private fun createEvents(number: Int) = (1..number).map {
