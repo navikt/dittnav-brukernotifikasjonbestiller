@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
@@ -27,6 +28,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -97,9 +100,26 @@ class BeskjedInputIT {
 
     @Test
     fun `Sender beskjeder på rapid-format`() {
+        val beskjedAvroKey = beskjedEvents.first().first
+        val beskjedAvroValue = beskjedEvents.first().second
         val beskjedJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
         beskjedJson.has("@event_name") shouldBe true
         beskjedJson["@event_name"].asText() shouldBe "beskjed"
+
+        beskjedJson["fodselsnummer"].asText() shouldBe beskjedAvroKey.getFodselsnummer()
+        beskjedJson["namespace"].asText() shouldBe beskjedAvroKey.getNamespace()
+        beskjedJson["appnavn"].asText() shouldBe beskjedAvroKey.getAppnavn()
+        beskjedJson["eventId"].asText() shouldBe beskjedAvroKey.getEventId()
+        beskjedJson["grupperingsId"].asText() shouldBe beskjedAvroKey.getGrupperingsId()
+        beskjedJson["eventTidspunkt"].asTimestamp() shouldBe beskjedAvroValue.getTidspunkt()
+        beskjedJson.has("forstBehandlet") shouldBe true
+        beskjedJson["tekst"].asText() shouldBe beskjedAvroValue.getTekst()
+        beskjedJson["link"].asText() shouldBe beskjedAvroValue.getLink()
+        beskjedJson["sikkerhetsnivaa"].asInt() shouldBe beskjedAvroValue.getSikkerhetsnivaa()
+        beskjedJson["synligFremTil"].asTimestamp() shouldBe beskjedAvroValue.getSynligFremTil()
+        beskjedJson["aktiv"].asBoolean() shouldBe true
+        beskjedJson["eksternVarsling"].asBoolean() shouldBe beskjedAvroValue.getEksternVarsling()
+        beskjedJson["prefererteKanaler"].map { it.asText() } shouldBe beskjedAvroValue.getPrefererteKanaler()
     }
 
     @Test
@@ -132,4 +152,7 @@ class BeskjedInputIT {
 
         return createNokkelInputWithEventId(existingEventId) to createBeskjedInput()
     }
+
+    private fun JsonNode.asTimestamp(): Long =
+        LocalDateTime.parse(asText()).toInstant(ZoneOffset.UTC).toEpochMilli()
 }
