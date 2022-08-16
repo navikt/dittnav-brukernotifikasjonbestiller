@@ -60,23 +60,10 @@ class ApplicationContext {
     var innboksInputConsumer = initializeInnboksInputProcessor()
     var doneInputConsumer = initializeDoneInputProcessor()
 
+    val beskjedRapidProducer = initializeBeskjedRapidProducer()
+
     var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
 
-    val beskjedRapidProducer = BeskjedRapidProducer(
-        KafkaProducer(
-            Properties().apply {
-                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
-                put(ProducerConfig.CLIENT_ID_CONFIG, environment.groupId + "Beskjed" + NetUtil.getHostname(InetSocketAddress(0)))
-                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, String::class.java)
-                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, String::class.java)
-                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
-                put(ProducerConfig.ACKS_CONFIG, "all")
-                put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-                putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
-            }
-        ),
-        environment.rapidTopic
-    )
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
@@ -154,6 +141,23 @@ class ApplicationContext {
         kafkaProducer.initTransactions()
         return Producer(environment.feilresponsTopicName, kafkaProducer)
     }
+
+    private fun initializeBeskjedRapidProducer() =
+        BeskjedRapidProducer(
+            KafkaProducer(
+                Properties().apply {
+                    put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
+                    put(ProducerConfig.CLIENT_ID_CONFIG, environment.groupId + "Beskjed" + NetUtil.getHostname(InetSocketAddress(0)))
+                    put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, String::class.java)
+                    put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, String::class.java)
+                    put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+                    put(ProducerConfig.ACKS_CONFIG, "all")
+                    put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+                    putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
+                }
+            ),
+            environment.rapidTopic
+        )
 
     private fun initializePeriodicConsumerPollingCheck(): PeriodicConsumerPollingCheck {
         return PeriodicConsumerPollingCheck(this)
