@@ -22,6 +22,7 @@ class BeskjedRapidProducer(
             objectNode.put("@event_name", "beskjed")
             val producerRecord = ProducerRecord(topicName, it.eventId, objectNode.toString())
             kafkaProducer.send(producerRecord)
+            log.info("Produsert beskjed på rapid med eventid ${it.eventId}")
         }
     }
 
