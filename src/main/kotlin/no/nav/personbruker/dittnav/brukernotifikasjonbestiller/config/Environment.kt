@@ -36,7 +36,8 @@ data class Environment(
         val feilresponsTopicName: String = getEnvVar("FEILRESPONS_TOPIC"),
         val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING"),
 
-        val rapidTopic: String = "min-side.rapid.v1"
+        val produceToRapid: Boolean = getEnvVar("PRODUCE_TO_RAPID", "false").toBoolean(),
+        val rapidTopic: String = "min-side.rapid.v1",
 )
 
 data class SecurityConfig(

@@ -87,7 +87,8 @@ class ApplicationContext {
             metricsCollector,
             handleDuplicateEvents,
             beskjedEventDispatcher,
-            beskjedRapidProducer
+            beskjedRapidProducer,
+            environment.produceToRapid
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }
