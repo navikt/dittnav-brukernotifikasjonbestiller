@@ -37,7 +37,7 @@ data class Environment(
         val serviceUserMapping: List<String> = getEnvVarAsList("SERVICEUSER_MAPPING"),
 
         val produceToRapid: Boolean = getEnvVar("PRODUCE_TO_RAPID", "false").toBoolean(),
-        val rapidTopic: String = "min-side.rapid.v1",
+        val rapidTopic: String = "min-side.brukervarsel-v1",
 )
 
 data class SecurityConfig(
