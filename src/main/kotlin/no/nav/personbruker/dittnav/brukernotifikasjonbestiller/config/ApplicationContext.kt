@@ -55,13 +55,12 @@ class ApplicationContext {
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
     var internInnboksKafkaProducer = initializeInternInnboksProducer()
     var internDoneKafkaProducer = initializeInternDoneProducer()
+    val beskjedRapidProducer = initializeBeskjedRapidProducer()
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
     var innboksInputConsumer = initializeInnboksInputProcessor()
     var doneInputConsumer = initializeDoneInputProcessor()
-
-    val beskjedRapidProducer = initializeBeskjedRapidProducer()
 
     var periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
 
