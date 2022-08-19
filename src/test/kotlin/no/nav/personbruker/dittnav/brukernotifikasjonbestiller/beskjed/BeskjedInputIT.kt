@@ -1,5 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
@@ -23,8 +25,11 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkel
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -40,45 +45,87 @@ class BeskjedInputIT {
         createEventWithInvalidEventId(),
         createEventWithDuplicateId(goodEvents)
     )
-    private val beskjedEvents = goodEvents.toMutableList().apply {
-        addAll(badEvents)
-    }.toMap()
+    private val beskjedEvents = goodEvents + badEvents
 
-    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>()
+    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>().apply {
+      initTransactions()
+    }
     private val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, internalKafkaProducer)
-    private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
+
+    private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>().apply {
+        initTransactions()
+    }
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
+
+    private val rapidKafkaProducer = KafkaTestUtil.createMockProducer<String, String>()
 
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
-    private val eventService = BeskjedInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+    private val eventService = BeskjedInputEventService(
+        metricsCollector,
+        handleDuplicateEvents,
+        eventDispatcher,
+        BeskjedRapidProducer(rapidKafkaProducer, "rapid"),
+        produceToRapid = true
+    )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
     private val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
 
-    @Test
-    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
-        beskjedEvents.entries.forEachIndexed { index, beskjed ->
+    @BeforeAll
+    fun setup() {
+        beskjedEvents.forEachIndexed { index, (key, value) ->
             inputKafkaConsumer.addRecord(ConsumerRecord(
                 KafkaTestTopics.beskjedInputTopicName,
                 0,
                 index.toLong(),
-                beskjed.key,
-                beskjed.value
+                key,
+                value
             ))
         }
 
-        internalKafkaProducer.initTransactions()
-        feilresponsKafkaProducer.initTransactions()
         runBlocking {
             inputEventConsumer.startPolling()
             KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
             inputEventConsumer.stopPolling()
         }
+    }
 
+    @Test
+    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
         internalKafkaProducer.history().size shouldBe goodEvents.size
         feilresponsKafkaProducer.history().size shouldBe badEvents.size
+    }
+
+    @Test
+    fun `Sender beskjeder på rapid-format`() {
+        val beskjedAvroKey = beskjedEvents.first().first
+        val beskjedAvroValue = beskjedEvents.first().second
+        val beskjedJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
+
+        beskjedJson.has("@event_name") shouldBe true
+        beskjedJson["@event_name"].asText() shouldBe "beskjed"
+        beskjedJson["fodselsnummer"].asText() shouldBe beskjedAvroKey.getFodselsnummer()
+        beskjedJson["namespace"].asText() shouldBe beskjedAvroKey.getNamespace()
+        beskjedJson["appnavn"].asText() shouldBe beskjedAvroKey.getAppnavn()
+        beskjedJson["eventId"].asText() shouldBe beskjedAvroKey.getEventId()
+        beskjedJson["grupperingsId"].asText() shouldBe beskjedAvroKey.getGrupperingsId()
+        beskjedJson["eventTidspunkt"].asTimestamp() shouldBe beskjedAvroValue.getTidspunkt()
+        beskjedJson.has("forstBehandlet") shouldBe true
+        beskjedJson["tekst"].asText() shouldBe beskjedAvroValue.getTekst()
+        beskjedJson["link"].asText() shouldBe beskjedAvroValue.getLink()
+        beskjedJson["sikkerhetsnivaa"].asInt() shouldBe beskjedAvroValue.getSikkerhetsnivaa()
+        beskjedJson["synligFremTil"].asTimestamp() shouldBe beskjedAvroValue.getSynligFremTil()
+        beskjedJson["aktiv"].asBoolean() shouldBe true
+        beskjedJson["eksternVarsling"].asBoolean() shouldBe beskjedAvroValue.getEksternVarsling()
+        beskjedJson["prefererteKanaler"].map { it.asText() } shouldBe beskjedAvroValue.getPrefererteKanaler()
+    }
+
+    @Test
+    fun `Sender beskjeder til rapid i tillegg til gammelt topic`() {
+        internalKafkaProducer.history().size shouldBe goodEvents.size
+        rapidKafkaProducer.history().size shouldBe goodEvents.size
     }
 
     private fun createEvents(number: Int) = (1..number).map {
@@ -105,4 +152,7 @@ class BeskjedInputIT {
 
         return createNokkelInputWithEventId(existingEventId) to createBeskjedInput()
     }
+
+    private fun JsonNode.asTimestamp(): Long =
+        LocalDateTime.parse(asText()).toInstant(ZoneOffset.UTC).toEpochMilli()
 }

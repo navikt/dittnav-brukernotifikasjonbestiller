@@ -18,11 +18,16 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class BeskjedInputEventService(
     private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateEvents,
-    private val eventDispatcher: EventDispatcher<BeskjedIntern>
+    private val eventDispatcher: EventDispatcher<BeskjedIntern>,
+    private val beskjedRapidProducer: BeskjedRapidProducer,
+    private val produceToRapid: Boolean = false
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedInputEventService::class.java)
@@ -78,9 +83,34 @@ class BeskjedInputEventService(
                 } else {
                     eventDispatcher.dispatchValidEventsOnly(remainingValidatedEvents)
                 }
+
+                if (produceToRapid) {
+                    val beskjeder = remainingValidatedEvents.map { it.toBeskjed() }
+                    beskjedRapidProducer.produce(beskjeder)
+                }
+
             } else if (problematicEvents.isNotEmpty()) {
                 eventDispatcher.dispatchProblematicEventsOnly(problematicEvents)
             }
         }
     }
 }
+
+private fun Pair<NokkelIntern, BeskjedIntern>.toBeskjed() =
+    Beskjed(
+        systembruker = first.getSystembruker(),
+        namespace = first.getNamespace(),
+        appnavn = first.getAppnavn(),
+        eventId = first.getEventId(),
+        eventTidspunkt = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getTidspunkt()), ZoneId.of("UTC")),
+        forstBehandlet = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getBehandlet()), ZoneId.of("UTC")),
+        fodselsnummer = first.getFodselsnummer(),
+        grupperingsId = first.getGrupperingsId(),
+        tekst = second.getTekst(),
+        link = second.getLink(),
+        sikkerhetsnivaa = second.getSikkerhetsnivaa(),
+        synligFremTil = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getSynligFremTil()), ZoneId.of("UTC")),
+        aktiv = true,
+        eksternVarsling = second.getEksternVarsling(),
+        prefererteKanaler = second.getPrefererteKanaler()
+    )

@@ -15,3 +15,5 @@ fun ObjectMapper.enableDittNavJsonConfig() {
     registerModule(JavaTimeModule())
     disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
 }
+
+val objectMapper = ObjectMapper().also { it.enableDittNavJsonConfig() }
