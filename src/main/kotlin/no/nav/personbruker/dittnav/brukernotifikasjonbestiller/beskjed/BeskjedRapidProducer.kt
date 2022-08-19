@@ -1,9 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.enableDittNavJsonConfig
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -15,8 +14,6 @@ class BeskjedRapidProducer(
     val log: Logger = LoggerFactory.getLogger(Producer::class.java)
 
     fun produce(beskjeder: List<Beskjed>) {
-        val objectMapper = ObjectMapper()
-        objectMapper.enableDittNavJsonConfig()
         beskjeder.forEach {
             val objectNode = objectMapper.valueToTree<ObjectNode>(it)
             objectNode.put("@event_name", "beskjed")
