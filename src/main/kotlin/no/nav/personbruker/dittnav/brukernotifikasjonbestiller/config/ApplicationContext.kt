@@ -1,6 +1,5 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import io.netty.util.NetUtil
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
@@ -37,7 +36,6 @@ import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
 import org.slf4j.LoggerFactory
-import java.net.InetSocketAddress
 import java.util.Properties
 
 class ApplicationContext {
@@ -56,8 +54,16 @@ class ApplicationContext {
     var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
     var internInnboksKafkaProducer = initializeInternInnboksProducer()
     var internDoneKafkaProducer = initializeInternDoneProducer()
-    val beskjedRapidProducer = initializeBeskjedRapidProducer()
-    val oppgaveRapidProducer = initializeOppgaveRapidProducer()
+    
+    private val rapidKafkaProducer = initializeRapidKafkaProducer()
+    val beskjedRapidProducer = BeskjedRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
+    val oppgaveRapidProducer = OppgaveRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
@@ -148,50 +154,22 @@ class ApplicationContext {
         kafkaProducer.initTransactions()
         return Producer(environment.feilresponsTopicName, kafkaProducer)
     }
-
-    private fun initializeBeskjedRapidProducer(): BeskjedRapidProducer {
-        val kafkaProducer = KafkaProducer<String, String>(
-            Properties().apply {
-                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
-                put(
-                    ProducerConfig.CLIENT_ID_CONFIG,
-                    environment.groupId + "Beskjed" + NetUtil.getHostname(InetSocketAddress(0))
-                )
-                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
-                put(ProducerConfig.ACKS_CONFIG, "all")
-                put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-                putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
-            }
-        )
-        return BeskjedRapidProducer(
-            kafkaProducer,
-            environment.rapidTopic
-        )
-    }
-
-    private fun initializeOppgaveRapidProducer(): OppgaveRapidProducer {
-        val kafkaProducer = KafkaProducer<String, String>(
-            Properties().apply {
-                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
-                put(
-                    ProducerConfig.CLIENT_ID_CONFIG,
-                    environment.groupId + "Oppgave" + NetUtil.getHostname(InetSocketAddress(0))
-                )
-                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
-                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
-                put(ProducerConfig.ACKS_CONFIG, "all")
-                put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-                putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
-            }
-        )
-        return OppgaveRapidProducer(
-            kafkaProducer,
-            environment.rapidTopic
-        )
-    }
+    
+    private fun initializeRapidKafkaProducer() = KafkaProducer<String, String>(
+        Properties().apply {
+            put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
+            put(
+                ProducerConfig.CLIENT_ID_CONFIG,
+                "dittnav-brukernotifikasjonbestiller"
+            )
+            put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+            put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+            put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+            put(ProducerConfig.ACKS_CONFIG, "all")
+            put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+            putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
+        }
+    )
 
     private fun initializePeriodicConsumerPollingCheck(): PeriodicConsumerPollingCheck {
         return PeriodicConsumerPollingCheck(this)
