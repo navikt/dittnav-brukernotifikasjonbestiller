@@ -25,6 +25,12 @@ internal class OppgaveInputEventServiceTest {
     private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<OppgaveIntern>>(relaxed = true)
     private val internalEvents = AvroOppgaveInternObjectMother.giveMeANumberOfInternalOppgaveEvents(2, "systembruker", "eventId", "fodselsnummer")
+    private val oppgaveEventService = OppgaveInputEventService(
+        metricsCollector = metricsCollector,
+        handleDuplicateEvents = handleDuplicateEvents,
+        eventDispatcher = eventDispatcher,
+        oppgaveRapidProducer = mockk(relaxed = true)
+    )
 
     private val eventId = UUID.randomUUID().toString()
 
@@ -34,7 +40,6 @@ internal class OppgaveInputEventServiceTest {
         val externalOppgave = AvroOppgaveInputObjectMother.createOppgaveInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalOppgave, topic)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>(), any()) } returns Unit
@@ -63,7 +68,6 @@ internal class OppgaveInputEventServiceTest {
         val externalOppgave = AvroOppgaveInputObjectMother.createOppgaveInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNullNokkel, externalOppgave, topic)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -88,7 +92,6 @@ internal class OppgaveInputEventServiceTest {
         val externalOppgaveWithTooLongText = AvroOppgaveInputObjectMother.createOppgaveInputWithText("1234567890".repeat(100))
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalOppgaveWithTooLongText, topic)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -112,7 +115,6 @@ internal class OppgaveInputEventServiceTest {
         val externalUnexpectedOppgave = mockk<OppgaveInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedOppgave, topic)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -140,7 +142,6 @@ internal class OppgaveInputEventServiceTest {
         val duplicateEvents = listOf(internalEvents[1])
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalOppgave, topic)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, OppgaveIntern>>>(), any()) } returns Unit
@@ -174,7 +175,6 @@ internal class OppgaveInputEventServiceTest {
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
 
         val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelInput, OppgaveInput>
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {

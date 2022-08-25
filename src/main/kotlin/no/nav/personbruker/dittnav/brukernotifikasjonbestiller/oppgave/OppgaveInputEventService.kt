@@ -1,12 +1,12 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
-import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -18,11 +18,16 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class OppgaveInputEventService(
     private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateEvents,
-    private val eventDispatcher: EventDispatcher<OppgaveIntern>
+    private val eventDispatcher: EventDispatcher<OppgaveIntern>,
+    private val oppgaveRapidProducer: OppgaveRapidProducer,
+    private val produceToRapid: Boolean = false
 ) : EventBatchProcessorService<NokkelInput, OppgaveInput> {
 
     private val log: Logger = LoggerFactory.getLogger(OppgaveInputEventService::class.java)
@@ -73,6 +78,11 @@ class OppgaveInputEventService(
                     this.countDuplicateEvents(duplicateEvents)
                 }
 
+                if (produceToRapid) {
+                    val oppgaver = remainingValidatedEvents.map { it.toOppgave() }
+                    oppgaveRapidProducer.produce(oppgaver)
+                }
+
                 if (problematicEvents.isNotEmpty()) {
                     eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)
                 } else {
@@ -84,3 +94,22 @@ class OppgaveInputEventService(
         }
     }
 }
+
+private fun Pair<NokkelIntern, OppgaveIntern>.toOppgave() =
+    Oppgave(
+        systembruker = first.getSystembruker(),
+        namespace = first.getNamespace(),
+        appnavn = first.getAppnavn(),
+        eventId = first.getEventId(),
+        eventTidspunkt = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getTidspunkt()), ZoneId.of("UTC")),
+        forstBehandlet = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getBehandlet()), ZoneId.of("UTC")),
+        fodselsnummer = first.getFodselsnummer(),
+        grupperingsId = first.getGrupperingsId(),
+        tekst = second.getTekst(),
+        link = second.getLink(),
+        sikkerhetsnivaa = second.getSikkerhetsnivaa(),
+        synligFremTil = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getSynligFremTil()), ZoneId.of("UTC")),
+        aktiv = true,
+        eksternVarsling = second.getEksternVarsling(),
+        prefererteKanaler = second.getPrefererteKanaler()
+    )

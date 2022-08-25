@@ -37,6 +37,7 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
             appContext.internInnboksKafkaProducer.flushAndClose()
             appContext.internDoneKafkaProducer.flushAndClose()
             appContext.beskjedRapidProducer.flushAndClose()
+            appContext.oppgaveRapidProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()
         }
         appContext.database.dataSource.close()

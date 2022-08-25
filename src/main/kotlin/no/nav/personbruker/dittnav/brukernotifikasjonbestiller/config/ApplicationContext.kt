@@ -28,6 +28,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthServ
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
@@ -56,6 +57,7 @@ class ApplicationContext {
     var internInnboksKafkaProducer = initializeInternInnboksProducer()
     var internDoneKafkaProducer = initializeInternDoneProducer()
     val beskjedRapidProducer = initializeBeskjedRapidProducer()
+    val oppgaveRapidProducer = initializeOppgaveRapidProducer()
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
@@ -84,7 +86,13 @@ class ApplicationContext {
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
         val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
-        val oppgaveEventService = OppgaveInputEventService(metricsCollector, handleDuplicateEvents, oppgaveEventDispatcher)
+        val oppgaveEventService = OppgaveInputEventService(
+            metricsCollector,
+            handleDuplicateEvents,
+            oppgaveEventDispatcher,
+            oppgaveRapidProducer,
+            environment.produceToRapid
+        )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
     }
 
@@ -158,6 +166,28 @@ class ApplicationContext {
             }
         )
         return BeskjedRapidProducer(
+            kafkaProducer,
+            environment.rapidTopic
+        )
+    }
+
+    private fun initializeOppgaveRapidProducer(): OppgaveRapidProducer {
+        val kafkaProducer = KafkaProducer<String, String>(
+            Properties().apply {
+                put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)
+                put(
+                    ProducerConfig.CLIENT_ID_CONFIG,
+                    environment.groupId + "Oppgave" + NetUtil.getHostname(InetSocketAddress(0))
+                )
+                put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+                put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer::class.java)
+                put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
+                put(ProducerConfig.ACKS_CONFIG, "all")
+                put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
+                putAll(Kafka.credentialPropsAiven(environment.securityConfig.variables!!))
+            }
+        )
+        return OppgaveRapidProducer(
             kafkaProducer,
             environment.rapidTopic
         )
