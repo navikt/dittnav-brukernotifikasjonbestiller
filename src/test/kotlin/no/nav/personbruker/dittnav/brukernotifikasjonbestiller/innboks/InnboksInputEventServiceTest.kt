@@ -29,7 +29,7 @@ internal class InnboksInputEventServiceTest {
         metricsCollector = metricsCollector,
         handleDuplicateEvents = handleDuplicateEvents,
         eventDispatcher = eventDispatcher,
-        innboksRapidProducer = mockk(relaxed = true)
+        innboksRapidProducer = mockk()
     )
 
     private val eventId = UUID.randomUUID().toString()

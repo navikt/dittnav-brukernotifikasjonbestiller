@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
@@ -25,6 +26,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.LocalDateTime.now
@@ -47,17 +49,24 @@ class DoneInputIT {
     private val internalEventProducer = Producer(KafkaTestTopics.doneInternTopicName, internalKafkaProducer)
     private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
     private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
+    private val rapidKafkaProducer = KafkaTestUtil.createMockProducer<String, String>()
 
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
     private val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
     private val eventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
-    private val eventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
+    private val eventService = DoneInputEventService(
+        metricsCollector = metricsCollector,
+        handleDuplicateEvents = handleDuplicateEvents,
+        eventDispatcher = eventDispatcher,
+        doneRapidProducer = DoneRapidProducer(rapidKafkaProducer, "rapid"),
+        produceToRapid = true
+    )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, DoneInput>(KafkaTestTopics.doneInputTopicName)
     private val inputEventConsumer = Consumer(KafkaTestTopics.doneInputTopicName, inputKafkaConsumer, eventService)
 
-    @Test
-    fun `Should read Done-events and send to hoved-topic or error response topic, and allow invalid eventIds for backwards-compatibility`() {
+    @BeforeAll
+    fun setup() {
         doneEvents.forEachIndexed { index, (key, value) ->
             inputKafkaConsumer.addRecord(ConsumerRecord(
                 KafkaTestTopics.doneInputTopicName,
@@ -79,9 +88,28 @@ class DoneInputIT {
             KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.doneInputTopicName, doneEvents.size.toLong())
             inputEventConsumer.stopPolling()
         }
+    }
 
+    @Test
+    fun `Should read Done-events and send to hoved-topic or error response topic, and allow invalid eventIds for backwards-compatibility`() {
         internalKafkaProducer.history().size shouldBe goodEvents.size
         feilresponsKafkaProducer.history().size shouldBe badEvents.size
+    }
+
+    @Test
+    fun `Sender done på rapid-format`() {
+        rapidKafkaProducer.history().size shouldBe goodEvents.size
+
+        val doneJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
+        doneJson.has("@event_name") shouldBe true
+        doneJson["@event_name"].asText() shouldBe "done"
+        doneJson["eventId"].asText() shouldBe doneEvents.first().first.getEventId()
+    }
+
+    @Test
+    fun `Sender done til rapid i tillegg til gammelt topic`() {
+        internalKafkaProducer.history().size shouldBe goodEvents.size
+        rapidKafkaProducer.history().size shouldBe goodEvents.size
     }
 
     private suspend fun createMatchingBeskjedEventsInDatabase(doneEvents: List<Pair<NokkelInput, DoneInput>>) {

@@ -23,6 +23,12 @@ internal class DoneInputEventServiceTest {
     private val handleDuplicateEvents = mockk<HandleDuplicateDoneEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<DoneIntern>>(relaxed = true)
     private val internalEvents = AvroDoneInternObjectMother.giveMeANumberOfInternalDoneEvents(2, "systembruker", "eventId", "fodselsnummer")
+    private val doneEventService = DoneInputEventService(
+        metricsCollector = metricsCollector,
+        handleDuplicateEvents = handleDuplicateEvents,
+        eventDispatcher = eventDispatcher,
+        doneRapidProducer = mockk()
+    )
 
     private val eventId = UUID.randomUUID().toString()
 
@@ -32,7 +38,6 @@ internal class DoneInputEventServiceTest {
         val externalDone = AvroDoneInputObjectMother.createDoneInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
@@ -61,7 +66,6 @@ internal class DoneInputEventServiceTest {
         val externalDone = AvroDoneInputObjectMother.createDoneInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNullNokkel, externalDone, topic)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -86,7 +90,6 @@ internal class DoneInputEventServiceTest {
         val externalDoneWithTooLongText = AvroDoneInputObjectMother.createDoneInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDoneWithTooLongText, topic)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -110,7 +113,6 @@ internal class DoneInputEventServiceTest {
         val externalUnexpectedDone = mockk<DoneInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedDone, topic)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -138,7 +140,6 @@ internal class DoneInputEventServiceTest {
         val duplicateEvents = listOf(internalEvents[1])
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
@@ -172,7 +173,6 @@ internal class DoneInputEventServiceTest {
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
 
         val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelInput, DoneInput>
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {

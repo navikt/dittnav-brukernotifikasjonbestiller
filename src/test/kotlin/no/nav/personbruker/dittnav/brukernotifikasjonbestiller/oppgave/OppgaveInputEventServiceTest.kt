@@ -29,7 +29,7 @@ internal class OppgaveInputEventServiceTest {
         metricsCollector = metricsCollector,
         handleDuplicateEvents = handleDuplicateEvents,
         eventDispatcher = eventDispatcher,
-        oppgaveRapidProducer = mockk(relaxed = true)
+        oppgaveRapidProducer = mockk()
     )
 
     private val eventId = UUID.randomUUID().toString()

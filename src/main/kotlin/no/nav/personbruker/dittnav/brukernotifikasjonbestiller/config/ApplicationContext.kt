@@ -23,6 +23,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Cons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRapidProducer
@@ -66,6 +67,10 @@ class ApplicationContext {
         topicName = environment.rapidTopic
     )
     val innboksRapidProducer = InnboksRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
+    val doneRapidProducer = DoneRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
     )
@@ -127,7 +132,13 @@ class ApplicationContext {
         val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE)
         val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
-        val doneEventService = DoneInputEventService(metricsCollector, handleDuplicateEvents, doneEventDispatcher)
+        val doneEventService = DoneInputEventService(
+            metricsCollector,
+            handleDuplicateEvents,
+            doneEventDispatcher,
+            doneRapidProducer,
+            environment.produceToRapid
+        )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
     }
 

@@ -4,9 +4,9 @@ import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationExcep
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -22,7 +22,9 @@ import org.slf4j.LoggerFactory
 class DoneInputEventService(
     private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateDoneEvents,
-    private val eventDispatcher: EventDispatcher<DoneIntern>
+    private val eventDispatcher: EventDispatcher<DoneIntern>,
+    private val doneRapidProducer: DoneRapidProducer,
+    private val produceToRapid: Boolean = false
 ) : EventBatchProcessorService<NokkelInput, DoneInput> {
 
     private val log: Logger = LoggerFactory.getLogger(DoneInputEventService::class.java)
@@ -71,6 +73,11 @@ class DoneInputEventService(
                 if (duplicateEvents.isNotEmpty()) {
                     problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.DONE, duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
+                }
+
+                if (produceToRapid) {
+                    val doneEventer = remainingValidatedEvents.map { Done(it.first.getEventId()) }
+                    doneRapidProducer.produce(doneEventer)
                 }
 
                 if (problematicEvents.isNotEmpty()) {
