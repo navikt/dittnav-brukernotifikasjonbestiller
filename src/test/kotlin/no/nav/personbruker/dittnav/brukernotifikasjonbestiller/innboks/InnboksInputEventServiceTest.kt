@@ -25,6 +25,12 @@ internal class InnboksInputEventServiceTest {
     private val handleDuplicateEvents = mockk<HandleDuplicateEvents>(relaxed = true)
     private val eventDispatcher = mockk<EventDispatcher<InnboksIntern>>(relaxed = true)
     private val internalEvents = AvroInnboksInternObjectMother.giveMeANumberOfInternalInnboksEvents(2, "systembruker", "eventId", "fodselsnummer")
+    private val innboksEventService = InnboksInputEventService(
+        metricsCollector = metricsCollector,
+        handleDuplicateEvents = handleDuplicateEvents,
+        eventDispatcher = eventDispatcher,
+        innboksRapidProducer = mockk(relaxed = true)
+    )
 
     private val eventId = UUID.randomUUID().toString()
 
@@ -34,7 +40,6 @@ internal class InnboksInputEventServiceTest {
         val externalInnboks = AvroInnboksInputObjectMother.createInnboksInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalInnboks, topic)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) } returns Unit
@@ -63,7 +68,6 @@ internal class InnboksInputEventServiceTest {
         val externalInnboks = AvroInnboksInputObjectMother.createInnboksInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNullNokkel, externalInnboks, topic)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -88,7 +92,6 @@ internal class InnboksInputEventServiceTest {
         val externalInnboksWithTooLongText = AvroInnboksInputObjectMother.createInnboksInputWithText("1234567890".repeat(100))
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalInnboksWithTooLongText, topic)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -112,7 +115,6 @@ internal class InnboksInputEventServiceTest {
         val externalUnexpectedInnboks = mockk<InnboksInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedInnboks, topic)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
@@ -140,7 +142,6 @@ internal class InnboksInputEventServiceTest {
         val duplicateEvents = listOf(internalEvents[1])
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalInnboks, topic)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
         coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, InnboksIntern>>>(), any()) } returns Unit
@@ -174,7 +175,6 @@ internal class InnboksInputEventServiceTest {
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
 
         val externalEvents = externalMalplacedEvents as ConsumerRecords<NokkelInput, InnboksInput>
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, eventDispatcher)
 
         val slot = slot<suspend EventMetricsSession.() -> Unit>()
         coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {

@@ -25,6 +25,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.poll
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
@@ -61,6 +62,10 @@ class ApplicationContext {
         topicName = environment.rapidTopic
     )
     val oppgaveRapidProducer = OppgaveRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
+    val innboksRapidProducer = InnboksRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
     )
@@ -107,7 +112,13 @@ class ApplicationContext {
         val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
         val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
         val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
-        val innboksEventService = InnboksInputEventService(metricsCollector, handleDuplicateEvents, innboksEventDispatcher)
+        val innboksEventService = InnboksInputEventService(
+            metricsCollector,
+            handleDuplicateEvents,
+            innboksEventDispatcher,
+            innboksRapidProducer,
+            environment.produceToRapid
+        )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
     }
 
