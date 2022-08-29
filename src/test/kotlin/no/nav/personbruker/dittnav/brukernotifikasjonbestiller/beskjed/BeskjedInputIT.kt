@@ -128,7 +128,11 @@ class BeskjedInputIT {
         val eventId = UUID.randomUUID().toString()
 
         createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createBeskjedInput()
-    }
+    } + createBeskjedWithNullFields()
+
+    private fun createBeskjedWithNullFields() = listOf(
+        createNokkelInputWithEventIdAndGroupId(UUID.randomUUID().toString(), "123") to createBeskjedInput(synligFremTil = null)
+    )
 
     private fun createEventWithTooLongGroupId(): Pair<NokkelInput, BeskjedInput> {
         val eventId = UUID.randomUUID().toString()

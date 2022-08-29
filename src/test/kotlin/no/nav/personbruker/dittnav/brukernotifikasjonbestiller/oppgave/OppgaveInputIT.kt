@@ -128,7 +128,11 @@ class OppgaveInputIT {
         val eventId = UUID.randomUUID().toString()
 
         createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createOppgaveInput()
-    }
+    } + createOppgaveWithNullFields()
+
+    private fun createOppgaveWithNullFields() = listOf(
+        createNokkelInputWithEventIdAndGroupId(UUID.randomUUID().toString(), "123") to createOppgaveInput(synligFremTil = null)
+    )
 
     private fun createEventWithTooLongGroupId(): Pair<NokkelInput, OppgaveInput> {
         val eventId = UUID.randomUUID().toString()

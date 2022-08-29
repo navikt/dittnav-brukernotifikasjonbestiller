@@ -108,7 +108,7 @@ private fun Pair<NokkelIntern, OppgaveIntern>.toOppgave() =
         tekst = second.getTekst(),
         link = second.getLink(),
         sikkerhetsnivaa = second.getSikkerhetsnivaa(),
-        synligFremTil = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getSynligFremTil()), ZoneId.of("UTC")),
+        synligFremTil = if (second.getSynligFremTil() != null) LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getSynligFremTil()), ZoneId.of("UTC")) else null,
         aktiv = true,
         eksternVarsling = second.getEksternVarsling(),
         prefererteKanaler = second.getPrefererteKanaler()
