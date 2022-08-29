@@ -4,9 +4,9 @@ import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationExcep
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
+import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -18,11 +18,16 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 class InnboksInputEventService(
     private val metricsCollector: MetricsCollector,
     private val handleDuplicateEvents: HandleDuplicateEvents,
-    private val eventDispatcher: EventDispatcher<InnboksIntern>
+    private val eventDispatcher: EventDispatcher<InnboksIntern>,
+    private val innboksRapidProducer: InnboksRapidProducer,
+    private val produceToRapid: Boolean = false
 ) : EventBatchProcessorService<NokkelInput, InnboksInput> {
 
     private val log: Logger = LoggerFactory.getLogger(InnboksInputEventService::class.java)
@@ -73,6 +78,11 @@ class InnboksInputEventService(
                     this.countDuplicateEvents(duplicateEvents)
                 }
 
+                if (produceToRapid) {
+                    val innboksVarsler = remainingValidatedEvents.map { it.toInnboks() }
+                    innboksRapidProducer.produce(innboksVarsler)
+                }
+
                 if (problematicEvents.isNotEmpty()) {
                     eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)
                 } else {
@@ -84,3 +94,21 @@ class InnboksInputEventService(
         }
     }
 }
+
+private fun Pair<NokkelIntern, InnboksIntern>.toInnboks() =
+    Innboks(
+        systembruker = first.getSystembruker(),
+        namespace = first.getNamespace(),
+        appnavn = first.getAppnavn(),
+        eventId = first.getEventId(),
+        eventTidspunkt = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getTidspunkt()), ZoneId.of("UTC")),
+        forstBehandlet = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getBehandlet()), ZoneId.of("UTC")),
+        fodselsnummer = first.getFodselsnummer(),
+        grupperingsId = first.getGrupperingsId(),
+        tekst = second.getTekst(),
+        link = second.getLink(),
+        sikkerhetsnivaa = second.getSikkerhetsnivaa(),
+        aktiv = true,
+        eksternVarsling = second.getEksternVarsling(),
+        prefererteKanaler = second.getPrefererteKanaler()
+    )

@@ -32,7 +32,7 @@ internal class BeskjedInputEventServiceTest {
         metricsCollector,
         handleDuplicateEvents,
         eventDispatcher,
-        BeskjedRapidProducer(mockk(relaxed = true), "")
+        mockk()
     )
 
     @Test
