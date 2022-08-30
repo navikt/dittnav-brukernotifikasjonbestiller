@@ -12,15 +12,13 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 class InnboksInputEventService(
     private val metricsCollector: MetricsCollector,
@@ -101,8 +99,8 @@ private fun Pair<NokkelIntern, InnboksIntern>.toInnboks() =
         namespace = first.getNamespace(),
         appnavn = first.getAppnavn(),
         eventId = first.getEventId(),
-        eventTidspunkt = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getTidspunkt()), ZoneId.of("UTC")),
-        forstBehandlet = LocalDateTime.ofInstant(Instant.ofEpochMilli(second.getBehandlet()), ZoneId.of("UTC")),
+        eventTidspunkt = second.getTidspunkt().toLocalDateTime(),
+        forstBehandlet = second.getBehandlet().toLocalDateTime(),
         fodselsnummer = first.getFodselsnummer(),
         grupperingsId = first.getGrupperingsId(),
         tekst = second.getTekst(),
