@@ -104,6 +104,7 @@ class DoneInputIT {
         doneJson.has("@event_name") shouldBe true
         doneJson["@event_name"].asText() shouldBe "done"
         doneJson["eventId"].asText() shouldBe doneEvents.first().first.getEventId()
+        doneJson.has("forstBehandlet") shouldBe true
     }
 
     @Test

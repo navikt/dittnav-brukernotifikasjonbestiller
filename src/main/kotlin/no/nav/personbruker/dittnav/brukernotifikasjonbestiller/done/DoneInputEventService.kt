@@ -12,6 +12,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -76,7 +77,12 @@ class DoneInputEventService(
                 }
 
                 if (produceToRapid) {
-                    val doneEventer = remainingValidatedEvents.map { Done(it.first.getEventId()) }
+                    val doneEventer = remainingValidatedEvents.map {  (key, doneIntern) ->
+                        Done(
+                            eventId = key.getEventId(),
+                            forstBehandlet = doneIntern.getBehandlet().toLocalDateTime()
+                        )
+                    }
                     doneRapidProducer.produce(doneEventer)
                 }
 
