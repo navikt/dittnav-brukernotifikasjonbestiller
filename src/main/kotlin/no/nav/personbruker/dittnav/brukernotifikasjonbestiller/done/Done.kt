@@ -4,5 +4,6 @@ import java.time.LocalDateTime
 
 data class Done(
     val eventId: String,
-    val forstBehandlet: LocalDateTime
+    val forstBehandlet: LocalDateTime,
+    val fodselsnummer: String
     )

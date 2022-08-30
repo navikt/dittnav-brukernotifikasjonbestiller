@@ -80,7 +80,8 @@ class DoneInputEventService(
                     val doneEventer = remainingValidatedEvents.map {  (key, doneIntern) ->
                         Done(
                             eventId = key.getEventId(),
-                            forstBehandlet = doneIntern.getBehandlet().toLocalDateTime()
+                            forstBehandlet = doneIntern.getBehandlet().toLocalDateTime(),
+                            fodselsnummer = key.getFodselsnummer()
                         )
                     }
                     doneRapidProducer.produce(doneEventer)

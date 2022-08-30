@@ -100,10 +100,12 @@ class DoneInputIT {
     fun `Sender done på rapid-format`() {
         rapidKafkaProducer.history().size shouldBe goodEvents.size
 
+        val doneAvroKey = doneEvents.first().first
         val doneJson = ObjectMapper().readTree(rapidKafkaProducer.history().first().value())
         doneJson.has("@event_name") shouldBe true
         doneJson["@event_name"].asText() shouldBe "done"
-        doneJson["eventId"].asText() shouldBe doneEvents.first().first.getEventId()
+        doneJson["fodselsnummer"].asText() shouldBe doneAvroKey.getFodselsnummer()
+        doneJson["eventId"].asText() shouldBe doneAvroKey.getEventId()
         doneJson.has("forstBehandlet") shouldBe true
     }
 
