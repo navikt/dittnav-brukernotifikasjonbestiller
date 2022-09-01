@@ -83,8 +83,13 @@ class BeskjedInputEventService(
                 }
 
                 if (produceToRapid) {
-                    val beskjeder = remainingValidatedEvents.map { it.toBeskjed() }
-                    beskjedRapidProducer.produce(beskjeder)
+                    remainingValidatedEvents.forEach {
+                        try {
+                            beskjedRapidProducer.produce(it.toBeskjed())
+                        } catch (e: Exception) {
+                            log.warn("Klarte ikke produsere beskjed ${it.first.getEventId()} på rapid", e)
+                        }
+                    }
                 }
 
             } else if (problematicEvents.isNotEmpty()) {

@@ -13,14 +13,12 @@ class OppgaveRapidProducer(
 ) {
     val log: Logger = LoggerFactory.getLogger(Producer::class.java)
 
-    fun produce(oppgaver: List<Oppgave>) {
-        oppgaver.forEach {
-            val objectNode = objectMapper.valueToTree<ObjectNode>(it)
-            objectNode.put("@event_name", "oppgave")
-            val producerRecord = ProducerRecord(topicName, it.eventId, objectNode.toString())
-            kafkaProducer.send(producerRecord)
-            log.info("Produsert oppgave på rapid med eventid ${it.eventId}")
-        }
+    fun produce(oppgave: Oppgave) {
+        val objectNode = objectMapper.valueToTree<ObjectNode>(oppgave)
+        objectNode.put("@event_name", "oppgave")
+        val producerRecord = ProducerRecord(topicName, oppgave.eventId, objectNode.toString())
+        kafkaProducer.send(producerRecord)
+        log.info("Produsert oppgave på rapid med eventid ${oppgave.eventId}")
     }
 
     fun flushAndClose() {

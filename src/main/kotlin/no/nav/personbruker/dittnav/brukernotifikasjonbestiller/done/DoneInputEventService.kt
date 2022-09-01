@@ -77,14 +77,19 @@ class DoneInputEventService(
                 }
 
                 if (produceToRapid) {
-                    val doneEventer = remainingValidatedEvents.map {  (key, doneIntern) ->
-                        Done(
-                            eventId = key.getEventId(),
-                            forstBehandlet = doneIntern.getBehandlet().toLocalDateTime(),
-                            fodselsnummer = key.getFodselsnummer()
-                        )
+                    remainingValidatedEvents.forEach { (key, doneIntern) ->
+                        try {
+                            doneRapidProducer.produce(
+                                Done(
+                                    eventId = key.getEventId(),
+                                    forstBehandlet = doneIntern.getBehandlet().toLocalDateTime(),
+                                    fodselsnummer = key.getFodselsnummer()
+                                )
+                            )
+                        } catch (e: Exception) {
+                            log.warn("Klarte ikke produsere done ${key.getEventId()} på rapid", e)
+                        }
                     }
-                    doneRapidProducer.produce(doneEventer)
                 }
 
                 if (problematicEvents.isNotEmpty()) {

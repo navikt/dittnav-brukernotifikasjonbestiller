@@ -77,8 +77,13 @@ class InnboksInputEventService(
                 }
 
                 if (produceToRapid) {
-                    val innboksVarsler = remainingValidatedEvents.map { it.toInnboks() }
-                    innboksRapidProducer.produce(innboksVarsler)
+                    remainingValidatedEvents.forEach {
+                        try {
+                            innboksRapidProducer.produce(it.toInnboks())
+                        } catch (e: Exception) {
+                            log.warn("Klarte ikke produsere innboks ${it.first.getEventId()} på rapid", e)
+                        }
+                    }
                 }
 
                 if (problematicEvents.isNotEmpty()) {

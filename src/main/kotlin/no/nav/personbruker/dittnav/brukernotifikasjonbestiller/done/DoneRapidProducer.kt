@@ -13,14 +13,12 @@ class DoneRapidProducer(
 ) {
     val log: Logger = LoggerFactory.getLogger(Producer::class.java)
 
-    fun produce(doneEventer: List<Done>) {
-        doneEventer.forEach {
-            val objectNode = objectMapper.valueToTree<ObjectNode>(it)
-            objectNode.put("@event_name", "done")
-            val producerRecord = ProducerRecord(topicName, it.eventId, objectNode.toString())
-            kafkaProducer.send(producerRecord)
-            log.info("Produsert done på rapid med eventid ${it.eventId}")
-        }
+    fun produce(done: Done) {
+        val objectNode = objectMapper.valueToTree<ObjectNode>(done)
+        objectNode.put("@event_name", "done")
+        val producerRecord = ProducerRecord(topicName, done.eventId, objectNode.toString())
+        kafkaProducer.send(producerRecord)
+        log.info("Produsert done på rapid med eventid ${done.eventId}")
     }
 
     fun flushAndClose() {

@@ -37,11 +37,11 @@ class InnboksInputIT {
     private val metricsReporter = StubMetricsReporter()
     private val metricsCollector = MetricsCollector(metricsReporter)
 
-    private val goodEvents = createEvents(10)
+    private val goodEvents = createEvents()
     private val badEvents = listOf(
         createEventWithTooLongGroupId(),
         createEventWithInvalidEventId(),
-        createEventWithDuplicateId(goodEvents)
+        createEventWithDuplicateId(goodEvents.first().first.getEventId())
     )
     private val innboksVarsler = goodEvents + badEvents
 
@@ -123,28 +123,22 @@ class InnboksInputIT {
         rapidKafkaProducer.history().size shouldBe goodEvents.size
     }
 
-    private fun createEvents(number: Int) = (1..number).map {
-        val eventId = UUID.randomUUID().toString()
-
-        createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createInnboksInput()
+    private fun createEvents() = (1..10).map {
+        createNokkelInputWithEventIdAndGroupId(
+            eventId = UUID.randomUUID().toString(),
+            groupId = it.toString()
+        ) to createInnboksInput()
     }
 
-    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, InnboksInput> {
-        val eventId = UUID.randomUUID().toString()
-        val groupId = "groupId".repeat(100)
+    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, InnboksInput> =
+        createNokkelInputWithEventIdAndGroupId(
+            eventId = UUID.randomUUID().toString(),
+            groupId = "groupId".repeat(100)
+        ) to createInnboksInput()
 
-        return createNokkelInputWithEventIdAndGroupId(eventId, groupId) to createInnboksInput()
-    }
+    private fun createEventWithInvalidEventId() =
+        createNokkelInputWithEventId("notUuidOrUlid") to createInnboksInput()
 
-    private fun createEventWithInvalidEventId(): Pair<NokkelInput, InnboksInput> {
-        val eventId = "notUuidOrUlid"
-
-        return createNokkelInputWithEventId(eventId) to createInnboksInput()
-    }
-
-    private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, InnboksInput>>): Pair<NokkelInput, InnboksInput> {
-        val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
-
-        return createNokkelInputWithEventId(existingEventId) to createInnboksInput()
-    }
+    private fun createEventWithDuplicateId(existingEventId: String) =
+        createNokkelInputWithEventId(existingEventId) to createInnboksInput()
 }

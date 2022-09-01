@@ -13,14 +13,13 @@ class BeskjedRapidProducer(
 ) {
     val log: Logger = LoggerFactory.getLogger(Producer::class.java)
 
-    fun produce(beskjeder: List<Beskjed>) {
-        beskjeder.forEach {
-            val objectNode = objectMapper.valueToTree<ObjectNode>(it)
-            objectNode.put("@event_name", "beskjed")
-            val producerRecord = ProducerRecord(topicName, it.eventId, objectNode.toString())
-            kafkaProducer.send(producerRecord)
-            log.info("Produsert beskjed på rapid med eventid ${it.eventId}")
-        }
+    fun produce(beskjed: Beskjed) {
+        val objectNode = objectMapper.valueToTree<ObjectNode>(beskjed)
+        objectNode.put("@event_name", "beskjed")
+        val producerRecord = ProducerRecord(topicName, beskjed.eventId, objectNode.toString())
+        kafkaProducer.send(producerRecord)
+        log.info("Produsert beskjed på rapid med eventid ${beskjed.eventId}")
+
     }
 
     fun flushAndClose() {

@@ -38,10 +38,10 @@ class DoneInputIT {
     private val metricsReporter = StubMetricsReporter()
     private val metricsCollector = MetricsCollector(metricsReporter)
 
-    private val goodEvents = createEvents(10) + createEventWithInvalidEventId()
+    private val goodEvents = createEvents() + createEventWithInvalidEventId()
     private val badEvents = listOf(
         createEventWithTooLongGroupId(),
-        createEventWithDuplicateId(goodEvents)
+        createEventWithDuplicateId(goodEvents.first().first.getEventId())
     )
     private val doneEvents = goodEvents + badEvents
 
@@ -123,28 +123,22 @@ class DoneInputIT {
         database.createBrukernotifikasjonbestillinger(beskjedEvents)
     }
 
-    private fun createEvents(number: Int) = (1..number).map {
-        val eventId = UUID.randomUUID().toString()
-
-        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, it.toString()) to createDoneInput()
+    private fun createEvents() = (1..10).map {
+        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(
+            eventId = UUID.randomUUID().toString(),
+            groupId = it.toString()
+        ) to createDoneInput()
     }
 
-    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, DoneInput> {
-        val eventId = UUID.randomUUID().toString()
-        val groupId = "groupId".repeat(100)
+    private fun createEventWithTooLongGroupId(): Pair<NokkelInput, DoneInput> =
+        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(
+            eventId = UUID.randomUUID().toString(),
+            groupId = "groupId".repeat(100)
+        ) to createDoneInput()
 
-        return AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, groupId) to createDoneInput()
-    }
+    private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> =
+        AvroNokkelInputObjectMother.createNokkelInputWithEventId("notUuidOrUlid") to createDoneInput()
 
-    private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> {
-        val eventId = "notUuidOrUlid"
-
-        return AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId) to createDoneInput()
-    }
-
-    private fun createEventWithDuplicateId(goodEvents: List<Pair<NokkelInput, DoneInput>>): Pair<NokkelInput, DoneInput> {
-        val existingEventId = goodEvents.first().let { (nokkel, _) -> nokkel.getEventId() }
-
-        return AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
-    }
+    private fun createEventWithDuplicateId(existingEventId: String) =
+        AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
 }

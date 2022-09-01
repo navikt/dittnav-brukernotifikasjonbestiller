@@ -77,8 +77,13 @@ class OppgaveInputEventService(
                 }
 
                 if (produceToRapid) {
-                    val oppgaver = remainingValidatedEvents.map { it.toOppgave() }
-                    oppgaveRapidProducer.produce(oppgaver)
+                    remainingValidatedEvents.forEach {
+                        try {
+                            oppgaveRapidProducer.produce(it.toOppgave())
+                        } catch (e: Exception) {
+                            log.warn("Klarte ikke produsere oppgave ${it.first.getEventId()} på rapid", e)
+                        }
+                    }
                 }
 
                 if (problematicEvents.isNotEmpty()) {

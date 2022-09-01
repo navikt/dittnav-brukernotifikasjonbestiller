@@ -194,7 +194,7 @@ internal class BeskjedInputEventServiceTest {
     }
 
     @Test
-    fun `sender beskjed til rapid hvis flagg er på`() {
+    fun `sender ikke beskjed til rapid hvis flagg er av`() {
         val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
         val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
 
@@ -204,7 +204,7 @@ internal class BeskjedInputEventServiceTest {
             handleDuplicateEvents = handleDuplicateEvents,
             eventDispatcher = eventDispatcher,
             beskjedRapidProducer = beskjedRapidProducer,
-            produceToRapid = true
+            produceToRapid = false
         )
 
         coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, BeskjedIntern>>>()) } returns DuplicateCheckResult(internalEvents, emptyList())
@@ -222,6 +222,6 @@ internal class BeskjedInputEventServiceTest {
             beskjedEventService.processEvents(externalEvents)
         }
 
-        verify(exactly = 1) { beskjedRapidProducer.produce(any()) }
+        verify(exactly = 0) { beskjedRapidProducer.produce(any()) }
     }
 }
