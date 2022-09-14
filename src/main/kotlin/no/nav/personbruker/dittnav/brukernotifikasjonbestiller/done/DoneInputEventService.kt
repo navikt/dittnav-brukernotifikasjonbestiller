@@ -10,6 +10,7 @@ import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
@@ -84,6 +85,12 @@ class DoneInputEventService(
                                     eventId = key.getEventId(),
                                     forstBehandlet = doneIntern.getBehandlet().toLocalDateTime(),
                                     fodselsnummer = key.getFodselsnummer()
+                                )
+                            )
+                            countSuccessfulRapidEventForProducer(
+                                NamespaceAppName(
+                                    namespace = key.getNamespace(),
+                                    appName = key.getAppnavn()
                                 )
                             )
                         } catch (e: Exception) {

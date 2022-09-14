@@ -11,6 +11,7 @@ class EventMetricsSession(val eventtype: Eventtype) {
     private val log: Logger = LoggerFactory.getLogger(EventMetricsSession::class.java)
 
     private val countProcessedEventsBySysUser = HashMap<NamespaceAppName, Int>()
+    private val countProcessedRapidEventsBySysUser = HashMap<NamespaceAppName, Int>()
     private val countFailedEventsBySysUser = HashMap<NamespaceAppName, Int>()
     private val countDuplicateKeyBySysUser = HashMap<NamespaceAppName, Int>()
     private var countNokkelWasNull: Int = 0
@@ -18,6 +19,10 @@ class EventMetricsSession(val eventtype: Eventtype) {
 
     fun countSuccessfulEventForProducer(producer: NamespaceAppName) {
         countProcessedEventsBySysUser[producer] = countProcessedEventsBySysUser.getOrDefault(producer, 0).inc()
+    }
+
+    fun countSuccessfulRapidEventForProducer(producer: NamespaceAppName) {
+        countProcessedRapidEventsBySysUser[producer] = countProcessedRapidEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
     fun countNokkelWasNull() {
@@ -50,6 +55,10 @@ class EventMetricsSession(val eventtype: Eventtype) {
 
     fun getEventsProcessed(producer: NamespaceAppName): Int {
         return countProcessedEventsBySysUser.getOrDefault(producer, 0)
+    }
+
+    fun getRapidEventsProcessed(producer: NamespaceAppName): Int {
+        return countProcessedRapidEventsBySysUser.getOrDefault(producer, 0)
     }
 
     fun getEventsFailed(producer: NamespaceAppName): Int {

@@ -17,6 +17,7 @@ class MetricsCollector(private val metricsReporter: MetricsReporter) {
         if (session.getEventsSeen() > 0) {
             handleSeenEvents(session)
             handleProcessedEvents(session)
+            handleProcessedRapidEvents(session)
             handleFailedEvents(session)
             handleDuplicateEventKeys(session)
             handleNokkelWasNull(session)
@@ -42,6 +43,17 @@ class MetricsCollector(private val metricsReporter: MetricsReporter) {
             if (numberProcessed > 0) {
                 reportMetrics(KAFKA_EVENTS_PROCESSED, numberProcessed, eventTypeName, producer)
                 PrometheusMetricsCollector.registerEventsProcessed(numberProcessed, eventTypeName, producer.appName)
+            }
+        }
+    }
+
+    private suspend fun handleProcessedRapidEvents(session: EventMetricsSession) {
+        session.getUniqueProducer().forEach { producer ->
+            val numberProcessed = session.getRapidEventsProcessed(producer)
+            val eventTypeName = session.eventtype.toString()
+
+            if (numberProcessed > 0) {
+                reportMetrics(KAFKA_RAPID_EVENTS_PROCESSED, numberProcessed, eventTypeName, producer)
             }
         }
     }

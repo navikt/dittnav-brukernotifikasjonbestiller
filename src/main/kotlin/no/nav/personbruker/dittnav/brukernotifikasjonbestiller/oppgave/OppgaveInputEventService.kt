@@ -10,6 +10,7 @@ import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.NokkelNullException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.serializer.getNonNullKey
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
@@ -80,6 +81,12 @@ class OppgaveInputEventService(
                     remainingValidatedEvents.forEach {
                         try {
                             oppgaveRapidProducer.produce(it.toOppgave())
+                            countSuccessfulRapidEventForProducer(
+                                NamespaceAppName(
+                                    namespace = it.first.getNamespace(),
+                                    appName = it.first.getAppnavn()
+                                )
+                            )
                         } catch (e: Exception) {
                             log.warn("Klarte ikke produsere oppgave ${it.first.getEventId()} på rapid", e)
                         }
