@@ -3,7 +3,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import io.ktor.client.features.json.*
+import io.ktor.client.plugins.json.*
+import io.ktor.client.plugins.jackson.JacksonSerializer
 
 fun buildJsonSerializer(): JacksonSerializer {
     return JacksonSerializer {

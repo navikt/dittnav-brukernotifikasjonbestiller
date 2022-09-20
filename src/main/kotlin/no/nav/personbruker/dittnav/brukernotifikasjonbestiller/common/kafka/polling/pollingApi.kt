@@ -1,9 +1,9 @@
 package no.nav.personbruker.brukernotifikasjonbestiller.common.kafka.polling
 
-import io.ktor.application.*
+import io.ktor.server.application.*
 import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.ApplicationContext
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.KafkaConsumerSetup
 
