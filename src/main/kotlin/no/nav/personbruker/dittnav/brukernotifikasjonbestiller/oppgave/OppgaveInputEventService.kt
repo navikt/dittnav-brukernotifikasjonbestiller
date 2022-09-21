@@ -88,7 +88,7 @@ class OppgaveInputEventService(
                                 )
                             )
                         } catch (e: Exception) {
-                            log.warn("Klarte ikke produsere oppgave ${it.first.getEventId()} på rapid", e)
+                            log.error("Klarte ikke produsere oppgave ${it.first.getEventId()} på rapid", e)
                         }
                     }
                 }

@@ -94,7 +94,7 @@ class BeskjedInputEventService(
                                 )
                             )
                         } catch (e: Exception) {
-                            log.warn("Klarte ikke produsere beskjed ${it.first.getEventId()} på rapid", e)
+                            log.error("Klarte ikke produsere beskjed ${it.first.getEventId()} på rapid", e)
                         }
                     }
                 }

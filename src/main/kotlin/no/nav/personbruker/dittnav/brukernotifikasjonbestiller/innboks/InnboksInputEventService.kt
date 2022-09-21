@@ -88,7 +88,7 @@ class InnboksInputEventService(
                                 )
                             )
                         } catch (e: Exception) {
-                            log.warn("Klarte ikke produsere innboks ${it.first.getEventId()} på rapid", e)
+                            log.error("Klarte ikke produsere innboks ${it.first.getEventId()} på rapid", e)
                         }
                     }
                 }

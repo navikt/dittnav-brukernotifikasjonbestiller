@@ -94,7 +94,7 @@ class DoneInputEventService(
                                 )
                             )
                         } catch (e: Exception) {
-                            log.warn("Klarte ikke produsere done ${key.getEventId()} på rapid", e)
+                            log.error("Klarte ikke produsere done ${key.getEventId()} på rapid", e)
                         }
                     }
                 }
