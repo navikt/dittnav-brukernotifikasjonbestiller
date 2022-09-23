@@ -77,12 +77,6 @@ class BeskjedInputEventService(
                     this.countDuplicateEvents(duplicateEvents)
                 }
 
-                if (problematicEvents.isNotEmpty()) {
-                    eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)
-                } else {
-                    eventDispatcher.dispatchValidEventsOnly(remainingValidatedEvents)
-                }
-
                 if (produceToRapid) {
                     remainingValidatedEvents.forEach {
                         try {
@@ -97,6 +91,12 @@ class BeskjedInputEventService(
                             log.error("Klarte ikke produsere beskjed ${it.first.getEventId()} på rapid", e)
                         }
                     }
+                }
+
+                if (problematicEvents.isNotEmpty()) {
+                    eventDispatcher.dispatchValidAndProblematicEvents(remainingValidatedEvents, problematicEvents)
+                } else {
+                    eventDispatcher.dispatchValidEventsOnly(remainingValidatedEvents)
                 }
 
             } else if (problematicEvents.isNotEmpty()) {
