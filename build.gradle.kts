@@ -42,8 +42,6 @@ dependencies {
     implementation(ULID.sulkyUlid)
     implementation(Ktor2.Server.htmlDsl)
     implementation(Ktor2.Server.netty)
-    implementation(Ktor2.Client.apache)
-    implementation(Ktor2.Client.contentNegotiation)
     implementation(Ktor2.Server.defaultHeaders)
     implementation("io.ktor:ktor-serialization-jackson:2.1.2")
     implementation(Jackson.dataTypeJsr310)
