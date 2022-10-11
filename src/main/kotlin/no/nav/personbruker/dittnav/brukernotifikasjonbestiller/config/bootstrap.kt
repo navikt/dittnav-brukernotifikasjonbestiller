@@ -4,9 +4,8 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.install
-import io.ktor.server.plugins.DefaultHeaders
+
 import io.ktor.server.routing.routing
-import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.runBlocking
@@ -14,7 +13,9 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.healthApi
 
 fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()) {
     DefaultExports.initialize()
+
     install(DefaultHeaders)
+
     routing {
         healthApi(appContext.healthService)
     }
