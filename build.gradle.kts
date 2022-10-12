@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.kotlin.compilerRunner.KotlinLogger
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -27,13 +28,10 @@ dependencies {
     implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2022.04.27-11.14-a4039fef5785")
     implementation(DittNAV.Common.influxdb)
     implementation(DittNAV.Common.utils)
-    implementation(DittNAV.Common.logging)
     implementation(Flyway.core)
     implementation(Hikari.cp)
     implementation(Kafka.Apache.clients)
     implementation(Kafka.Confluent.avroSerializer)
-    implementation(Ktor.htmlBuilder)
-    implementation(Ktor.serverNetty)
     implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
     implementation(NAV.tokenValidatorKtor)
@@ -42,14 +40,13 @@ dependencies {
     implementation(Prometheus.logback)
     implementation(Postgresql.postgresql)
     implementation(ULID.sulkyUlid)
-    implementation(Ktor.clientApache)
-    implementation(Ktor.clientJson)
-    implementation(Ktor.clientJackson)
+    implementation(Ktor2.Server.htmlDsl)
+    implementation(Ktor2.Server.netty)
+    implementation(Ktor2.Server.defaultHeaders)
+    implementation("io.ktor:ktor-serialization-jackson:2.1.2")
     implementation(Jackson.dataTypeJsr310)
 
     testImplementation(Junit.api)
-    testImplementation(Ktor.clientMock)
-    testImplementation(Ktor.clientMockJvm)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)
