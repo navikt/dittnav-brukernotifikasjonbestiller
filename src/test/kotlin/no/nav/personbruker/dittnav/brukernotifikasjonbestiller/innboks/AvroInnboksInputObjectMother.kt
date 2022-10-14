@@ -7,12 +7,12 @@ object AvroInnboksInputObjectMother {
 
     private val defaultTekst = "Dette er en innboks til bruker."
     private val defaultSikkerhetsnivaa = 4
-    private val defaultEksternVarsling = false
+    private val defaultEksternVarsling = true
     private val defaultLink = "http://gyldig.url"
     private val defaultPrefererteKanaler = emptyList<String>()
-    private val defaultEpostVarslingstekst: String? = null
-    private val defaultEpostVarslingstittel: String? = null
-    private val defaultSmsVarslingstekst: String? = null
+    private val defaultEpostVarslingstekst: String = "eposttest"
+    private val defaultEpostVarslingstittel: String = "eposttittel"
+    private val defaultSmsVarslingstekst: String = "smstittel"
 
     fun createInnboksInput(
         text: String = defaultTekst,

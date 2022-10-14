@@ -116,6 +116,9 @@ class BeskjedInputIT {
         beskjedJson["aktiv"].asBoolean() shouldBe true
         beskjedJson["eksternVarsling"].asBoolean() shouldBe beskjedAvroValue.getEksternVarsling()
         beskjedJson["prefererteKanaler"].map { it.asText() } shouldBe beskjedAvroValue.getPrefererteKanaler()
+        beskjedJson["smsVarslingstekst"].asText() shouldBe beskjedAvroValue.getSmsVarslingstekst()
+        beskjedJson["epostVarslingstekst"].asText() shouldBe beskjedAvroValue.getEpostVarslingstekst()
+        beskjedJson["epostVarslingsttittel"].asText() shouldBe beskjedAvroValue.getEpostVarslingstittel()
     }
 
     @Test
@@ -135,7 +138,12 @@ class BeskjedInputIT {
         createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = "123"
-        ) to createBeskjedInput(synligFremTil = null)
+        ) to createBeskjedInput(
+            synligFremTil = null,
+            smsVarslingstekst = null,
+            epostVarslingstekst = null,
+            epostVarslingstittel = null
+        )
     )
 
     private fun createEventWithTooLongGroupId() =

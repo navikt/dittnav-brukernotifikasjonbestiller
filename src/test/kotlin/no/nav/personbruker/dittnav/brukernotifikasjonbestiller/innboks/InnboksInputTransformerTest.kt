@@ -283,7 +283,9 @@ internal class InnboksInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
             eksternVarsling = false,
-            smsVarslingstekst = "L".repeat(160)
+            smsVarslingstekst = "L".repeat(160),
+            epostVarslingstekst = null,
+            epostVarslingstittel = null
         )
         shouldThrow<FieldValidationException> {
             runBlocking {
@@ -419,7 +421,9 @@ internal class InnboksInputTransformerTest {
         val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
         val externalInnboksInput = AvroInnboksInputObjectMother.createInnboksInput(
             eksternVarsling = false,
-            epostVarslingstittel = "<p>Hei!</p>"
+            epostVarslingstittel = "<p>Hei!</p>",
+            epostVarslingstekst = null,
+            smsVarslingstekst = null
         )
         shouldThrow<FieldValidationException> {
             runBlocking {
