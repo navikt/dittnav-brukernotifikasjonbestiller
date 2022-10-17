@@ -120,5 +120,8 @@ private fun Pair<NokkelIntern, InnboksIntern>.toInnboks() =
         sikkerhetsnivaa = second.getSikkerhetsnivaa(),
         aktiv = true,
         eksternVarsling = second.getEksternVarsling(),
-        prefererteKanaler = second.getPrefererteKanaler()
+        prefererteKanaler = second.getPrefererteKanaler(),
+        smsVarslingstekst = second.getSmsVarslingstekst(),
+        epostVarslingstekst = second.getEpostVarslingstekst(),
+        epostVarslingsttittel = second.getEpostVarslingstittel()
     )

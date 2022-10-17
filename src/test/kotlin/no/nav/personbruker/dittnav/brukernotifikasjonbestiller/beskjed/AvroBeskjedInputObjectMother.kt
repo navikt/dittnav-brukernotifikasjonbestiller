@@ -7,13 +7,13 @@ object AvroBeskjedInputObjectMother {
 
     private val defaultTekst = "Dette er en beskjed til bruker."
     private val defaultSikkerhetsnivaa = 4
-    private val defaultEksternVarsling = false
+    private val defaultEksternVarsling = true
     private val defaultLink = "http://gyldig.url"
     private val defaultSynligFremTil = Instant.now().toEpochMilli()
     private val defaultPrefererteKanaler = emptyList<String>()
-    private val defaultEpostVarslingstekst: String? = null
-    private val defaultEpostVarslingstittel: String? = null
-    private val defaultSmsVarslingstekst: String? = null
+    private val defaultEpostVarslingstekst: String = "eposttest"
+    private val defaultEpostVarslingstittel: String = "eposttittel"
+    private val defaultSmsVarslingstekst: String = "smstittel"
 
     fun createBeskjedInput(
         text: String = defaultTekst,
@@ -25,7 +25,6 @@ object AvroBeskjedInputObjectMother {
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
         epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
-
     ): BeskjedInput {
         return BeskjedInput(
             Instant.now().toEpochMilli(),

@@ -135,7 +135,12 @@ class OppgaveInputIT {
         createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = "123"
-        ) to createOppgaveInput(synligFremTil = null)
+        ) to createOppgaveInput(
+            synligFremTil = null,
+            smsVarslingstekst = null,
+            epostVarslingstekst = null,
+            epostVarslingstittel = null
+        )
     )
 
     private fun createEventWithTooLongGroupId() =

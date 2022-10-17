@@ -37,7 +37,7 @@ class InnboksInputIT {
     private val metricsReporter = StubMetricsReporter()
     private val metricsCollector = MetricsCollector(metricsReporter)
 
-    private val goodEvents = createEvents()
+    private val goodEvents = createEvents() + createInnboksWithNullFields()
     private val badEvents = listOf(
         createEventWithTooLongGroupId(),
         createEventWithInvalidEventId(),
@@ -129,6 +129,17 @@ class InnboksInputIT {
             groupId = it.toString()
         ) to createInnboksInput()
     }
+
+    private fun createInnboksWithNullFields() = listOf(
+        createNokkelInputWithEventIdAndGroupId(
+            eventId = UUID.randomUUID().toString(),
+            groupId = "123"
+        ) to createInnboksInput(
+            smsVarslingstekst = null,
+            epostVarslingstekst = null,
+            epostVarslingstittel = null
+        )
+    )
 
     private fun createEventWithTooLongGroupId(): Pair<NokkelInput, InnboksInput> =
         createNokkelInputWithEventIdAndGroupId(

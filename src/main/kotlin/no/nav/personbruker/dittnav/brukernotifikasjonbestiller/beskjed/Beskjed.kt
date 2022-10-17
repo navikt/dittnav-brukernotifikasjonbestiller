@@ -17,5 +17,8 @@ data class Beskjed(
     val synligFremTil: LocalDateTime?,
     val aktiv: Boolean,
     val eksternVarsling: Boolean,
-    val prefererteKanaler: List<String> = emptyList()
+    val prefererteKanaler: List<String>,
+    val smsVarslingstekst: String?,
+    val epostVarslingstekst: String?,
+    val epostVarslingsttittel: String?
 )

@@ -121,5 +121,8 @@ private fun Pair<NokkelIntern, OppgaveIntern>.toOppgave() =
         synligFremTil = if (second.getSynligFremTil() != null) second.getSynligFremTil().toLocalDateTime() else null,
         aktiv = true,
         eksternVarsling = second.getEksternVarsling(),
-        prefererteKanaler = second.getPrefererteKanaler()
+        prefererteKanaler = second.getPrefererteKanaler(),
+        smsVarslingstekst = second.getSmsVarslingstekst(),
+        epostVarslingstekst = second.getEpostVarslingstekst(),
+        epostVarslingsttittel = second.getEpostVarslingstittel()
     )
