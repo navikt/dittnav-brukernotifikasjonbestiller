@@ -19,5 +19,5 @@ data class Innboks(
     val prefererteKanaler: List<String>,
     val smsVarslingstekst: String?,
     val epostVarslingstekst: String?,
-    val epostVarslingsttittel: String?
+    val epostVarslingstittel: String?
 )

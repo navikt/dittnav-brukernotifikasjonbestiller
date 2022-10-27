@@ -118,7 +118,7 @@ class BeskjedInputIT {
         beskjedJson["prefererteKanaler"].map { it.asText() } shouldBe beskjedAvroValue.getPrefererteKanaler()
         beskjedJson["smsVarslingstekst"].asText() shouldBe beskjedAvroValue.getSmsVarslingstekst()
         beskjedJson["epostVarslingstekst"].asText() shouldBe beskjedAvroValue.getEpostVarslingstekst()
-        beskjedJson["epostVarslingsttittel"].asText() shouldBe beskjedAvroValue.getEpostVarslingstittel()
+        beskjedJson["epostVarslingstittel"].asText() shouldBe beskjedAvroValue.getEpostVarslingstittel()
     }
 
     @Test

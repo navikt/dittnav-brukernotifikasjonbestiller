@@ -125,5 +125,5 @@ private fun Pair<NokkelIntern, BeskjedIntern>.toBeskjed() =
         prefererteKanaler = second.getPrefererteKanaler(),
         smsVarslingstekst = second.getSmsVarslingstekst(),
         epostVarslingstekst = second.getEpostVarslingstekst(),
-        epostVarslingsttittel = second.getEpostVarslingstittel()
+        epostVarslingstittel = second.getEpostVarslingstittel()
     )

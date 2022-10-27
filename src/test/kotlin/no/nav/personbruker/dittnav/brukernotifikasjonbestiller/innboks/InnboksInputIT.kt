@@ -115,6 +115,9 @@ class InnboksInputIT {
         innboksJson["aktiv"].asBoolean() shouldBe true
         innboksJson["eksternVarsling"].asBoolean() shouldBe innboksAvroValue.getEksternVarsling()
         innboksJson["prefererteKanaler"].map { it.asText() } shouldBe innboksAvroValue.getPrefererteKanaler()
+        innboksJson["smsVarslingstekst"].asText() shouldBe innboksAvroValue.getSmsVarslingstekst()
+        innboksJson["epostVarslingstekst"].asText() shouldBe innboksAvroValue.getEpostVarslingstekst()
+        innboksJson["epostVarslingstittel"].asText() shouldBe innboksAvroValue.getEpostVarslingstittel()
     }
 
     @Test

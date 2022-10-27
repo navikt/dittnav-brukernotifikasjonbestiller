@@ -116,6 +116,9 @@ class OppgaveInputIT {
         oppgaveJson["aktiv"].asBoolean() shouldBe true
         oppgaveJson["eksternVarsling"].asBoolean() shouldBe oppgaveAvroValue.getEksternVarsling()
         oppgaveJson["prefererteKanaler"].map { it.asText() } shouldBe oppgaveAvroValue.getPrefererteKanaler()
+        oppgaveJson["smsVarslingstekst"].asText() shouldBe oppgaveAvroValue.getSmsVarslingstekst()
+        oppgaveJson["epostVarslingstekst"].asText() shouldBe oppgaveAvroValue.getEpostVarslingstekst()
+        oppgaveJson["epostVarslingstittel"].asText() shouldBe oppgaveAvroValue.getEpostVarslingstittel()
     }
 
     @Test

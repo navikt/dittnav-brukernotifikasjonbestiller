@@ -124,5 +124,5 @@ private fun Pair<NokkelIntern, OppgaveIntern>.toOppgave() =
         prefererteKanaler = second.getPrefererteKanaler(),
         smsVarslingstekst = second.getSmsVarslingstekst(),
         epostVarslingstekst = second.getEpostVarslingstekst(),
-        epostVarslingsttittel = second.getEpostVarslingstittel()
+        epostVarslingstittel = second.getEpostVarslingstittel()
     )
