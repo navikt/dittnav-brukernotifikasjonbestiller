@@ -39,10 +39,10 @@ class DoneInputIT {
     private val metricsCollector = MetricsCollector(metricsReporter)
 
     private val goodEvents = createEvents() + createEventWithInvalidEventId()
-    private val badEvents = listOf(
-        createEventWithTooLongGroupId(),
-        createEventWithDuplicateId(goodEvents.first().first.getEventId())
-    )
+    private val duplicateEvents = listOf(createEventWithDuplicateId(goodEvents.first().first.getEventId()))
+    private val invalidEvents = listOf(createEventWithTooLongGroupId())
+    private val badEvents = invalidEvents + duplicateEvents
+
     private val doneEvents = goodEvents + badEvents
 
     private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, DoneIntern>()
@@ -93,7 +93,7 @@ class DoneInputIT {
     @Test
     fun `Should read Done-events and send to hoved-topic or error response topic, and allow invalid eventIds for backwards-compatibility`() {
         internalKafkaProducer.history().size shouldBe goodEvents.size
-        feilresponsKafkaProducer.history().size shouldBe badEvents.size
+        feilresponsKafkaProducer.history().size shouldBe invalidEvents.size
     }
 
     @Test

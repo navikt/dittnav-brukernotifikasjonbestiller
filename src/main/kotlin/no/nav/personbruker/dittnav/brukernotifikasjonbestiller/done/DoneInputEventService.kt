@@ -73,7 +73,6 @@ class DoneInputEventService(
                 val remainingValidatedEvents = duplicateCheckResult.validEvents
 
                 if (duplicateEvents.isNotEmpty()) {
-                    problematicEvents.addAll(FeilresponsTransformer.createFeilresponsFromDuplicateEvents(Eventtype.DONE, duplicateEvents))
                     this.countDuplicateEvents(duplicateEvents)
                 }
 

@@ -132,40 +132,6 @@ internal class DoneInputEventServiceTest {
     }
 
     @Test
-    fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
-        val externalDone = AvroDoneInputObjectMother.createDoneInput()
-
-        val validEvents = listOf(internalEvents[0])
-        val duplicateEvents = listOf(internalEvents[1])
-
-        val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
-
-        coEvery { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) } returns DuplicateCheckResult(validEvents, duplicateEvents)
-        coEvery { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) } returns Unit
-        coEvery { eventDispatcher.dispatchValidEventsOnly(any()) } returns Unit
-        coEvery { eventDispatcher.dispatchProblematicEventsOnly(any()) } returns Unit
-
-        val slot = slot<suspend EventMetricsSession.() -> Unit>()
-        coEvery { metricsCollector.recordMetrics(any(), capture(slot)) } coAnswers {
-            slot.captured.invoke(metricsSession)
-        }
-
-
-        runBlocking {
-            doneEventService.processEvents(externalEvents)
-        }
-
-        coVerify(exactly = 1) { metricsSession.countSuccessfulEventForProducer(any()) }
-        coVerify(exactly = 1) { metricsSession.countDuplicateEvents(any()) }
-        coVerify(exactly = 1) { handleDuplicateEvents.checkForDuplicateEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
-
-        coVerify(exactly = 0) { eventDispatcher.dispatchValidEventsOnly(any<MutableList<Pair<NokkelIntern, DoneIntern>>>()) }
-        coVerify(exactly = 1) { eventDispatcher.dispatchValidAndProblematicEvents(any<MutableList<Pair<NokkelIntern, DoneIntern>>>(), any()) }
-        coVerify(exactly = 0) { eventDispatcher.dispatchProblematicEventsOnly(any()) }
-    }
-
-    @Test
     fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
         val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
         val externalDone = AvroOppgaveInputObjectMother.createOppgaveInput()
