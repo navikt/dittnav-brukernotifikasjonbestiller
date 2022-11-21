@@ -31,7 +31,7 @@ object ConsumerRecordsObjectMother {
         return allRecords
     }
 
-    fun <T> createInputConsumerRecords(nokkel: NokkelInput?, event: T?, topic: String): ConsumerRecords<NokkelInput, T> {
+    fun <T> createInputConsumerRecords(nokkel: NokkelInput?, event: T?, topic: String = "topic"): ConsumerRecords<NokkelInput, T> {
         val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<NokkelInput, T>>>()
         val recordsForSingleTopic = mutableListOf<ConsumerRecord<NokkelInput, T>>()
 

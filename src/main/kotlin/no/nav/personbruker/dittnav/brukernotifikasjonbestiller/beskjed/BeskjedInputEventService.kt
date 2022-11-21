@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
@@ -17,9 +18,15 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDat
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.net.MalformedURLException
+import java.net.URL
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.UUID
 
 class BeskjedInputEventService(
     private val metricsCollector: MetricsCollector,
@@ -30,6 +37,91 @@ class BeskjedInputEventService(
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedInputEventService::class.java)
+
+    fun processEvents2(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
+        val validatedBeskjeder = events.filter { validate(it.key(), it.value()) }
+
+        validatedBeskjeder.map { it.toBeskjed() }.forEach { beskjed ->
+            try {
+                beskjedRapidProducer.produce(beskjed)
+            } catch (e: Exception) {
+                log.error("Klarte ikke produsere beskjed ${beskjed.eventId} på rapid", e)
+            }
+        }
+    }
+
+    private fun validate(nokkelInput: NokkelInput?, beskjedInput: BeskjedInput): Boolean {
+        val MAX_LENGTH_TEXT_BESKJED = 300
+        val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
+        val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
+        val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
+        val MAX_LENGTH_LINK = 200
+
+        if(nokkelInput == null) return false
+        nokkelInput.apply {
+            if(getFodselsnummer() == null) return false
+            if(getEventId() == null) return false
+
+            //TODO: kan også være ulid?
+
+            try {
+                UUID.fromString(getEventId())
+            } catch (e: IllegalArgumentException) {
+                return false
+            }
+        }
+
+        beskjedInput.apply {
+            getTekst()?.let {
+                if(it.length > MAX_LENGTH_TEXT_BESKJED) return false
+            } ?: return false
+
+            if(getLink() == null) return false
+            if(getLink().length > MAX_LENGTH_LINK) return false
+            try {
+               URL(getLink())
+            } catch (e: MalformedURLException) {
+                return false
+            }
+
+            if(getSikkerhetsnivaa() !in listOf(3, 4)) return false
+
+            if(getPrefererteKanaler().isNotEmpty()) {
+                if(!getEksternVarsling()) return false
+
+                getPrefererteKanaler().forEach { preferertKanal ->
+                    try {
+                        PreferertKanal.valueOf(preferertKanal)
+                    } catch(e: IllegalArgumentException) {
+                        return false
+                    }
+                }
+            }
+
+            if(getEpostVarslingstekst() != null) {
+                if(!getEksternVarsling()) return false
+
+                if(getEpostVarslingstekst() == "") return false
+                if(getEpostVarslingstekst().length > MAX_LENGTH_EPOST_VARSLINGSTEKST) return false
+            }
+
+            if(getEpostVarslingstittel() != null) {
+                if(!getEksternVarsling()) return false
+
+                if(getEpostVarslingstittel() == "") return false
+                if(getEpostVarslingstittel().length > MAX_LENGTH_EPOST_VARSLINGSTTITTEL) return false
+            }
+
+            if(getSmsVarslingstekst() != null) {
+                if(!getEksternVarsling()) return false
+
+                if(getSmsVarslingstekst() == "") return false
+                if(getSmsVarslingstekst().length > MAX_LENGTH_SMS_VARSLINGSTEKST) return false
+            }
+        }
+
+        return true
+    }
 
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
@@ -105,6 +197,28 @@ class BeskjedInputEventService(
         }
     }
 }
+
+private fun ConsumerRecord<NokkelInput, BeskjedInput>.toBeskjed() =
+    Beskjed(
+        systembruker = "N/A",
+        namespace = key().getNamespace(),
+        appnavn = key().getAppnavn(),
+        eventId = key().getEventId(),
+        eventTidspunkt = value().getTidspunkt().toLocalDateTime(),
+        forstBehandlet = LocalDateTime.now(ZoneId.of("UTC")),
+        fodselsnummer = key().getFodselsnummer(),
+        grupperingsId = key().getGrupperingsId(),
+        tekst = value().getTekst(),
+        link = value().getLink(),
+        sikkerhetsnivaa = value().getSikkerhetsnivaa(),
+        synligFremTil = if (value().getSynligFremTil() != null) value().getSynligFremTil().toLocalDateTime() else null,
+        aktiv = true,
+        eksternVarsling = value().getEksternVarsling(),
+        prefererteKanaler = value().getPrefererteKanaler(),
+        smsVarslingstekst = value().getSmsVarslingstekst(),
+        epostVarslingstekst = value().getEpostVarslingstekst(),
+        epostVarslingstittel = value().getEpostVarslingstittel()
+    )
 
 private fun Pair<NokkelIntern, BeskjedIntern>.toBeskjed() =
     Beskjed(
