@@ -9,13 +9,17 @@ import org.junit.jupiter.api.Test
 
 class BeskjedValideringTest {
 
-    private val validation = Validation()
-
     @Test
     fun `nøkkel kan ikke være null`() {
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(null, AvroBeskjedInputObjectMother.createBeskjedInput())
 
-        validation.validate(externalEvents.first()) shouldBe false
+        val validation = NokkelValidation(externalEvents.first().key())
+        validation.isValid shouldBe false
+        validation.failedValidators.map { it.type } shouldBe listOf(
+            NokkelValidatorType.HasNokkel,
+            NokkelValidatorType.HasFodselsnummer,
+            NokkelValidatorType.EventIdIsUUIDorULID
+        )
     }
 
     @Test
@@ -32,7 +36,7 @@ class BeskjedValideringTest {
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjed)
 
-        validation.validate(externalEvents.first()) shouldBe false
+        //validation.validate(externalEvents.first()) shouldBe false
     }
 
     @Test
