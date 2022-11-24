@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import de.huxhorn.sulky.ulid.ULID
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
@@ -50,6 +51,15 @@ class BeskjedInputEventService(
         }
     }
 
+    private fun String.isValidUuid(): Boolean =
+        try { UUID.fromString(this).toString() == this } catch (e: IllegalArgumentException) { false }
+
+    private fun String.isValidUlid(): Boolean =
+        try {
+            ULID.parseULID(this)
+            true
+        } catch (e: IllegalArgumentException) { false }
+
     private fun validate(nokkelInput: NokkelInput?, beskjedInput: BeskjedInput): Boolean {
         val MAX_LENGTH_TEXT_BESKJED = 300
         val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
@@ -62,13 +72,7 @@ class BeskjedInputEventService(
             if(getFodselsnummer() == null) return false
             if(getEventId() == null) return false
 
-            //TODO: kan også være ulid?
-
-            try {
-                UUID.fromString(getEventId())
-            } catch (e: IllegalArgumentException) {
-                return false
-            }
+            if (!getEventId().isValidUuid() && !getEventId().isValidUlid()) return false
         }
 
         beskjedInput.apply {
