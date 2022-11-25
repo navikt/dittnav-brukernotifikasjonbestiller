@@ -14,11 +14,11 @@ class BeskjedValideringTest {
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(null, AvroBeskjedInputObjectMother.createBeskjedInput())
 
         val validation = NokkelValidation(externalEvents.first().key())
-        validation.isValid shouldBe false
-        validation.failedValidators.map { it.type } shouldBe listOf(
-            NokkelValidatorType.HasNokkel,
-            NokkelValidatorType.HasFodselsnummer,
-            NokkelValidatorType.EventIdIsUUIDorULID
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
+            HasNokkel::class.java,
+            HasFodselsnummer::class.java,
+            EventIdIsUUIDorULID::class.java
         )
     }
 
