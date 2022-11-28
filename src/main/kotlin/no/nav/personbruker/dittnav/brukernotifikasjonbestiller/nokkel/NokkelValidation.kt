@@ -17,7 +17,7 @@ class NokkelValidation(nokkelInput: NokkelInput?) {
         HasNokkel(),
         FodselsnummerIs11Characters(),
         NamespaceIsUnder64Characters(),
-        AppnavnIsUnder100Characters(),
+        AppnavnIsUnder101Characters(),
         EventIdIsUUIDorULID()
     ).filter{ !it.validate(nokkelInput) }
 }
@@ -53,7 +53,7 @@ class NamespaceIsUnder64Characters: NokkelValidator() {
 }
 
 
-class AppnavnIsUnder100Characters: NokkelValidator() {
+class AppnavnIsUnder101Characters: NokkelValidator() {
     override val description: String = "Appnavn kan ikke være null, og må være mindre enn 101 tegn"
 
     override fun validate(nokkelInput: NokkelInput?): Boolean =

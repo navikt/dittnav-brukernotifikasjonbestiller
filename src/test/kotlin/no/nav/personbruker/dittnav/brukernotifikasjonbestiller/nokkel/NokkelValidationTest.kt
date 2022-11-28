@@ -19,7 +19,7 @@ class NokkelValidationTest {
             HasNokkel::class.java,
             FodselsnummerIs11Characters::class.java,
             NamespaceIsUnder64Characters::class.java,
-            AppnavnIsUnder100Characters::class.java,
+            AppnavnIsUnder101Characters::class.java,
             EventIdIsUUIDorULID::class.java
         )
     }
@@ -78,7 +78,7 @@ class NokkelValidationTest {
             NokkelTestData.nokkel(appnavn = appnavn)
         ).apply {
             isValid() shouldBe false
-            failedValidators.map { it.javaClass } shouldBe listOf(AppnavnIsUnder100Characters::class.java)
+            failedValidators.map { it.javaClass } shouldBe listOf(AppnavnIsUnder101Characters::class.java)
         }
     }
 
