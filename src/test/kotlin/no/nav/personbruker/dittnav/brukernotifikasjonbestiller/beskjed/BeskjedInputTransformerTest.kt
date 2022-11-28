@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.domain.PreferertKanal
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,7 +38,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `should transform from external to internal`() {
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(eventId)
 
         every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
@@ -64,7 +64,7 @@ internal class BeskjedInputTransformerTest {
     fun `should allow UUID as eventid`() {
         val uuidEventId = UUID.randomUUID().toString()
 
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(uuidEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(uuidEventId)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         val (transformedNokkel, _) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
@@ -76,7 +76,7 @@ internal class BeskjedInputTransformerTest {
     fun `should allow ULID as eventid`() {
         val ulidEventId = ULID().nextULID()
 
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(ulidEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(ulidEventId)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         val (transformedNokkel, _) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
@@ -87,7 +87,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `should not allow eventId that is not ulid or uuid`() {
         val invalidEventId = "1234"
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(invalidEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(invalidEventId)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         shouldThrow<FieldValidationException> {
@@ -100,7 +100,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow empty fodselsnummer`() {
         val fodselsnummerEmpty = ""
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         shouldThrow<FieldValidationException> {
@@ -113,7 +113,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow too long fodselsnummer`() {
         val tooLongFnr = "1".repeat(12)
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
 
         shouldThrow<FieldValidationException> {
@@ -125,7 +125,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should allow synligFremTil to be null`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(eventId)
         val beskjedUtenSynligTilSatt = AvroBeskjedInputObjectMother.createBeskjedInputWithSynligFremTil(null)
 
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, beskjedUtenSynligTilSatt)
@@ -137,7 +137,7 @@ internal class BeskjedInputTransformerTest {
     fun `do not allow too long grupperingsId`() {
         val tooLongGrupperingsId = "G".repeat(101)
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput()
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(eventId, tooLongGrupperingsId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventIdAndGroupId(eventId, tooLongGrupperingsId)
 
         shouldThrow<FieldValidationException> {
             runBlocking {
@@ -149,7 +149,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `should allow text length up to the limit`() {
         val textWithMaxAllowedLength = "B".repeat(300)
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithText(textWithMaxAllowedLength)
 
         runBlocking {
@@ -160,7 +160,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow empty tekst`() {
         val emptyText = ""
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithText(emptyText)
 
         shouldThrow<FieldValidationException> {
@@ -173,7 +173,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow too long tekst`() {
         val tooLongText = "T".repeat(501)
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithText(tooLongText)
 
         shouldThrow<FieldValidationException> {
@@ -186,7 +186,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow too long link`() {
         val tooLongLink = "http://" + "L".repeat(201)
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(tooLongLink)
 
         shouldThrow<FieldValidationException> {
@@ -199,7 +199,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow invalid link`() {
         val invalidLink = "invalidUrl"
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(invalidLink)
 
         shouldThrow<FieldValidationException> {
@@ -212,7 +212,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `should allow empty link`() {
         val emptyLink = ""
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithLink(emptyLink)
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
@@ -222,7 +222,7 @@ internal class BeskjedInputTransformerTest {
     @Test
     fun `do not allow invalid sikkerhetsnivaa`() {
         val invalidSikkerhetsnivaa = 2
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithSikkerhetsnivaa(invalidSikkerhetsnivaa)
 
         shouldThrow<FieldValidationException> {
@@ -234,7 +234,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `do not allow prefererteKanaler if eksternVarsling is false`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = false, prefererteKanaler = listOf(PreferertKanal.SMS.toString()))
         shouldThrow<FieldValidationException> {
             runBlocking {
@@ -245,7 +245,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `do not allow unknown preferert kanal`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = listOf("unknown"))
         shouldThrow<FieldValidationException> {
             runBlocking {
@@ -256,7 +256,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should allow empty prefererteKanaler`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling = true, prefererteKanaler = emptyList())
         val (_, transformedBeskjed) = BeskjedInputTransformer.toInternal(externalNokkelInput, externalBeskjedInput)
 
@@ -265,7 +265,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should transform smsVarslingstekst`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             smsVarslingstekst = "L".repeat(160)
@@ -278,7 +278,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should allow null smsVarslingstekst`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             smsVarslingstekst = null
@@ -291,7 +291,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `do not allow smsVarslingstekst if eksternVarsling is false`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = false,
             smsVarslingstekst = "L".repeat(160),
@@ -307,7 +307,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow too long sms text`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             smsVarslingstekst = "L".repeat(161)
@@ -321,7 +321,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow empty sms text`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             smsVarslingstekst = " "
@@ -335,7 +335,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should transform epostVarslingstekst`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstekst = "Hei ".repeat(20)
@@ -348,7 +348,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should allow null epostVarslingstekst`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstekst = null
@@ -361,7 +361,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `do not allow epostVarslingstekst if eksternVarsling is false`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = false,
             epostVarslingstekst = "<p>Hei!</p>"
@@ -375,7 +375,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow too long email text`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstekst = "L".repeat(4_001)
@@ -389,7 +389,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow empty email text`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstekst = " "
@@ -403,7 +403,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should transform epostVarslingstittel`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstittel = "Hei ".repeat(10)
@@ -416,7 +416,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `should allow null epostVarslingstittel`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstittel = null
@@ -429,7 +429,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     fun `do not allow epostVarslingstittel if eksternVarsling is false`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = false,
             epostVarslingstittel = "<p>Hei!</p>",
@@ -445,7 +445,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow too long email titel`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstittel = "L".repeat(41)
@@ -459,7 +459,7 @@ internal class BeskjedInputTransformerTest {
 
     @Test
     internal fun `should not allow empty email tittel`() {
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInput()
+        val externalNokkelInput = NokkelTestData.createNokkelInput()
         val externalBeskjedInput = AvroBeskjedInputObjectMother.createBeskjedInput(
             eksternVarsling = true,
             epostVarslingstittel = " "

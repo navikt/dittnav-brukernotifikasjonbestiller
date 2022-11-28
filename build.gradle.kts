@@ -47,6 +47,7 @@ dependencies {
     implementation(Jackson.dataTypeJsr310)
 
     testImplementation(Junit.api)
+    testImplementation(Junit.params)
     testImplementation(Mockk.mockk)
     testImplementation(Jjwt.api)
     testImplementation(Kotlinx.atomicfu)

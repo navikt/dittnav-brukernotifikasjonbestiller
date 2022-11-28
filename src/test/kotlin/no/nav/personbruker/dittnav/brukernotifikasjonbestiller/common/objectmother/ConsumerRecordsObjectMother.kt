@@ -3,7 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmot
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInputObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.common.TopicPartition
@@ -24,7 +24,7 @@ object ConsumerRecordsObjectMother {
         val allRecords = mutableListOf<ConsumerRecord<NokkelInput, BeskjedInput>>()
         for (i in 0 until totalNumber) {
             val schemaRecord = AvroBeskjedInputObjectMother.createBeskjedInput()
-            val nokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(i.toString())
+            val nokkel = NokkelTestData.createNokkelInputWithEventId(i.toString())
 
             allRecords.add(ConsumerRecord(topicName, i, i.toLong(), nokkel, schemaRecord))
         }
