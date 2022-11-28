@@ -47,6 +47,13 @@ class NokkelValidationTest {
             isValid() shouldBe false
             failedValidators.map { it.javaClass } shouldBe listOf(EventIdIsUUIDorULID::class.java)
         }
+
+        NokkelValidation(
+            NokkelTestData.nokkel(eventId = null)
+        ).apply {
+            isValid() shouldBe false
+            failedValidators.map { it.javaClass } shouldBe listOf(EventIdIsUUIDorULID::class.java)
+        }
     }
 
     @ParameterizedTest

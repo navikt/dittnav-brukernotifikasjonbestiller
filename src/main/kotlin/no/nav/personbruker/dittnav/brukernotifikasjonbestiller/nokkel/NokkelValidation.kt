@@ -4,12 +4,6 @@ import de.huxhorn.sulky.ulid.ULID
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import java.util.UUID
 
-private val MAX_LENGTH_TEXT_BESKJED = 300
-private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
-private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
-private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
-private val MAX_LENGTH_LINK = 200
-
 class NokkelValidation(nokkelInput: NokkelInput?) {
     val failedValidators: List<NokkelValidator>
 
@@ -60,7 +54,7 @@ class NamespaceIsUnder64Characters: NokkelValidator() {
 
 
 class AppnavnIsUnder100Characters: NokkelValidator() {
-    override val description: String = "Appnavn kan ikke være null"
+    override val description: String = "Appnavn kan ikke være null, og må være mindre enn 101 tegn"
 
     override fun validate(nokkelInput: NokkelInput?): Boolean =
         nokkelInput?.let { nokkel ->
@@ -72,9 +66,8 @@ class EventIdIsUUIDorULID: NokkelValidator() {
     override val description: String = "Eventid må være gyldig UUID eller ULIO"
 
     override fun validate(nokkelInput: NokkelInput?): Boolean =
-        nokkelInput?.let {
-            if (it.getEventId() == null) return false
-            return it.getEventId().isValidUuid() || it.getEventId().isValidUlid()
+        nokkelInput?.let { nokkel ->
+            nokkel.getEventId()?.let { it.isValidUuid() || it.isValidUlid() } ?: false
         } ?: false
 
     private fun String.isValidUuid(): Boolean =
