@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
+import org.apache.avro.generic.GenericRecord
 
 private val MAX_LENGTH_TEXT_BESKJED = 300
 private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
@@ -8,7 +9,7 @@ private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
 private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
 private val MAX_LENGTH_LINK = 200
 
-class BeskjedValidation(beskjedInput: BeskjedInput?) {
+class BeskjedValidation(beskjedInput: BeskjedInput) {
     val failedValidators: List<BeskjedValidator>
 
     init {
@@ -17,8 +18,8 @@ class BeskjedValidation(beskjedInput: BeskjedInput?) {
 
     fun isValid(): Boolean = failedValidators.isEmpty()
 
-    private fun getFailedValidators(beskjedInput: BeskjedInput?) = listOf(
-        HasTekst(),
+    private fun getFailedValidators(beskjedInput: BeskjedInput) = listOf(
+        TekstIsUnder200Characters(),
     ).filter{ !it.validate(beskjedInput) }
 
     /*
@@ -78,11 +79,15 @@ class BeskjedValidation(beskjedInput: BeskjedInput?) {
 abstract class BeskjedValidator {
     abstract val description: String
 
-    abstract fun validate(beskjedInput: BeskjedInput?): Boolean
+    abstract fun validate(beskjedInput: BeskjedInput): Boolean
 }
 
-class HasTekst: BeskjedValidator() {
-    override val description: String = "Nokkel kan ikke være null"
+class TekstIsUnder200Characters: BeskjedValidator() {
+    override val description: String = "Tekst kan ikke være null, og må være under 200 tegn"
+    private val fieldName = "tekst"
 
-    override fun validate(beskjedInput: BeskjedInput?): Boolean = beskjedInput != null
+    override fun validate(beskjedInput: BeskjedInput): Boolean =
+        beskjedInput.isNotNull(fieldName) && beskjedInput.get(fieldName).toString().length < 200
 }
+
+private fun GenericRecord.isNotNull(fieldName: String): Boolean = hasField(fieldName) && get(fieldName) != null

@@ -1,34 +1,36 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 
 class BeskjedValideringTest {
 
     @Test
-    @Disabled
-    fun `Alle felter må bli validert før videresending`() {
-        val externalNokkel = NokkelTestData.nokkel()
-        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput(
-            //link = "",
-            //sikkerhetsnivaa = 5
-            //eksternVarsling = true,
-            //prefererteKanaler = listOf("SMS")
-            //epostVarslingstekst = ""
-            smsVarslingstekst = ""
+    fun `beskjed med gyldige felter er gyldig`() {
+        val validation = BeskjedValidation(BeskjedTestData.beskjedInput(
+            tekst = "x".repeat(199)
+        ))
+        validation.isValid() shouldBe true
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = [200])
+    fun `tekst kan ikke være null`(length: Int?) {
+        val tekst = length?.let { "x".repeat(length) }
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                tekst = tekst
+            )
         )
-
-        val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(
-            externalNokkel,
-            externalBeskjed)
-
-        val validation = BeskjedValidation(externalEvents.first().value())
         validation.isValid() shouldBe false
-        validation.failedValidators.map { it.javaClass } shouldBe listOf(
-            HasTekst::class.java,
+        validation.failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
+            TekstIsUnder200Characters::class.java
         )
     }
 

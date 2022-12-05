@@ -9,7 +9,7 @@ import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInputObjectMother.createBeskjedInput
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData.beskjedInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -131,14 +131,14 @@ class BeskjedInputIT {
         createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = it.toString()
-        ) to createBeskjedInput()
+        ) to beskjedInput()
     }
 
     private fun createBeskjedWithNullFields() = listOf(
         createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = "123"
-        ) to createBeskjedInput(
+        ) to beskjedInput(
             synligFremTil = null,
             smsVarslingstekst = null,
             epostVarslingstekst = null,
@@ -150,11 +150,11 @@ class BeskjedInputIT {
         createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = "groupId".repeat(100)
-        ) to createBeskjedInput()
+        ) to beskjedInput()
 
     private fun createEventWithInvalidEventId() =
-        createNokkelInputWithEventId("notUuidOrUlid") to createBeskjedInput()
+        createNokkelInputWithEventId("notUuidOrUlid") to beskjedInput()
 
     private fun createEventWithDuplicateId(existingEventId: String) =
-        createNokkelInputWithEventId(existingEventId) to createBeskjedInput()
+        createNokkelInputWithEventId(existingEventId) to beskjedInput()
 }
