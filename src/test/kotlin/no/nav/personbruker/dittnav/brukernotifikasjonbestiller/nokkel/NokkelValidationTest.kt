@@ -18,8 +18,8 @@ class NokkelValidationTest {
         validation.failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
             HasNokkel::class.java,
             FodselsnummerIs11Characters::class.java,
-            NamespaceIsUnder64Characters::class.java,
-            AppnavnIsUnder101Characters::class.java,
+            HasNamespace::class.java,
+            HasAppnavn::class.java,
             EventIdIsUUIDorULID::class.java
         )
     }
@@ -56,29 +56,23 @@ class NokkelValidationTest {
         }
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(ints = [64])
-    fun `namespace må være under 64 tegn`(length: Int?) {
-        val namespace = length?.let { "x".repeat(it) }
+    @Test
+    fun `namespace kan ikke være null`() {
         NokkelValidation(
-            NokkelTestData.nokkel(namespace = namespace)
+            NokkelTestData.nokkel(namespace = null)
         ).apply {
             isValid() shouldBe false
-            failedValidators.map { it.javaClass } shouldBe listOf(NamespaceIsUnder64Characters::class.java)
+            failedValidators.map { it.javaClass } shouldBe listOf(HasNamespace::class.java)
         }
     }
 
-    @ParameterizedTest
-    @NullSource
-    @ValueSource(ints = [101])
-    fun `appnavn må være under 101 tegn`(length: Int?) {
-        val appnavn = length?.let { "x".repeat(it) }
+    @Test
+    fun `appnavn kan ikke være null`() {
         NokkelValidation(
-            NokkelTestData.nokkel(appnavn = appnavn)
+            NokkelTestData.nokkel(appnavn = null)
         ).apply {
             isValid() shouldBe false
-            failedValidators.map { it.javaClass } shouldBe listOf(AppnavnIsUnder101Characters::class.java)
+            failedValidators.map { it.javaClass } shouldBe listOf(HasAppnavn::class.java)
         }
     }
 

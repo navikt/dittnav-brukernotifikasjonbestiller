@@ -16,8 +16,8 @@ class NokkelValidation(nokkelInput: NokkelInput?) {
     private fun getFailedValidators(nokkelInput: NokkelInput?) = listOf(
         HasNokkel(),
         FodselsnummerIs11Characters(),
-        NamespaceIsUnder64Characters(),
-        AppnavnIsUnder101Characters(),
+        HasNamespace(),
+        HasAppnavn(),
         EventIdIsUUIDorULID()
     ).filter{ !it.validate(nokkelInput) }
 }
@@ -43,22 +43,22 @@ class FodselsnummerIs11Characters: NokkelValidator() {
         } ?: false
 }
 
-class NamespaceIsUnder64Characters: NokkelValidator() {
-    override val description: String = "Namespace kan ikke være null, og må være mindre enn 64 tegn"
+class HasNamespace: NokkelValidator() {
+    override val description: String = "Namespace kan ikke være null"
 
     override fun validate(nokkelInput: NokkelInput?): Boolean =
         nokkelInput?.let { nokkel ->
-            nokkel.getNamespace()?.let { it.length < 64 } ?: false
+            nokkel.getNamespace() != null
         } ?: false
 }
 
 
-class AppnavnIsUnder101Characters: NokkelValidator() {
-    override val description: String = "Appnavn kan ikke være null, og må være mindre enn 101 tegn"
+class HasAppnavn: NokkelValidator() {
+    override val description: String = "Appnavn kan ikke være null"
 
     override fun validate(nokkelInput: NokkelInput?): Boolean =
         nokkelInput?.let { nokkel ->
-            nokkel.getAppnavn()?.let { it.length < 100 } ?: false
+            nokkel.getAppnavn() != null
         } ?: false
 }
 
