@@ -17,12 +17,9 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDat
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 class BeskjedInputEventService(
     private val metricsCollector: MetricsCollector,
@@ -33,20 +30,6 @@ class BeskjedInputEventService(
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedInputEventService::class.java)
-
-    /*
-    fun processEvents2(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
-        val validatedBeskjeder = events.filter { validate(it.key(), it.value()) }
-
-        validatedBeskjeder.map { it.toBeskjed() }.forEach { beskjed ->
-            try {
-                beskjedRapidProducer.produce(beskjed)
-            } catch (e: Exception) {
-                log.error("Klarte ikke produsere beskjed ${beskjed.eventId} på rapid", e)
-            }
-        }
-    }
-     */
 
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
@@ -122,28 +105,6 @@ class BeskjedInputEventService(
         }
     }
 }
-
-private fun ConsumerRecord<NokkelInput, BeskjedInput>.toBeskjed() =
-    Beskjed(
-        systembruker = "N/A",
-        namespace = key().getNamespace(),
-        appnavn = key().getAppnavn(),
-        eventId = key().getEventId(),
-        eventTidspunkt = value().getTidspunkt().toLocalDateTime(),
-        forstBehandlet = LocalDateTime.now(ZoneId.of("UTC")),
-        fodselsnummer = key().getFodselsnummer(),
-        grupperingsId = key().getGrupperingsId(),
-        tekst = value().getTekst(),
-        link = value().getLink(),
-        sikkerhetsnivaa = value().getSikkerhetsnivaa(),
-        synligFremTil = if (value().getSynligFremTil() != null) value().getSynligFremTil().toLocalDateTime() else null,
-        aktiv = true,
-        eksternVarsling = value().getEksternVarsling(),
-        prefererteKanaler = value().getPrefererteKanaler(),
-        smsVarslingstekst = value().getSmsVarslingstekst(),
-        epostVarslingstekst = value().getEpostVarslingstekst(),
-        epostVarslingstittel = value().getEpostVarslingstittel()
-    )
 
 private fun Pair<NokkelIntern, BeskjedIntern>.toBeskjed() =
     Beskjed(
