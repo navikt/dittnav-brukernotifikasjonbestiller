@@ -52,7 +52,6 @@ class HasNamespace: NokkelValidator() {
         } ?: false
 }
 
-
 class HasAppnavn: NokkelValidator() {
     override val description: String = "Appnavn kan ikke være null"
 

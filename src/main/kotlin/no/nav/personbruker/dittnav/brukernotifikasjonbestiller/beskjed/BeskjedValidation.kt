@@ -7,7 +7,6 @@ private val MAX_LENGTH_TEXT_BESKJED = 300
 private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
 private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
 private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
-private val MAX_LENGTH_LINK = 200
 
 class BeskjedValidation(beskjedInput: BeskjedInput) {
     val failedValidators: List<BeskjedValidator>
@@ -19,14 +18,13 @@ class BeskjedValidation(beskjedInput: BeskjedInput) {
     fun isValid(): Boolean = failedValidators.isEmpty()
 
     private fun getFailedValidators(beskjedInput: BeskjedInput) = listOf(
-        TekstIsUnder200Characters(),
+        TekstIsUnder300Characters(),
+        LinkIsURLUnder200Characters()
     ).filter{ !it.validate(beskjedInput) }
 
     /*
     beskjedInput.apply {
-        getTekst()?.let {
-            if(it.length > MAX_LENGTH_TEXT_BESKJED) return false
-        } ?: return false
+
 
         if(getLink() == null) return false
         if(getLink().length > MAX_LENGTH_LINK) return false
@@ -82,12 +80,26 @@ abstract class BeskjedValidator {
     abstract fun validate(beskjedInput: BeskjedInput): Boolean
 }
 
-class TekstIsUnder200Characters: BeskjedValidator() {
-    override val description: String = "Tekst kan ikke være null, og må være under 200 tegn"
+class TekstIsUnder300Characters: BeskjedValidator() {
+    private val MAX_LENGTH_TEXT_BESKJED = 300
     private val fieldName = "tekst"
 
+    override val description: String = "Tekst kan ikke være null, og må være under $MAX_LENGTH_TEXT_BESKJED tegn"
+
     override fun validate(beskjedInput: BeskjedInput): Boolean =
-        beskjedInput.isNotNull(fieldName) && beskjedInput.get(fieldName).toString().length < 200
+        beskjedInput.isNotNull(fieldName) && (beskjedInput.get(fieldName) as String).length < MAX_LENGTH_TEXT_BESKJED
+}
+
+class LinkIsURLUnder200Characters: BeskjedValidator() {
+    private val MAX_LENGTH_LINK = 200
+    private val fieldName = "link"
+
+    override val description: String = "Link må være under $MAX_LENGTH_LINK tegn"
+
+    override fun validate(beskjedInput: BeskjedInput): Boolean {
+        return beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as String).length < MAX_LENGTH_LINK
+    }
 }
 
 private fun GenericRecord.isNotNull(fieldName: String): Boolean = hasField(fieldName) && get(fieldName) != null
+private fun GenericRecord.isNull(fieldName: String): Boolean = !hasField(fieldName) || get(fieldName) == null
