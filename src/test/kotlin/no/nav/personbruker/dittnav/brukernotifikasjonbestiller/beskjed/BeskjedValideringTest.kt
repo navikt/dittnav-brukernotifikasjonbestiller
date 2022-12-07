@@ -20,6 +20,7 @@ class BeskjedValideringTest {
     fun `valgfrie felter kan være null`() {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
+                //sikkerhetsnivaa = null,
                 link = null
             )
         ).isValid() shouldBe true
@@ -57,7 +58,7 @@ class BeskjedValideringTest {
     fun `link må være gyldig linke og mindre enn 200 tegn`() {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                link = "x".repeat(200)
+                link = "https://" + "x".repeat(192)
             )
         ).apply {
             isValid() shouldBe false
@@ -68,7 +69,7 @@ class BeskjedValideringTest {
 
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                link = "link-uten-https"
+                link = "ugyldig-link"
             )
         ).apply {
             isValid() shouldBe false
@@ -77,6 +78,19 @@ class BeskjedValideringTest {
             )
         }
 
+    }
+
+    @Test
+    fun `sikkerhetsnivaa må være 3 eller 4`() {
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                sikkerhetsnivaa = 5
+            )
+        )
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
+            SikkerhetsnivaaIs3Or4::class.java
+        )
     }
 
     @Test
