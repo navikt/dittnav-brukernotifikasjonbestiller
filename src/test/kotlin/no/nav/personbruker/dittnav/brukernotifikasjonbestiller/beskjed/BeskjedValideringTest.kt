@@ -11,7 +11,8 @@ class BeskjedValideringTest {
     fun `beskjed med gyldige felter er gyldig`() {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                tekst = "x".repeat(299)
+                tekst = "x".repeat(299),
+                link = "https://" + "x".repeat(191)
             )
         ).isValid() shouldBe true
     }
@@ -21,7 +22,9 @@ class BeskjedValideringTest {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
                 //sikkerhetsnivaa = null,
-                link = null
+                link = null,
+                prefererteKanaler = null,
+                smsVarslingstekst = null
             )
         ).isValid() shouldBe true
     }
@@ -62,7 +65,7 @@ class BeskjedValideringTest {
             )
         ).apply {
             isValid() shouldBe false
-            failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
+            failedValidators.map { it.javaClass } shouldBe listOf(
                 LinkIsURLUnder200Characters::class.java
             )
         }
@@ -73,7 +76,7 @@ class BeskjedValideringTest {
             )
         ).apply {
             isValid() shouldBe false
-            failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
+            failedValidators.map { it.javaClass } shouldBe listOf(
                 LinkIsURLUnder200Characters::class.java
             )
         }
@@ -88,8 +91,36 @@ class BeskjedValideringTest {
             )
         )
         validation.isValid() shouldBe false
-        validation.failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
             SikkerhetsnivaaIs3Or4::class.java
+        )
+    }
+
+    @Test
+    fun `prefererte kanaler må være SMS eller EPOST`() {
+        //test tom liste
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                prefererteKanaler = listOf("ABC")
+            )
+        )
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
+            PrefererteKanalerIsSMSorEpost::class.java
+        )
+    }
+
+    @Test
+    fun `smstekst kan være maks 160 tegn`() {
+        //test tom streng
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                smsVarslingstekst = "x".repeat(161)
+            )
+        )
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
+            SmstekstIsMaximum160Characters::class.java
         )
     }
 

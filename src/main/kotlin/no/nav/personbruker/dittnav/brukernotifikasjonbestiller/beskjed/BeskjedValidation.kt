@@ -5,8 +5,6 @@ import org.apache.avro.generic.GenericRecord
 import java.net.MalformedURLException
 import java.net.URL
 
-private val MAX_LENGTH_TEXT_BESKJED = 300
-private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
 private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
 private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
 
@@ -22,24 +20,13 @@ class BeskjedValidation(beskjedInput: BeskjedInput) {
     private fun getFailedValidators(beskjedInput: BeskjedInput) = listOf(
         TekstIsUnder300Characters(),
         LinkIsURLUnder200Characters(),
-        SikkerhetsnivaaIs3Or4()
+        SikkerhetsnivaaIs3Or4(),
+        PrefererteKanalerIsSMSorEpost(),
+        SmstekstIsMaximum160Characters()
     ).filter{ !it.validate(beskjedInput) }
 
     /*
     beskjedInput.apply {
-        if(getSikkerhetsnivaa() !in listOf(3, 4)) return false
-
-        if(getPrefererteKanaler().isNotEmpty()) {
-            if(!getEksternVarsling()) return false
-
-            getPrefererteKanaler().forEach { preferertKanal ->
-                try {
-                    PreferertKanal.valueOf(preferertKanal)
-                } catch(e: IllegalArgumentException) {
-                    return false
-                }
-            }
-        }
 
         if(getEpostVarslingstekst() != null) {
             if(!getEksternVarsling()) return false
@@ -76,7 +63,6 @@ abstract class BeskjedValidator {
 class TekstIsUnder300Characters: BeskjedValidator() {
     private val MAX_LENGTH_TEXT_BESKJED = 300
     private val fieldName = "tekst"
-
     override val description: String = "Tekst kan ikke være null, og må være under $MAX_LENGTH_TEXT_BESKJED tegn"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean =
@@ -86,7 +72,6 @@ class TekstIsUnder300Characters: BeskjedValidator() {
 class LinkIsURLUnder200Characters: BeskjedValidator() {
     private val MAX_LENGTH_LINK = 200
     private val fieldName = "link"
-
     override val description: String = "Link må være under $MAX_LENGTH_LINK tegn"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean {
@@ -104,12 +89,31 @@ class LinkIsURLUnder200Characters: BeskjedValidator() {
 
 class SikkerhetsnivaaIs3Or4: BeskjedValidator() {
     private val fieldName = "sikkerhetsnivaa"
-
     override val description: String = "Sikkerhetsnivaa må være 3 eller 4, default er 4"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean =
         beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as Int) in listOf(3,4)
 }
+
+class PrefererteKanalerIsSMSorEpost: BeskjedValidator() {
+    private val fieldName = "prefererteKanaler"
+    override val description: String = "Preferte kanaler kan bare inneholde SMS eller EPOST"
+
+    override fun validate(beskjedInput: BeskjedInput): Boolean =
+        beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as List<*>).all { it in listOf("SMS", "EPOST") }
+}
+
+class SmstekstIsMaximum160Characters: BeskjedValidator() {
+    private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
+    private val fieldName = "smsVarslingstekst"
+    override val description: String = "Sms-varsel kan ikke være tomt, og kan maks være 160 tegn"
+
+    override fun validate(beskjedInput: BeskjedInput): Boolean =
+        beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as String).trim().let {
+            it.isNotEmpty() && it.length < MAX_LENGTH_SMS_VARSLINGSTEKST
+        }
+}
+
 
 private fun GenericRecord.isNotNull(fieldName: String): Boolean = hasField(fieldName) && get(fieldName) != null
 private fun GenericRecord.isNull(fieldName: String): Boolean = !hasField(fieldName) || get(fieldName) == null
