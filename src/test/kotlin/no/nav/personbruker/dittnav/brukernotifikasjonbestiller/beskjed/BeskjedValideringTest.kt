@@ -4,6 +4,8 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class BeskjedValideringTest {
 
@@ -85,7 +87,6 @@ class BeskjedValideringTest {
                 LinkIsURLandMax200Characters::class.java
             )
         }
-
     }
 
     @Test
@@ -101,12 +102,12 @@ class BeskjedValideringTest {
         )
     }
 
-    @Test
-    fun `optional prefererte kanaler må være SMS eller EPOST`() {
-        //test tom liste
+    @ParameterizedTest
+    @ValueSource(strings = ["ABC", "SMS,ABC", ""])
+    fun `optional prefererte kanaler må være SMS eller EPOST`(prefererteKanaler: String) {
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                prefererteKanaler = listOf("ABC")
+                prefererteKanaler = prefererteKanaler.split(",")
             )
         )
         validation.isValid() shouldBe false
@@ -115,12 +116,12 @@ class BeskjedValideringTest {
         )
     }
 
-    @Test
-    fun `optional smstekst kan ikke være tom, og maks 160 tegn`() {
-        //test tom streng
+    @ParameterizedTest
+    @ValueSource(ints = [0, 161])
+    fun `optional smstekst kan ikke være tom, og maks 160 tegn`(length: Int) {
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                smsVarslingstekst = "x".repeat(161)
+                smsVarslingstekst = "x".repeat(length)
             )
         )
         validation.isValid() shouldBe false
@@ -129,12 +130,12 @@ class BeskjedValideringTest {
         )
     }
 
-    @Test
-    fun `optional eposttekst kan ikke være tom, og maks 4000 tegn`() {
-        //test tom streng
+    @ParameterizedTest
+    @ValueSource(ints = [0, 4001])
+    fun `optional eposttekst kan ikke være tom, og maks 4000 tegn`(length: Int) {
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                epostVarslingstekst = "x".repeat(4001)
+                epostVarslingstekst = "x".repeat(length)
             )
         )
         validation.isValid() shouldBe false
@@ -143,12 +144,12 @@ class BeskjedValideringTest {
         )
     }
 
-    @Test
-    fun `optional eposttittel kan ikke være tom, og maks 40 tegn`() {
-        //test tom streng
+    @ParameterizedTest
+    @ValueSource(ints = [0, 41])
+    fun `optional eposttittel kan ikke være tom, og maks 40 tegn`(length: Int) {
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                epostVarslingstittel = "x".repeat(4001)
+                epostVarslingstittel = "x".repeat(length)
             )
         )
         validation.isValid() shouldBe false
