@@ -5,9 +5,6 @@ import org.apache.avro.generic.GenericRecord
 import java.net.MalformedURLException
 import java.net.URL
 
-private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
-private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
-
 class BeskjedValidation(beskjedInput: BeskjedInput) {
     val failedValidators: List<BeskjedValidator>
 
@@ -18,40 +15,15 @@ class BeskjedValidation(beskjedInput: BeskjedInput) {
     fun isValid(): Boolean = failedValidators.isEmpty()
 
     private fun getFailedValidators(beskjedInput: BeskjedInput) = listOf(
-        TekstIsUnder300Characters(),
-        LinkIsURLUnder200Characters(),
+        TekstIsMax300Characters(),
+        LinkIsURLandMax200Characters(),
         SikkerhetsnivaaIs3Or4(),
         PrefererteKanalerIsSMSorEpost(),
-        SmstekstIsMaximum160Characters()
+        SmstekstIsMax160Characters(),
+        EposttekstIsMax4000Characters(),
+        EposttittelIsMax40Characters()
+    //synligFremtil? må være frem i tid?
     ).filter{ !it.validate(beskjedInput) }
-
-    /*
-    beskjedInput.apply {
-
-        if(getEpostVarslingstekst() != null) {
-            if(!getEksternVarsling()) return false
-
-            if(getEpostVarslingstekst() == "") return false
-            if(getEpostVarslingstekst().length > MAX_LENGTH_EPOST_VARSLINGSTEKST) return false
-        }
-
-        if(getEpostVarslingstittel() != null) {
-            if(!getEksternVarsling()) return false
-
-            if(getEpostVarslingstittel() == "") return false
-            if(getEpostVarslingstittel().length > MAX_LENGTH_EPOST_VARSLINGSTTITTEL) return false
-        }
-
-        if(getSmsVarslingstekst() != null) {
-            if(!getEksternVarsling()) return false
-
-            if(getSmsVarslingstekst() == "") return false
-            if(getSmsVarslingstekst().length > MAX_LENGTH_SMS_VARSLINGSTEKST) return false
-        }
-    }
-
-    return true
-     */
 }
 
 abstract class BeskjedValidator {
@@ -60,26 +32,26 @@ abstract class BeskjedValidator {
     abstract fun validate(beskjedInput: BeskjedInput): Boolean
 }
 
-class TekstIsUnder300Characters: BeskjedValidator() {
+class TekstIsMax300Characters: BeskjedValidator() {
     private val MAX_LENGTH_TEXT_BESKJED = 300
     private val fieldName = "tekst"
-    override val description: String = "Tekst kan ikke være null, og må være under $MAX_LENGTH_TEXT_BESKJED tegn"
+    override val description: String = "Tekst kan ikke være null, og maks $MAX_LENGTH_TEXT_BESKJED tegn"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean =
-        beskjedInput.isNotNull(fieldName) && (beskjedInput.get(fieldName) as String).length < MAX_LENGTH_TEXT_BESKJED
+        beskjedInput.isNotNull(fieldName) && (beskjedInput.get(fieldName) as String).length <= MAX_LENGTH_TEXT_BESKJED
 }
 
-class LinkIsURLUnder200Characters: BeskjedValidator() {
+class LinkIsURLandMax200Characters: BeskjedValidator() {
     private val MAX_LENGTH_LINK = 200
     private val fieldName = "link"
-    override val description: String = "Link må være under $MAX_LENGTH_LINK tegn"
+    override val description: String = "Link må være gyldig URL og maks $MAX_LENGTH_LINK tegn"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean {
         return beskjedInput.isNull(fieldName) || isValidURL(beskjedInput.get(fieldName) as String)
     }
 
     private fun isValidURL(link: String) =
-        link.length < MAX_LENGTH_LINK && try {
+        link.length <= MAX_LENGTH_LINK && try {
             URL(link)
             true
         } catch (e: MalformedURLException) {
@@ -97,23 +69,44 @@ class SikkerhetsnivaaIs3Or4: BeskjedValidator() {
 
 class PrefererteKanalerIsSMSorEpost: BeskjedValidator() {
     private val fieldName = "prefererteKanaler"
-    override val description: String = "Preferte kanaler kan bare inneholde SMS eller EPOST"
+    override val description: String = "Preferte kanaler kan bare inneholde SMS og EPOST"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean =
         beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as List<*>).all { it in listOf("SMS", "EPOST") }
 }
 
-class SmstekstIsMaximum160Characters: BeskjedValidator() {
+class SmstekstIsMax160Characters: BeskjedValidator() {
     private val MAX_LENGTH_SMS_VARSLINGSTEKST = 160
     private val fieldName = "smsVarslingstekst"
-    override val description: String = "Sms-varsel kan ikke være tomt, og kan maks være 160 tegn"
+    override val description: String = "Sms-varsel kan ikke være tom string, og maks $MAX_LENGTH_SMS_VARSLINGSTEKST tegn"
 
     override fun validate(beskjedInput: BeskjedInput): Boolean =
         beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as String).trim().let {
-            it.isNotEmpty() && it.length < MAX_LENGTH_SMS_VARSLINGSTEKST
+            it.isNotEmpty() && it.length <= MAX_LENGTH_SMS_VARSLINGSTEKST
         }
 }
 
+class EposttekstIsMax4000Characters: BeskjedValidator() {
+    private val MAX_LENGTH_EPOST_VARSLINGSTEKST = 4000
+    private val fieldName = "epostVarslingstekst"
+    override val description: String = "Epost-tekst kan ikke være tom string, og maks $MAX_LENGTH_EPOST_VARSLINGSTEKST tegn"
+
+    override fun validate(beskjedInput: BeskjedInput): Boolean =
+        beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as String).trim().let {
+            it.isNotEmpty() && it.length <= MAX_LENGTH_EPOST_VARSLINGSTEKST
+        }
+}
+
+class EposttittelIsMax40Characters: BeskjedValidator() {
+    private val MAX_LENGTH_EPOST_VARSLINGSTTITTEL = 40
+    private val fieldName = "epostVarslingstittel"
+    override val description: String = "Epost-tittel kan ikke være tom string, og maks $MAX_LENGTH_EPOST_VARSLINGSTTITTEL tegn"
+
+    override fun validate(beskjedInput: BeskjedInput): Boolean =
+        beskjedInput.isNull(fieldName) || (beskjedInput.get(fieldName) as String).trim().let {
+            it.isNotEmpty() && it.length <= MAX_LENGTH_EPOST_VARSLINGSTTITTEL
+        }
+}
 
 private fun GenericRecord.isNotNull(fieldName: String): Boolean = hasField(fieldName) && get(fieldName) != null
 private fun GenericRecord.isNull(fieldName: String): Boolean = !hasField(fieldName) || get(fieldName) == null

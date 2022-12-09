@@ -11,8 +11,11 @@ class BeskjedValideringTest {
     fun `beskjed med gyldige felter er gyldig`() {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                tekst = "x".repeat(299),
-                link = "https://" + "x".repeat(191)
+                tekst = "x".repeat(300),
+                link = "https://" + "x".repeat(192),
+                epostVarslingstekst = "x".repeat(4000),
+                smsVarslingstekst = "x".repeat(160),
+                epostVarslingstittel = "x".repeat(40)
             )
         ).isValid() shouldBe true
     }
@@ -24,7 +27,9 @@ class BeskjedValideringTest {
                 //sikkerhetsnivaa = null,
                 link = null,
                 prefererteKanaler = null,
-                smsVarslingstekst = null
+                smsVarslingstekst = null,
+                epostVarslingstekst = null,
+                epostVarslingstittel = null
             )
         ).isValid() shouldBe true
     }
@@ -39,34 +44,34 @@ class BeskjedValideringTest {
         validation.apply {
             isValid() shouldBe false
             failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
-                TekstIsUnder300Characters::class.java
+                TekstIsMax300Characters::class.java
             )
         }
     }
 
     @Test
-    fun `tekst må være mindre enn 300 tegn`() {
+    fun `tekst kan maks være 300 tegn`() {
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                tekst = "x".repeat(300)
+                tekst = "x".repeat(301)
             )
         )
         validation.isValid() shouldBe false
         validation.failedValidators.map { it.javaClass } shouldContainExactlyInAnyOrder listOf(
-            TekstIsUnder300Characters::class.java
+            TekstIsMax300Characters::class.java
         )
     }
 
     @Test
-    fun `link må være gyldig linke og mindre enn 200 tegn`() {
+    fun `optional link må være gyldig lenke og maks 200 tegn`() {
         BeskjedValidation(
             BeskjedTestData.beskjedInput(
-                link = "https://" + "x".repeat(192)
+                link = "https://" + "x".repeat(193)
             )
         ).apply {
             isValid() shouldBe false
             failedValidators.map { it.javaClass } shouldBe listOf(
-                LinkIsURLUnder200Characters::class.java
+                LinkIsURLandMax200Characters::class.java
             )
         }
 
@@ -77,7 +82,7 @@ class BeskjedValideringTest {
         ).apply {
             isValid() shouldBe false
             failedValidators.map { it.javaClass } shouldBe listOf(
-                LinkIsURLUnder200Characters::class.java
+                LinkIsURLandMax200Characters::class.java
             )
         }
 
@@ -97,7 +102,7 @@ class BeskjedValideringTest {
     }
 
     @Test
-    fun `prefererte kanaler må være SMS eller EPOST`() {
+    fun `optional prefererte kanaler må være SMS eller EPOST`() {
         //test tom liste
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
@@ -111,7 +116,7 @@ class BeskjedValideringTest {
     }
 
     @Test
-    fun `smstekst kan være maks 160 tegn`() {
+    fun `optional smstekst kan ikke være tom, og maks 160 tegn`() {
         //test tom streng
         val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
@@ -120,7 +125,35 @@ class BeskjedValideringTest {
         )
         validation.isValid() shouldBe false
         validation.failedValidators.map { it.javaClass } shouldBe listOf(
-            SmstekstIsMaximum160Characters::class.java
+            SmstekstIsMax160Characters::class.java
+        )
+    }
+
+    @Test
+    fun `optional eposttekst kan ikke være tom, og maks 4000 tegn`() {
+        //test tom streng
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                epostVarslingstekst = "x".repeat(4001)
+            )
+        )
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
+            EposttekstIsMax4000Characters::class.java
+        )
+    }
+
+    @Test
+    fun `optional eposttittel kan ikke være tom, og maks 40 tegn`() {
+        //test tom streng
+        val validation = BeskjedValidation(
+            BeskjedTestData.beskjedInput(
+                epostVarslingstittel = "x".repeat(4001)
+            )
+        )
+        validation.isValid() shouldBe false
+        validation.failedValidators.map { it.javaClass } shouldBe listOf(
+            EposttittelIsMax40Characters::class.java
         )
     }
 
