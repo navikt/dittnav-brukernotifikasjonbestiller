@@ -16,7 +16,7 @@ object AvroOppgaveInputObjectMother {
     private val defaultSmsVarslingstekst: String = "smstittel"
 
     fun createOppgaveInput(
-        text: String = defaultTekst,
+        tekst: String = defaultTekst,
         sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
         eksternVarsling: Boolean = defaultEksternVarsling,
         link: String = defaultLink,
@@ -29,7 +29,7 @@ object AvroOppgaveInputObjectMother {
         return OppgaveInput(
             Instant.now().toEpochMilli(),
             synligFremTil,
-            text,
+            tekst,
             link,
             sikkerhetsnivaa,
             eksternVarsling,

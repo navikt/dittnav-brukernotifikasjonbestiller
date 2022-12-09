@@ -2,18 +2,47 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Disabled
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-class BeskjedValideringTest {
+class VarselValideringTest {
 
     @Test
     fun `beskjed med gyldige felter er gyldig`() {
         val validation = VarselValidation(
             BeskjedTestData.beskjedInput(
                 tekst = "x".repeat(300),
+                link = "https://" + "x".repeat(192),
+                epostVarslingstekst = "x".repeat(4000),
+                smsVarslingstekst = "x".repeat(160),
+                epostVarslingstittel = "x".repeat(40)
+            )
+        )
+        assert(validation.isValid()) { "Validering feilet:" + validation.failedValidators.map { it.description } }
+    }
+
+    @Test
+    fun `oppgave med gyldige felter er gyldig`() {
+        val validation = VarselValidation(
+            AvroOppgaveInputObjectMother.createOppgaveInput(
+                tekst = "x".repeat(500),
+                link = "https://" + "x".repeat(192),
+                epostVarslingstekst = "x".repeat(4000),
+                smsVarslingstekst = "x".repeat(160),
+                epostVarslingstittel = "x".repeat(40)
+            )
+        )
+        assert(validation.isValid()) { "Validering feilet:" + validation.failedValidators.map { it.description } }
+    }
+
+    @Test
+    fun `innboks med gyldige felter er gyldig`() {
+        val validation = VarselValidation(
+            AvroInnboksInputObjectMother.createInnboksInput(
+                tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
                 epostVarslingstekst = "x".repeat(4000),
                 smsVarslingstekst = "x".repeat(160),
@@ -158,11 +187,5 @@ class BeskjedValideringTest {
         validation.failedValidators.map { it.javaClass } shouldBe listOf(
             EposttittelValidator::class.java
         )
-    }
-
-    @Test
-    @Disabled
-    fun `eventtype må være beskjed`() {
-
     }
 }

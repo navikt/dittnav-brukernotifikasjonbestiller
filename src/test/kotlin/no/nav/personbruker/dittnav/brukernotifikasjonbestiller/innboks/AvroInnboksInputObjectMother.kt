@@ -15,7 +15,7 @@ object AvroInnboksInputObjectMother {
     private val defaultSmsVarslingstekst: String = "smstittel"
 
     fun createInnboksInput(
-        text: String = defaultTekst,
+        tekst: String = defaultTekst,
         sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
         eksternVarsling: Boolean = defaultEksternVarsling,
         link: String = defaultLink,
@@ -26,7 +26,7 @@ object AvroInnboksInputObjectMother {
     ): InnboksInput {
         return InnboksInput(
             Instant.now().toEpochMilli(),
-            text,
+            tekst,
             link,
             sikkerhetsnivaa,
             eksternVarsling,
@@ -38,7 +38,7 @@ object AvroInnboksInputObjectMother {
     }
 
     fun createInnboksInputWithText(text: String): InnboksInput {
-        return createInnboksInput(text = text)
+        return createInnboksInput(tekst = text)
     }
 
     fun createInnboksInputWithLink(link: String): InnboksInput {
