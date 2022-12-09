@@ -11,7 +11,7 @@ class BeskjedValideringTest {
 
     @Test
     fun `beskjed med gyldige felter er gyldig`() {
-        BeskjedValidation(
+        val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
                 tekst = "x".repeat(300),
                 link = "https://" + "x".repeat(192),
@@ -19,12 +19,13 @@ class BeskjedValideringTest {
                 smsVarslingstekst = "x".repeat(160),
                 epostVarslingstittel = "x".repeat(40)
             )
-        ).isValid() shouldBe true
+        )
+        assert(validation.isValid()) { "Validering feilet:" + validation.failedValidators.map { it.description } }
     }
 
     @Test
     fun `valgfrie felter kan være null`() {
-        BeskjedValidation(
+        val validation = BeskjedValidation(
             BeskjedTestData.beskjedInput(
                 //sikkerhetsnivaa = null,
                 link = null,
@@ -33,7 +34,8 @@ class BeskjedValideringTest {
                 epostVarslingstekst = null,
                 epostVarslingstittel = null
             )
-        ).isValid() shouldBe true
+        )
+        assert(validation.isValid()) { "Validering feilet:" + validation.failedValidators.map { it.description } }
     }
 
     @Test
