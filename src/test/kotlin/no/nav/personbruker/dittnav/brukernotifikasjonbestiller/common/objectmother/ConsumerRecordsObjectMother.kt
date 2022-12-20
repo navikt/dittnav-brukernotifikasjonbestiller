@@ -2,8 +2,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmot
 
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AvroBeskjedInputObjectMother
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.common.TopicPartition
@@ -23,15 +23,15 @@ object ConsumerRecordsObjectMother {
     private fun createBeskjedRecords(topicName: String, totalNumber: Int): List<ConsumerRecord<NokkelInput, BeskjedInput>> {
         val allRecords = mutableListOf<ConsumerRecord<NokkelInput, BeskjedInput>>()
         for (i in 0 until totalNumber) {
-            val schemaRecord = AvroBeskjedInputObjectMother.createBeskjedInput()
-            val nokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(i.toString())
+            val schemaRecord = BeskjedTestData.beskjedInput()
+            val nokkel = NokkelTestData.createNokkelInputWithEventId(i.toString())
 
             allRecords.add(ConsumerRecord(topicName, i, i.toLong(), nokkel, schemaRecord))
         }
         return allRecords
     }
 
-    fun <T> createInputConsumerRecords(nokkel: NokkelInput?, event: T?, topic: String): ConsumerRecords<NokkelInput, T> {
+    fun <T> createInputConsumerRecords(nokkel: NokkelInput?, event: T?, topic: String = "topic"): ConsumerRecords<NokkelInput, T> {
         val allRecords = mutableMapOf<TopicPartition, List<ConsumerRecord<NokkelInput, T>>>()
         val recordsForSingleTopic = mutableListOf<ConsumerRecord<NokkelInput, T>>()
 

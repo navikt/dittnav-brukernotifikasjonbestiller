@@ -13,7 +13,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmoth
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -37,8 +37,8 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
-        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
+        val externalBeskjed = BeskjedTestData.beskjedInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjed, topic)
 
@@ -66,7 +66,7 @@ internal class BeskjedInputEventServiceTest {
     @Test
     fun `skal ikke skrive til topic hvis nokkel er null`() {
         val externalNullNokkel = null
-        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
+        val externalBeskjed = BeskjedTestData.beskjedInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNullNokkel, externalBeskjed, topic)
 
@@ -89,8 +89,8 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis eventet har en valideringsfeil`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
-        val externalBeskjedWithTooLongText = AvroBeskjedInputObjectMother.createBeskjedInputWithText("1234567890".repeat(50))
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
+        val externalBeskjedWithTooLongText = BeskjedTestData.createBeskjedInputWithText("1234567890".repeat(50))
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalBeskjedWithTooLongText, topic)
 
@@ -112,7 +112,7 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalUnexpectedBeskjed = mockk<BeskjedInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedBeskjed, topic)
@@ -136,8 +136,8 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
-        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
+        val externalBeskjed = BeskjedTestData.beskjedInput()
 
         val validEvents = listOf(internalEvents[0])
         val duplicateEvents = listOf(internalEvents[1])
@@ -170,7 +170,7 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalDone = AvroDoneInputObjectMother.createDoneInput()
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
@@ -195,8 +195,8 @@ internal class BeskjedInputEventServiceTest {
 
     @Test
     fun `sender ikke beskjed til rapid hvis flagg er av`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
-        val externalBeskjed = AvroBeskjedInputObjectMother.createBeskjedInput()
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
+        val externalBeskjed = BeskjedTestData.beskjedInput()
 
         val beskjedRapidProducer: BeskjedRapidProducer = mockk(relaxed = true)
         val beskjedEventService = BeskjedInputEventService(

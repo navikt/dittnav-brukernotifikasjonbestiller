@@ -3,7 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import java.time.Instant
 
-object AvroBeskjedInputObjectMother {
+object BeskjedTestData {
 
     private val defaultTekst = "Dette er en beskjed til bruker."
     private val defaultSikkerhetsnivaa = 4
@@ -15,13 +15,13 @@ object AvroBeskjedInputObjectMother {
     private val defaultEpostVarslingstittel: String = "eposttittel"
     private val defaultSmsVarslingstekst: String = "smstittel"
 
-    fun createBeskjedInput(
-        text: String = defaultTekst,
-        link: String = defaultLink,
-        eksternVarsling: Boolean = defaultEksternVarsling,
-        sikkerhetsnivaa: Int = defaultSikkerhetsnivaa,
+    fun beskjedInput(
+        tekst: String? = defaultTekst,
+        link: String? = defaultLink,
+        eksternVarsling: Boolean? = defaultEksternVarsling,
+        sikkerhetsnivaa: Int? = defaultSikkerhetsnivaa,
         synligFremTil: Long? = defaultSynligFremTil,
-        prefererteKanaler: List<String> = defaultPrefererteKanaler,
+        prefererteKanaler: List<String>? = defaultPrefererteKanaler,
         epostVarslingstekst: String? = defaultEpostVarslingstekst,
         epostVarslingstittel: String? = defaultEpostVarslingstittel,
         smsVarslingstekst: String? = defaultSmsVarslingstekst
@@ -29,7 +29,7 @@ object AvroBeskjedInputObjectMother {
         return BeskjedInput(
             Instant.now().toEpochMilli(),
             synligFremTil,
-            text,
+            tekst,
             link,
             sikkerhetsnivaa,
             eksternVarsling,
@@ -41,22 +41,22 @@ object AvroBeskjedInputObjectMother {
     }
 
     fun createBeskjedInputWithText(text: String): BeskjedInput {
-        return createBeskjedInput(text = text)
+        return beskjedInput(tekst = text)
     }
 
     fun createBeskjedInputWithLink(link: String): BeskjedInput {
-        return createBeskjedInput(link = link)
+        return beskjedInput(link = link)
     }
 
     fun createBeskjedInputWithSikkerhetsnivaa(sikkerhetsnivaa: Int): BeskjedInput {
-        return createBeskjedInput(sikkerhetsnivaa = sikkerhetsnivaa)
+        return beskjedInput(sikkerhetsnivaa = sikkerhetsnivaa)
     }
 
     fun createBeskjedInputWithSynligFremTil(synligFremTil: Long?): BeskjedInput {
-        return createBeskjedInput(synligFremTil = synligFremTil)
+        return beskjedInput(synligFremTil = synligFremTil)
     }
 
     fun createBeskjedInputWithEksternVarslingAndPrefererteKanaler(eksternVarsling: Boolean, prefererteKanaler: List<String>): BeskjedInput {
-        return createBeskjedInput(eksternVarsling = eksternVarsling, prefererteKanaler = prefererteKanaler)
+        return beskjedInput(eksternVarsling = eksternVarsling, prefererteKanaler = prefererteKanaler)
     }
 }

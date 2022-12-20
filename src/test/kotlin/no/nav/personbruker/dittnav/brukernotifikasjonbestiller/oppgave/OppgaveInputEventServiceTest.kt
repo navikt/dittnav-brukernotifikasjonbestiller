@@ -13,7 +13,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmoth
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -36,7 +36,7 @@ internal class OppgaveInputEventServiceTest {
 
     @Test
     fun `skal skrive til internal-topic hvis alt er ok`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalOppgave = AvroOppgaveInputObjectMother.createOppgaveInput()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalOppgave, topic)
@@ -88,7 +88,7 @@ internal class OppgaveInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis eventet har en valideringsfeil`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalOppgaveWithTooLongText = AvroOppgaveInputObjectMother.createOppgaveInputWithText("1234567890".repeat(100))
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalOppgaveWithTooLongText, topic)
@@ -111,7 +111,7 @@ internal class OppgaveInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis vi faar en uventet feil under transformering`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalUnexpectedOppgave = mockk<OppgaveInput>()
 
         val externalEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalUnexpectedOppgave, topic)
@@ -135,7 +135,7 @@ internal class OppgaveInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis det finnes duplikat`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalOppgave = AvroOppgaveInputObjectMother.createOppgaveInput()
 
         val validEvents = listOf(internalEvents[0])
@@ -169,7 +169,7 @@ internal class OppgaveInputEventServiceTest {
 
     @Test
     fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
-        val externalNokkel = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
         val externalDone = AvroDoneInputObjectMother.createDoneInput()
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)

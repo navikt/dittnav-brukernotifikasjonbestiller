@@ -23,7 +23,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype.BESKJED
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother.createDoneInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
@@ -124,21 +124,21 @@ class DoneInputIT {
     }
 
     private fun createEvents() = (1..10).map {
-        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(
+        NokkelTestData.createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = it.toString()
         ) to createDoneInput()
     }
 
     private fun createEventWithTooLongGroupId(): Pair<NokkelInput, DoneInput> =
-        AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndGroupId(
+        NokkelTestData.createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = "groupId".repeat(100)
         ) to createDoneInput()
 
     private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> =
-        AvroNokkelInputObjectMother.createNokkelInputWithEventId("notUuidOrUlid") to createDoneInput()
+        NokkelTestData.createNokkelInputWithEventId("notUuidOrUlid") to createDoneInput()
 
     private fun createEventWithDuplicateId(existingEventId: String) =
-        AvroNokkelInputObjectMother.createNokkelInputWithEventId(existingEventId) to createDoneInput()
+        NokkelTestData.createNokkelInputWithEventId(existingEventId) to createDoneInput()
 }

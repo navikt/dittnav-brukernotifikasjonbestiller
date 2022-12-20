@@ -10,7 +10,7 @@ import io.mockk.unmockkObject
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.builders.exception.FieldValidationException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.CurrentTimeHelper
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.AvroNokkelInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ internal class DoneInputTransformerTest {
     @Test
     fun `should transform from external to internal`() {
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(eventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(eventId)
 
         every { CurrentTimeHelper.nowInEpochMillis() } returns epochTimeMillis
 
@@ -56,7 +56,7 @@ internal class DoneInputTransformerTest {
     fun `should allow UUID as eventid`() {
         val uuidEventId = UUID.randomUUID().toString()
 
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(uuidEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(uuidEventId)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
@@ -68,7 +68,7 @@ internal class DoneInputTransformerTest {
     fun `should allow ULID as eventid`() {
         val ulidEventId = ULID().nextULID()
 
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(ulidEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(ulidEventId)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
@@ -79,7 +79,7 @@ internal class DoneInputTransformerTest {
     @Test
     fun `should allow eventId that is not ulid or uuid`() {
         val legacyEventId = "1234"
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventId(legacyEventId)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventId(legacyEventId)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
         val (transformedNokkel, _) = DoneInputTransformer.toInternal(externalNokkelInput, externalDoneInput)
@@ -90,7 +90,7 @@ internal class DoneInputTransformerTest {
     @Test
     fun `do not allow empty fodselsnummer`() {
         val fodselsnummerEmpty = ""
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventIdAndFnr(eventId, fodselsnummerEmpty)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
         shouldThrow<FieldValidationException> {
@@ -103,7 +103,7 @@ internal class DoneInputTransformerTest {
     @Test
     fun `do not allow too long fodselsnummer`() {
         val tooLongFnr = "1".repeat(12)
-        val externalNokkelInput = AvroNokkelInputObjectMother.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
+        val externalNokkelInput = NokkelTestData.createNokkelInputWithEventIdAndFnr(eventId, tooLongFnr)
         val externalDoneInput = AvroDoneInputObjectMother.createDoneInput()
 
         shouldThrow<FieldValidationException> {
