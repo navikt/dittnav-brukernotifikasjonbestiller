@@ -17,9 +17,11 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDat
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.feilrespons.FeilresponsTransformer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 class BeskjedInputEventService(
     private val metricsCollector: MetricsCollector,
@@ -30,6 +32,36 @@ class BeskjedInputEventService(
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedInputEventService::class.java)
+
+    suspend fun processEvents2(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
+
+        metricsCollector.recordMetrics(eventType = Eventtype.BESKJED) {
+            val (validEvents, invalidEvents) = events
+                .map { it to VarselValidation(it.key(), it.value()) }
+                .partition { (_, validation) -> validation.isValid() }
+
+            val validerteBeskjeder = validEvents.map { it.first.toBeskjed() }
+            val unikeBeskjeder = handleDuplicateEvents.unikeBeskjeder(validerteBeskjeder)
+
+            unikeBeskjeder.forEach {
+                try { // Trenger vi fortsatt try catch??
+                    beskjedRapidProducer.produce(it)
+                    countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
+                } catch (e: Exception) {
+                    log.error("Klarte ikke produsere beskjed ${it.eventId} på rapid", e)
+                }
+            }
+
+            //eventDispatcher.dispatchProblematicEventsOnly(problematicEvents)
+            //brukernotifikasjonbestillingRepository.persistInOneBatch(validatedEvents, eventtype)
+        }
+
+        //duplikatsjekke?? holder å ignorere
+        //produsere til rapid
+        //Lagre
+        //produsere til feiltopic
+        //logge
+    }
 
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
         val successfullyValidatedEvents = mutableListOf<Pair<NokkelIntern, BeskjedIntern>>()
@@ -126,4 +158,26 @@ private fun Pair<NokkelIntern, BeskjedIntern>.toBeskjed() =
         smsVarslingstekst = second.getSmsVarslingstekst(),
         epostVarslingstekst = second.getEpostVarslingstekst(),
         epostVarslingstittel = second.getEpostVarslingstittel()
+    )
+
+private fun ConsumerRecord<NokkelInput, BeskjedInput>.toBeskjed() =
+    Beskjed(
+        systembruker = "N/A",
+        namespace = key().getNamespace(),
+        appnavn = key().getAppnavn(),
+        eventId = key().getEventId(),
+        eventTidspunkt = value().getTidspunkt().toLocalDateTime(),
+        forstBehandlet = LocalDateTime.now(),
+        fodselsnummer = key().getFodselsnummer(),
+        grupperingsId = key().getGrupperingsId(),
+        tekst = value().getTekst(),
+        link = value().getLink(),
+        sikkerhetsnivaa = value().getSikkerhetsnivaa(),
+        synligFremTil = if (value().getSynligFremTil() != null) value().getSynligFremTil().toLocalDateTime() else null,
+        aktiv = true,
+        eksternVarsling = value().getEksternVarsling(),
+        prefererteKanaler = value().getPrefererteKanaler(),
+        smsVarslingstekst = value().getSmsVarslingstekst(),
+        epostVarslingstekst = value().getEpostVarslingstekst(),
+        epostVarslingstittel = value().getEpostVarslingstittel()
     )

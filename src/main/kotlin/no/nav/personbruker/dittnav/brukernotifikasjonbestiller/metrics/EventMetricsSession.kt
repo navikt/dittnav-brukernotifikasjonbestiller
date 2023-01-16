@@ -25,6 +25,11 @@ class EventMetricsSession(val eventtype: Eventtype) {
         countProcessedRapidEventsBySysUser[producer] = countProcessedRapidEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
+    fun countSuccessfulRapidEventForProducer(namespace: String, appnavn: String) {
+        val producer = NamespaceAppName(namespace = namespace, appName = appnavn)
+        countProcessedRapidEventsBySysUser[producer] = countProcessedRapidEventsBySysUser.getOrDefault(producer, 0).inc()
+    }
+
     fun countNokkelWasNull() {
         countNokkelWasNull++
     }
