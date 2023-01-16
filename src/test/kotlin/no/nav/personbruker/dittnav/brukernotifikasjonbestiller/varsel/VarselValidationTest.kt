@@ -1,18 +1,39 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.EposttekstValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.EposttittelValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.LinkValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.PrefererteKanalerValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.SikkerhetsnivaaValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.SmstekstValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.TekstValidator
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.VarselValidation
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 
-class VarselValideringTest {
+class VarselValidationTest {
+
+    @Test
+    fun `validere avro key og value`() {
+        val validation = VarselValidation(
+            NokkelTestData.nokkel(eventId = null), BeskjedTestData.beskjedInput()
+        )
+
+        validation.isValid() shouldBe false
+    }
+
 
     @Test
     fun `beskjed med gyldige felter er gyldig`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 tekst = "x".repeat(300),
                 link = "https://" + "x".repeat(192),
@@ -27,6 +48,7 @@ class VarselValideringTest {
     @Test
     fun `oppgave med gyldige felter er gyldig`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             AvroOppgaveInputObjectMother.createOppgaveInput(
                 tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
@@ -41,6 +63,7 @@ class VarselValideringTest {
     @Test
     fun `innboks med gyldige felter er gyldig`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             AvroInnboksInputObjectMother.createInnboksInput(
                 tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
@@ -55,6 +78,7 @@ class VarselValideringTest {
     @Test
     fun `valgfrie felter kan være null`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 //sikkerhetsnivaa = null,
                 link = null,
@@ -70,6 +94,7 @@ class VarselValideringTest {
     @Test
     fun `obligatoriske felter kan ikke være null`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 tekst = null
             )
@@ -85,6 +110,7 @@ class VarselValideringTest {
     @Test
     fun `tekst kan maks være 300 tegn`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 tekst = "x".repeat(301)
             )
@@ -98,6 +124,7 @@ class VarselValideringTest {
     @Test
     fun `optional link må være gyldig lenke og maks 200 tegn`() {
         VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 link = "https://" + "x".repeat(193)
             )
@@ -109,6 +136,7 @@ class VarselValideringTest {
         }
 
         VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 link = "ugyldig-link"
             )
@@ -123,6 +151,7 @@ class VarselValideringTest {
     @Test
     fun `sikkerhetsnivaa må være 3 eller 4`() {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 sikkerhetsnivaa = 5
             )
@@ -137,6 +166,7 @@ class VarselValideringTest {
     @ValueSource(strings = ["ABC", "SMS,ABC", ""])
     fun `optional prefererte kanaler må være SMS eller EPOST`(prefererteKanaler: String) {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 prefererteKanaler = prefererteKanaler.split(",")
             )
@@ -151,6 +181,7 @@ class VarselValideringTest {
     @ValueSource(ints = [0, 161])
     fun `optional smstekst kan ikke være tom, og maks 160 tegn`(length: Int) {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 smsVarslingstekst = "x".repeat(length)
             )
@@ -165,6 +196,7 @@ class VarselValideringTest {
     @ValueSource(ints = [0, 4001])
     fun `optional eposttekst kan ikke være tom, og maks 4000 tegn`(length: Int) {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 epostVarslingstekst = "x".repeat(length)
             )
@@ -179,6 +211,7 @@ class VarselValideringTest {
     @ValueSource(ints = [0, 41])
     fun `optional eposttittel kan ikke være tom, og maks 40 tegn`(length: Int) {
         val validation = VarselValidation(
+            NokkelTestData.nokkel(),
             BeskjedTestData.beskjedInput(
                 epostVarslingstittel = "x".repeat(length)
             )
