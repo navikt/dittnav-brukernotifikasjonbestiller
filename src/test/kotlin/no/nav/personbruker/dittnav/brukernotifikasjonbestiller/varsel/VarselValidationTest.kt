@@ -3,14 +3,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.EposttekstValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.EposttittelValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.LinkValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.PrefererteKanalerValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.SikkerhetsnivaaValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.SmstekstValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.TekstValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.VarselValidation
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother

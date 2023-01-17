@@ -4,12 +4,6 @@ import de.huxhorn.sulky.ulid.ULID
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.EventIdValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.FodselsnummerValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.AppnavnValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.NamespaceValidator
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.HasNokkel
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.VarselValidation
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest

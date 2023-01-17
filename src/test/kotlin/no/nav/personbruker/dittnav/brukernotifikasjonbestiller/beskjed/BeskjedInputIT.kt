@@ -5,21 +5,13 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.output.Feilrespons
-import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData.beskjedInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.asTimestamp
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventIdAndGroupId
@@ -39,28 +31,18 @@ class BeskjedInputIT {
 
     private val goodEvents = createEvents() + createBeskjedWithNullFields()
     private val badEvents = listOf(
-        //createEventWithTooLongGroupId(),
         createEventWithInvalidEventId(),
         createEventWithDuplicateId(goodEvents.first().first.getEventId())
     )
     private val beskjedEvents = goodEvents + badEvents
 
-    private val internalKafkaProducer = KafkaTestUtil.createMockProducer<NokkelIntern, BeskjedIntern>()
-    private val internalEventProducer = Producer(KafkaTestTopics.beskjedInternTopicName, internalKafkaProducer)
-    private val feilresponsKafkaProducer = KafkaTestUtil.createMockProducer<NokkelFeilrespons, Feilrespons>()
-    private val feilresponsEventProducer = Producer(KafkaTestTopics.feilresponsTopicName, feilresponsKafkaProducer)
     private val rapidKafkaProducer = KafkaTestUtil.createMockProducer<String, String>()
 
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-    private val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-    private val eventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internalEventProducer, feilresponsEventProducer)
     private val eventService = BeskjedInputEventService(
         metricsCollector = metricsCollector,
-        handleDuplicateEvents = handleDuplicateEvents,
-        eventDispatcher = eventDispatcher,
         beskjedRapidProducer = BeskjedRapidProducer(rapidKafkaProducer, "rapid"),
         brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository,
-        produceToRapid = true
     )
 
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
@@ -78,19 +60,11 @@ class BeskjedInputIT {
             ))
         }
 
-        internalKafkaProducer.initTransactions()
-        feilresponsKafkaProducer.initTransactions()
         runBlocking {
             inputEventConsumer.startPolling()
             KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
             inputEventConsumer.stopPolling()
         }
-    }
-
-    @Test
-    fun `Should read Beskjed-events and send to hoved-topic or error response topic as appropriate`() {
-        internalKafkaProducer.history().size shouldBe goodEvents.size
-        feilresponsKafkaProducer.history().size shouldBe badEvents.size
     }
 
     @Test
@@ -122,10 +96,15 @@ class BeskjedInputIT {
         beskjedJson["epostVarslingstittel"].asText() shouldBe beskjedAvroValue.getEpostVarslingstittel()
     }
 
+
     @Test
-    fun `Sender beskjeder til rapid i tillegg til gammelt topic`() {
-        internalKafkaProducer.history().size shouldBe goodEvents.size
-        rapidKafkaProducer.history().size shouldBe goodEvents.size
+    fun `lagrer greier`() {
+        throw NotImplementedError()
+    }
+
+    @Test
+    fun `validerer greier`() {
+        throw NotImplementedError()
     }
 
     private fun createEvents() = (1..10).map {
@@ -146,12 +125,6 @@ class BeskjedInputIT {
             epostVarslingstittel = null
         )
     )
-
-    private fun createEventWithTooLongGroupId() =
-        createNokkelInputWithEventIdAndGroupId(
-            eventId = UUID.randomUUID().toString(),
-            groupId = "groupId".repeat(100)
-        ) to beskjedInput()
 
     private fun createEventWithInvalidEventId() =
         createNokkelInputWithEventId("notUuidOrUlid") to beskjedInput()

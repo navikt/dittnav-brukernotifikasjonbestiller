@@ -84,16 +84,10 @@ class ApplicationContext {
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
-        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
         val beskjedEventService = BeskjedInputEventService(
             metricsCollector,
-            handleDuplicateEvents,
-            beskjedEventDispatcher,
             beskjedRapidProducer,
-            brukernotifikasjonbestillingRepository,
-            environment.produceToRapid
+            brukernotifikasjonbestillingRepository
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }

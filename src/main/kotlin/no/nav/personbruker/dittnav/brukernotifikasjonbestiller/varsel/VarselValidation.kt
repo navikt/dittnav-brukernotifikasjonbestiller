@@ -1,4 +1,4 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import de.huxhorn.sulky.ulid.ULID
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
