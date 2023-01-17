@@ -1,8 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DoneKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -26,6 +25,25 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
     suspend fun <T> persistInOneBatch(entities: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): ListPersistActionResult<Brukernotifikasjonbestilling> {
         return database.queryWithExceptionTranslation {
             createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(entities, eventtype))
+        }
+    }
+
+    suspend fun persist(beskjeder: List<Beskjed>) {
+        return database.queryWithExceptionTranslation {
+            createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(beskjeder))
+        }
+    }
+
+    private fun toBrukernotifikasjonbestilling(beskjeder: List<Beskjed>): List<Brukernotifikasjonbestilling> {
+        return beskjeder.map { beskjed ->
+                Brukernotifikasjonbestilling(
+                    eventId = beskjed.eventId,
+                    systembruker = beskjed.systembruker,
+                    eventtype = Eventtype.BESKJED,
+                    prosesserttidspunkt = LocalDateTime.now(ZoneId.of("UTC")),
+                    fodselsnummer = beskjed.fodselsnummer
+                )
+
         }
     }
 

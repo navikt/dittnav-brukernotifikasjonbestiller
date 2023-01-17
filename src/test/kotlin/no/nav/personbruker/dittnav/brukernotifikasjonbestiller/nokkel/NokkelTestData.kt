@@ -4,7 +4,7 @@ import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 
 object NokkelTestData {
     private const val defaultEventId = "12345678-1234-1234-1234-1234567890ab"
-    private const val defaultFodselsnr = "1234"
+    private const val defaultFodselsnr = "12345678910"
     private const val defaultGrupperingsid = "123"
     private const val defaultAppName = "defaultAppName"
     private const val defaultNamespace = "defaultNamespace"

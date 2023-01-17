@@ -1,20 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 
 class HandleDuplicateEvents(private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository) {
-
-    suspend fun unikeBeskjeder(beskjeder: List<Beskjed>): List<Beskjed> {
-        val eventIder = beskjeder.map { it.eventId }
-
-        val duplicatesInList = eventIder.groupingBy { it }.eachCount().filter { it.value > 1 }.map { it.value }
-        val duplicatesInDb = brukernotifikasjonbestillingRepository.fetchExistingEventIdsExcludingDone(eventIder).toSet()
-        val duplicates = duplicatesInList + duplicatesInDb
-
-        return beskjeder.filter { it.eventId !in duplicates }
-    }
 
     suspend fun <T> checkForDuplicateEvents(successfullyValidatedEvents: MutableList<Pair<NokkelIntern, T>>): DuplicateCheckResult<T> {
         val checkDuplicatesInDbResult = getDuplicatesFromDb(successfullyValidatedEvents)

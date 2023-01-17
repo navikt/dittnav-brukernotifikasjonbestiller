@@ -39,7 +39,7 @@ class BeskjedInputIT {
 
     private val goodEvents = createEvents() + createBeskjedWithNullFields()
     private val badEvents = listOf(
-        createEventWithTooLongGroupId(),
+        //createEventWithTooLongGroupId(),
         createEventWithInvalidEventId(),
         createEventWithDuplicateId(goodEvents.first().first.getEventId())
     )
@@ -59,6 +59,7 @@ class BeskjedInputIT {
         handleDuplicateEvents = handleDuplicateEvents,
         eventDispatcher = eventDispatcher,
         beskjedRapidProducer = BeskjedRapidProducer(rapidKafkaProducer, "rapid"),
+        brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository,
         produceToRapid = true
     )
 

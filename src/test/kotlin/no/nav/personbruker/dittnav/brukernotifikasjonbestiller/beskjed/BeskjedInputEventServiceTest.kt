@@ -32,6 +32,7 @@ internal class BeskjedInputEventServiceTest {
         metricsCollector,
         handleDuplicateEvents,
         eventDispatcher,
+        mockk(),
         mockk()
     )
 
@@ -204,6 +205,7 @@ internal class BeskjedInputEventServiceTest {
             handleDuplicateEvents = handleDuplicateEvents,
             eventDispatcher = eventDispatcher,
             beskjedRapidProducer = beskjedRapidProducer,
+            brukernotifikasjonbestillingRepository = mockk(),
             produceToRapid = false
         )
 

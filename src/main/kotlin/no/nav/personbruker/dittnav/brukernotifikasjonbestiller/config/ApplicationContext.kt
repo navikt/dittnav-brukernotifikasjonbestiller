@@ -92,6 +92,7 @@ class ApplicationContext {
             handleDuplicateEvents,
             beskjedEventDispatcher,
             beskjedRapidProducer,
+            brukernotifikasjonbestillingRepository,
             environment.produceToRapid
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)

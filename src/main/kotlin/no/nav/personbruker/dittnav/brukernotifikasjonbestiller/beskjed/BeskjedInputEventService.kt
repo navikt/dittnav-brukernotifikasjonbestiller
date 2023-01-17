@@ -7,6 +7,7 @@ import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
@@ -28,39 +29,41 @@ class BeskjedInputEventService(
     private val handleDuplicateEvents: HandleDuplicateEvents,
     private val eventDispatcher: EventDispatcher<BeskjedIntern>,
     private val beskjedRapidProducer: BeskjedRapidProducer,
+    private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository,
     private val produceToRapid: Boolean = false
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
 
     private val log: Logger = LoggerFactory.getLogger(BeskjedInputEventService::class.java)
 
     suspend fun processEvents2(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
-
         metricsCollector.recordMetrics(eventType = Eventtype.BESKJED) {
             val (validEvents, invalidEvents) = events
                 .map { it to VarselValidation(it.key(), it.value()) }
                 .partition { (_, validation) -> validation.isValid() }
 
-            val validerteBeskjeder = validEvents.map { it.first.toBeskjed() }
-            val unikeBeskjeder = handleDuplicateEvents.unikeBeskjeder(validerteBeskjeder)
+            val validBeskjeder = validEvents.map { it.first.toBeskjed() }
+            val uniqueBeskjeder = uniqueBeskjeder(validBeskjeder)
 
-            unikeBeskjeder.forEach {
-                try { // Trenger vi fortsatt try catch??
-                    beskjedRapidProducer.produce(it)
-                    countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
-                } catch (e: Exception) {
-                    log.error("Klarte ikke produsere beskjed ${it.eventId} på rapid", e)
-                }
+            uniqueBeskjeder.forEach {
+                beskjedRapidProducer.produce(it)
+                countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
             }
 
-            //eventDispatcher.dispatchProblematicEventsOnly(problematicEvents)
-            //brukernotifikasjonbestillingRepository.persistInOneBatch(validatedEvents, eventtype)
-        }
+            invalidEvents.forEach { (beskjed, validation) ->
+                log.info("Ignorerer beskjed på ugyldig format: ${beskjed.key().getEventId()}. " +
+                        "Grunn: ${validation.failedValidators.map { it.description }} ")
+            }
 
-        //duplikatsjekke?? holder å ignorere
-        //produsere til rapid
-        //Lagre
-        //produsere til feiltopic
-        //logge
+            brukernotifikasjonbestillingRepository.persist(uniqueBeskjeder)
+        }
+    }
+
+    private suspend fun uniqueBeskjeder(beskjeder: List<Beskjed>): List<Beskjed> {
+        val eventIder = beskjeder.map { it.eventId }
+        val duplicatesInDb = brukernotifikasjonbestillingRepository.fetchExistingEventIdsExcludingDone(eventIder).toSet()
+
+        return beskjeder.distinctBy { it.eventId }
+            .filter { it.eventId !in duplicatesInDb }
     }
 
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
