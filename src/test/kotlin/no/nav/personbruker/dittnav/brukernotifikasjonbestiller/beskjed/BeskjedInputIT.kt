@@ -7,11 +7,13 @@ import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData.beskjedInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.getAllBrukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.asTimestamp
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.LocalPostgresDatabase
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventIdAndGroupId
@@ -68,7 +70,7 @@ class BeskjedInputIT {
     }
 
     @Test
-    fun `Sender beskjeder på rapid-format`() {
+    fun `Sender validerte beskjeder til intern-topic`() {
         val beskjedAvroKey = beskjedEvents.first().first
         val beskjedAvroValue = beskjedEvents.first().second
 
@@ -98,13 +100,18 @@ class BeskjedInputIT {
 
 
     @Test
-    fun `lagrer greier`() {
-        throw NotImplementedError()
-    }
+    fun `Lagrer bestillingene i basen`() {
+        runBlocking {
+            val brukernotifikasjonbestillinger = database.dbQuery { getAllBrukernotifikasjonbestilling() }
+            brukernotifikasjonbestillinger.size shouldBe goodEvents.size
 
-    @Test
-    fun `validerer greier`() {
-        throw NotImplementedError()
+            val (beskjedKey, _) = goodEvents.first()
+            val brukernotifikasjonbestilling = brukernotifikasjonbestillinger.first { it.eventId == beskjedKey.getEventId()}
+            brukernotifikasjonbestilling.apply {
+                eventtype shouldBe Eventtype.BESKJED
+                fodselsnummer shouldBe beskjedKey.getFodselsnummer()
+            }
+        }
     }
 
     private fun createEvents() = (1..10).map {
