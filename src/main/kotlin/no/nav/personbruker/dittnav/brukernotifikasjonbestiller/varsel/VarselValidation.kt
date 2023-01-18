@@ -24,7 +24,6 @@ class VarselValidation(nokkel: NokkelInput?, varsel: GenericRecord) {
         SmstekstValidator(),
         EposttekstValidator(),
         EposttittelValidator()
-        //synligFremtil? må være frem i tid?
     ).filter { !it.validate(varsel) }
 
     private fun getFailedNokkelValidators(nokkel: NokkelInput?) =
@@ -74,7 +73,7 @@ class AppnavnValidator : VarselValidator() {
 }
 
 class EventIdValidator : VarselValidator() {
-    override val description: String = "Eventid må være gyldig UUID eller ULIO"
+    override val description: String = "Eventid må være gyldig UUID eller ULID"
     private val fieldName = "eventId"
 
     override fun validate(record: GenericRecord): Boolean =

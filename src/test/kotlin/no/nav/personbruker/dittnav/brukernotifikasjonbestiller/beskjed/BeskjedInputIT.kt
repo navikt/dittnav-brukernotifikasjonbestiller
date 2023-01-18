@@ -53,18 +53,24 @@ class BeskjedInputIT {
     @BeforeAll
     fun setup() {
         beskjedEvents.forEachIndexed { index, (key, value) ->
-            inputKafkaConsumer.addRecord(ConsumerRecord(
-                KafkaTestTopics.beskjedInputTopicName,
-                0,
-                index.toLong(),
-                key,
-                value
-            ))
+            inputKafkaConsumer.addRecord(
+                ConsumerRecord(
+                    KafkaTestTopics.beskjedInputTopicName,
+                    0,
+                    index.toLong(),
+                    key,
+                    value
+                )
+            )
         }
 
         runBlocking {
             inputEventConsumer.startPolling()
-            KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.beskjedInputTopicName, beskjedEvents.size.toLong())
+            KafkaTestUtil.delayUntilCommittedOffset(
+                consumer = inputKafkaConsumer,
+                topicName = KafkaTestTopics.beskjedInputTopicName,
+                offset = beskjedEvents.size.toLong()
+            )
             inputEventConsumer.stopPolling()
         }
     }
@@ -98,7 +104,6 @@ class BeskjedInputIT {
         beskjedJson["epostVarslingstittel"].asText() shouldBe beskjedAvroValue.getEpostVarslingstittel()
     }
 
-
     @Test
     fun `Lagrer bestillingene i basen`() {
         runBlocking {
@@ -106,8 +111,9 @@ class BeskjedInputIT {
             brukernotifikasjonbestillinger.size shouldBe goodEvents.size
 
             val (beskjedKey, _) = goodEvents.first()
-            val brukernotifikasjonbestilling = brukernotifikasjonbestillinger.first { it.eventId == beskjedKey.getEventId()}
-            brukernotifikasjonbestilling.apply {
+            brukernotifikasjonbestillinger.first {
+                it.eventId == beskjedKey.getEventId()
+            }.apply {
                 eventtype shouldBe Eventtype.BESKJED
                 fodselsnummer shouldBe beskjedKey.getFodselsnummer()
             }

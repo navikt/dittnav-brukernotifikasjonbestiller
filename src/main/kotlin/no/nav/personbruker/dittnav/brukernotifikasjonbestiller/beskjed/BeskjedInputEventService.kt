@@ -36,8 +36,9 @@ class BeskjedInputEventService(
             }
 
             invalidEvents.forEach { (beskjed, validation) ->
-                log.info("Ignorerer beskjed på ugyldig format: ${beskjed.key().getEventId()}. " +
-                        "Grunn: ${validation.failedValidators.map { it.description }} "
+                log.info(
+                    "Ignorerer beskjed på ugyldig format: ${beskjed.key().getEventId()}. " +
+                            "Grunn: ${validation.failedValidators.map { it.description }} "
                 )
             }
 
