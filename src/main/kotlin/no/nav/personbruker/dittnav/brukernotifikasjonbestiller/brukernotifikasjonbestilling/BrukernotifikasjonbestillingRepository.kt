@@ -5,6 +5,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.Varsel
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -34,6 +35,12 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         }
     }
 
+    suspend fun persistVarsler(varsler: List<Varsel>) {
+        return database.queryWithExceptionTranslation {
+            createBrukernotifikasjonbestilling(varsler.map { it.toBrukernotifikasjonbestilling() })
+        }
+    }
+
     private fun toBrukernotifikasjonbestilling(beskjeder: List<Beskjed>): List<Brukernotifikasjonbestilling> {
         return beskjeder.map { beskjed ->
                 Brukernotifikasjonbestilling(
@@ -46,6 +53,17 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
 
         }
     }
+
+    private fun Varsel.toBrukernotifikasjonbestilling() =
+        Brukernotifikasjonbestilling(
+            eventId = eventId,
+            systembruker = systembruker,
+            eventtype = Eventtype.BESKJED,
+            prosesserttidspunkt = LocalDateTime.now(ZoneId.of("UTC")),
+            fodselsnummer = fodselsnummer
+        )
+
+
 
     private fun <T> toBrukernotifikasjonbestilling(events: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
