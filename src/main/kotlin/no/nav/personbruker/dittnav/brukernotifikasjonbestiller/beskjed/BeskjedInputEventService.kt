@@ -41,8 +41,6 @@ class BeskjedInputEventService(
                 )
             }
 
-            //trenger vi håndtere fx en oppgave på beskjed-topicen?
-
             brukernotifikasjonbestillingRepository.persist(uniqueBeskjeder)
         }
     }

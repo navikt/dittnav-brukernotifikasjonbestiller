@@ -1,11 +1,12 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DoneKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.*
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.executeBatchPersistQuery
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.getUtcDateTime
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.mapList
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.toBatchPersistResult
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.toEventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import java.sql.Array
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
