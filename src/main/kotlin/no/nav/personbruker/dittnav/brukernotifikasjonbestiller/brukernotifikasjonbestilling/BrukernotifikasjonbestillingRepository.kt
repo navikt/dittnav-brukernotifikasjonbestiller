@@ -2,6 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasj
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.Beskjed
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -40,7 +41,7 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
                     eventId = beskjed.eventId,
                     systembruker = beskjed.systembruker,
                     eventtype = Eventtype.BESKJED,
-                    prosesserttidspunkt = LocalDateTime.now(ZoneId.of("UTC")),
+                    prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
                     fodselsnummer = beskjed.fodselsnummer
                 )
 
@@ -55,7 +56,7 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
                             eventId = event.first.getEventId(),
                             systembruker = event.first.getSystembruker(),
                             eventtype = eventtype,
-                            prosesserttidspunkt = LocalDateTime.now(ZoneId.of("UTC")),
+                            prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
                             fodselsnummer = event.first.getFodselsnummer()
                     )
             )

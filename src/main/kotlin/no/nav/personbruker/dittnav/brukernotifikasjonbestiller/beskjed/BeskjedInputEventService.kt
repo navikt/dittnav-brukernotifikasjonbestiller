@@ -4,6 +4,7 @@ import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
@@ -63,7 +64,7 @@ private fun ConsumerRecord<NokkelInput, BeskjedInput>.toBeskjed() =
         appnavn = key().getAppnavn(),
         eventId = key().getEventId(),
         eventTidspunkt = value().getTidspunkt().toLocalDateTime(),
-        forstBehandlet = LocalDateTime.now(),
+        forstBehandlet = LocalDateTimeHelper.nowAtUtc(),
         fodselsnummer = key().getFodselsnummer(),
         grupperingsId = key().getGrupperingsId(),
         tekst = value().getTekst(),
