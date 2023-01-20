@@ -117,7 +117,13 @@ class LinkValidator : VarselValidator() {
     override val description: String = "Link må være gyldig URL og maks $MAX_LENGTH_LINK tegn"
 
     override fun validate(record: GenericRecord): Boolean {
-        return record.isNull(fieldName) || isValidURL(record.get(fieldName) as String)
+        return record.isNull(fieldName)
+                || isEmptyBeskjedLink(record)
+                || isValidURL(record.get(fieldName) as String)
+    }
+
+    private fun isEmptyBeskjedLink(record: GenericRecord): Boolean {
+        return record.schema.name == "BeskjedInput" && (record.get(fieldName) as String) == ""
     }
 
     private fun isValidURL(link: String) =
