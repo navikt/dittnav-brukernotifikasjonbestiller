@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -52,6 +53,7 @@ class VarselForwarder(
 }
 
 data class Varsel(
+    @JsonIgnore
     val type: Eventtype,
     val systembruker: String,
     val namespace: String,
