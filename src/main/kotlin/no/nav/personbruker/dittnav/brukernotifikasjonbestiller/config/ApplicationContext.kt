@@ -13,7 +13,6 @@ import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -60,10 +59,6 @@ class ApplicationContext {
     var internDoneKafkaProducer = initializeInternDoneProducer()
     
     private val rapidKafkaProducer = initializeRapidKafkaProducer()
-    val beskjedRapidProducer = BeskjedRapidProducer(
-        kafkaProducer = rapidKafkaProducer,
-        topicName = environment.rapidTopic
-    )
     val oppgaveRapidProducer = OppgaveRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic

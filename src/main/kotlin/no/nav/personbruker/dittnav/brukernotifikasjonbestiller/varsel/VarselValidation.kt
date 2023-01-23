@@ -45,7 +45,7 @@ abstract class VarselValidator {
 
 class HasNokkel : VarselValidator() {
     override val description: String = "Nokkel kan ikke være null"
-    override fun validate(record: GenericRecord): Boolean = false
+    override fun validate(record: GenericRecord): Boolean = false //Brukes annerledes enn de andre validatorene
 }
 
 class FodselsnummerValidator : VarselValidator() {
@@ -77,7 +77,9 @@ class EventIdValidator : VarselValidator() {
     private val fieldName = "eventId"
 
     override fun validate(record: GenericRecord): Boolean =
-        record.get(fieldName)?.let { (it as String).isValidUuid() || it.isValidUlid() } ?: false
+        record.get(fieldName)?.let {
+            (it as String).isValidUuid() || it.isValidUlid()
+        } ?: false
 
     private fun String.isValidUuid(): Boolean =
         try {
