@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health
 
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
 import java.time.*
 
 class AppExpiryChecker (
@@ -19,7 +20,7 @@ class AppExpiryChecker (
     }
 
     private fun isWithinExpiryWindow(): Boolean {
-        val currentTimeUTC = LocalDateTime.now(ZoneOffset.UTC).toLocalTime()
+        val currentTimeUTC = LocalDateTimeHelper.nowAtUtc().toLocalTime()
 
         val windowStart = LocalTime.of(expiryHourUTC, 0)
         val windowEnd = windowStart.plusMinutes(expiryWindowMinutes.toLong())

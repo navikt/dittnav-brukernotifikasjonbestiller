@@ -9,3 +9,7 @@ object CurrentTimeHelper {
 }
 
 fun Long.toLocalDateTime(): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(this), ZoneId.of("UTC"))
+
+object LocalDateTimeHelper {
+    fun nowAtUtc(): LocalDateTime = LocalDateTime.now(ZoneId.of("UTC"))
+}
