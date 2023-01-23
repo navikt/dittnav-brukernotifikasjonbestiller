@@ -43,6 +43,7 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
             appContext.oppgaveRapidProducer.flushAndClose()
             appContext.innboksRapidProducer.flushAndClose()
             appContext.doneRapidProducer.flushAndClose()
+            appContext.varselRapidProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()
         }
         appContext.database.dataSource.close()

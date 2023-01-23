@@ -1,15 +1,12 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
+import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import org.apache.avro.generic.GenericRecord
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 class VarselForwarder(
@@ -17,12 +14,12 @@ class VarselForwarder(
     private val varselRapidProducer: VarselRapidProducer,
     private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository
 ) {
-    private val log: Logger = LoggerFactory.getLogger(VarselForwarder::class.java)
+    private val log = KotlinLogging.logger {}
 
-    suspend fun processVarsler(events: ConsumerRecords<NokkelInput, GenericRecord>, eventtype: Eventtype) {
+    suspend fun processVarsler(events: List<Pair<NokkelInput, GenericRecord>>, eventtype: Eventtype) {
         metricsCollector.recordMetrics(eventType = eventtype) {
             val (validEvents, invalidEvents) = events
-                .map { it to VarselValidation(it.key(), it.value()) }
+                .map { it to VarselValidation(it.first, it.second) }
                 .partition { (_, validation) -> validation.isValid() }
 
             val uniqueVarsler = uniqueVarsler(validEvents.map { it.first.toVarsel(eventtype) })
@@ -34,7 +31,7 @@ class VarselForwarder(
 
             invalidEvents.forEach { (varsel, validation) ->
                 log.info(
-                    "Ignorerer varsel på ugyldig format: ${varsel.key().getEventId()}. " +
+                    "Ignorerer varsel på ugyldig format: ${varsel.first.getEventId()}. " +
                             "Grunn: ${validation.failedValidators.map { it.description }} "
                 )
             }
@@ -75,28 +72,26 @@ data class Varsel(
     val epostVarslingstittel: String?
 )
 
-private fun ConsumerRecord<NokkelInput, GenericRecord>.toVarsel(type: Eventtype): Varsel {
+private fun Pair<NokkelInput, GenericRecord>.toVarsel(type: Eventtype): Varsel {
     return Varsel(
         type = type,
         systembruker = "N/A",
-        namespace = key().getNamespace(),
-        appnavn = key().getAppnavn(),
-        eventId = key().getEventId(),
-        eventTidspunkt = (value().get("tidspunkt") as Long).toLocalDateTime(),
+        namespace = first.getNamespace(),
+        appnavn = first.getAppnavn(),
+        eventId = first.getEventId(),
+        eventTidspunkt = (second.get("tidspunkt") as Long).toLocalDateTime(),
         forstBehandlet = LocalDateTime.now(),
-        fodselsnummer = key().getFodselsnummer(),
-        grupperingsId = key().getGrupperingsId(),
-        tekst = value().get("tekst") as String,
-        link = value().get("link") as String,
-        sikkerhetsnivaa = value().get("sikkerhetsnivaa") as Int,
-        synligFremTil = if (value().hasField("synligFremTil")) {
-            (value().get("synligFremTil") as Long).toLocalDateTime() 
-        } else null,
+        fodselsnummer = first.getFodselsnummer(),
+        grupperingsId = first.getGrupperingsId(),
+        tekst = second.get("tekst") as String,
+        link = second.get("link") as String,
+        sikkerhetsnivaa = second.get("sikkerhetsnivaa") as Int,
+        synligFremTil = (second.get("synligFremTil") as Long?)?.toLocalDateTime(),
         aktiv = true,
-        eksternVarsling = value().get("eksternVarsling") as Boolean,
-        prefererteKanaler = (value().get("prefererteKanaler") as List<*>).map { it as String },
-        smsVarslingstekst = value().get("smsVarslingstekst") as String,
-        epostVarslingstekst = value().get("epostVarslingstekst") as String,
-        epostVarslingstittel = value().get("epostVarslingstittel") as String
+        eksternVarsling = second.get("eksternVarsling") as Boolean,
+        prefererteKanaler = (second.get("prefererteKanaler") as List<*>).map { it as String },
+        smsVarslingstekst = second.get("smsVarslingstekst") as String?,
+        epostVarslingstekst = second.get("epostVarslingstekst") as String?,
+        epostVarslingstittel = second.get("epostVarslingstittel") as String?
     )
 }

@@ -30,6 +30,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
@@ -74,6 +76,16 @@ class ApplicationContext {
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
     )
+    val varselRapidProducer = VarselRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
+
+    private val varselForwarder = VarselForwarder(
+        metricsCollector = metricsCollector,
+        varselRapidProducer = varselRapidProducer,
+        brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository
+    )
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
@@ -84,11 +96,7 @@ class ApplicationContext {
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val beskjedEventService = BeskjedInputEventService(
-            metricsCollector,
-            beskjedRapidProducer,
-            brukernotifikasjonbestillingRepository
-        )
+        val beskjedEventService = BeskjedInputEventService(varselForwarder)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }
 

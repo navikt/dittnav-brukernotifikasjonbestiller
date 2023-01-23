@@ -18,7 +18,7 @@ class VarselRapidProducer(
         objectNode.put("@event_name", varsel.type.eventtype)
         val producerRecord = ProducerRecord(topicName, varsel.eventId, objectNode.toString())
         kafkaProducer.send(producerRecord)
-        log.info("Produsert varsel på rapid med eventid ${varsel.eventId}")
+        log.info("Videresendt validert varsel til intern-topic med eventid ${varsel.eventId}")
     }
 
     fun flushAndClose() {

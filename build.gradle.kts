@@ -1,5 +1,4 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.jetbrains.kotlin.compilerRunner.KotlinLogger
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -45,6 +44,7 @@ dependencies {
     implementation(Ktor2.Server.defaultHeaders)
     implementation("io.ktor:ktor-serialization-jackson:2.1.2")
     implementation(Jackson.dataTypeJsr310)
+    implementation(KotlinLogging.logging)
 
     testImplementation(Junit.api)
     testImplementation(Junit.params)

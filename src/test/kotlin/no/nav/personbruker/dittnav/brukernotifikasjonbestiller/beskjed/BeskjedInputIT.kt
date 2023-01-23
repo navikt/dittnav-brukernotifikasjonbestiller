@@ -17,6 +17,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventId
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData.createNokkelInputWithEventIdAndGroupId
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
@@ -41,12 +43,12 @@ class BeskjedInputIT {
     private val rapidKafkaProducer = KafkaTestUtil.createMockProducer<String, String>()
 
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
-    private val eventService = BeskjedInputEventService(
+    private val varselForwarder = VarselForwarder(
         metricsCollector = metricsCollector,
-        beskjedRapidProducer = BeskjedRapidProducer(rapidKafkaProducer, "rapid"),
-        brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository,
+        varselRapidProducer = VarselRapidProducer(rapidKafkaProducer, "rapid"),
+        brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository
     )
-
+    private val eventService = BeskjedInputEventService(varselForwarder = varselForwarder)
     private val inputKafkaConsumer = KafkaTestUtil.createMockConsumer<NokkelInput, BeskjedInput>(KafkaTestTopics.beskjedInputTopicName)
     private val inputEventConsumer = Consumer(KafkaTestTopics.beskjedInputTopicName, inputKafkaConsumer, eventService)
 
