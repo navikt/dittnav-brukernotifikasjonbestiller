@@ -30,7 +30,7 @@ object AvroBeskjedInternObjectMother {
         return events
     }
 
-    fun createNokkelIntern(eventId: String, fnr: String, systembruker: String): NokkelIntern {
+    private fun createNokkelIntern(eventId: String, fnr: String, systembruker: String): NokkelIntern {
         return AvroNokkelInternObjectMother.createNokkelIntern(defaultUlid, eventId, defaultGrupperingsid, fnr, defaultNamespace, "$systembruker-app", systembruker)
     }
 
@@ -38,7 +38,7 @@ object AvroBeskjedInternObjectMother {
         return createBeskjedIntern(defaultTidspunkt, defaultBehandlet, defaultSynligFremTil, defaultTekst, defaultLink, defaultSikkerhetsnivaa, defaultEksternVarsling, defaultPrefererteKanaler)
     }
 
-    fun createBeskjedIntern(tidspunkt: Long, behandlet: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): BeskjedIntern {
+    private fun createBeskjedIntern(tidspunkt: Long, behandlet: Long, synligFremTil: Long, tekst: String, link: String, sikkerhetsnivaa: Int, eksternvarsling: Boolean, prefererteKanaler: List<String>, epostVarslingstekst: String? = null, epostVarslingstittel: String? = null, smsVarslingstekst: String? = null): BeskjedIntern {
         return BeskjedIntern(
             tidspunkt,
             behandlet,

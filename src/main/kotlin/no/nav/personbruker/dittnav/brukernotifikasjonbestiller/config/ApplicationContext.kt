@@ -13,7 +13,6 @@ import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
 import no.nav.brukernotifikasjon.schemas.output.Feilrespons
 import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
@@ -30,6 +29,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRa
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
@@ -58,10 +59,6 @@ class ApplicationContext {
     var internDoneKafkaProducer = initializeInternDoneProducer()
     
     private val rapidKafkaProducer = initializeRapidKafkaProducer()
-    val beskjedRapidProducer = BeskjedRapidProducer(
-        kafkaProducer = rapidKafkaProducer,
-        topicName = environment.rapidTopic
-    )
     val oppgaveRapidProducer = OppgaveRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
@@ -74,6 +71,16 @@ class ApplicationContext {
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
     )
+    val varselRapidProducer = VarselRapidProducer(
+        kafkaProducer = rapidKafkaProducer,
+        topicName = environment.rapidTopic
+    )
+
+    private val varselForwarder = VarselForwarder(
+        metricsCollector = metricsCollector,
+        varselRapidProducer = varselRapidProducer,
+        brukernotifikasjonbestillingRepository = brukernotifikasjonbestillingRepository
+    )
 
     var beskjedInputConsumer = initializeBeskjedInputProcessor()
     var oppgaveInputConsumer = initializeOppgaveInputProcessor()
@@ -84,16 +91,7 @@ class ApplicationContext {
 
     private fun initializeBeskjedInputProcessor(): Consumer<NokkelInput, BeskjedInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.BESKJED)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.BESKJED)
-        val beskjedEventDispatcher = EventDispatcher(Eventtype.BESKJED, brukernotifikasjonbestillingRepository, internBeskjedKafkaProducer, feilresponsKafkaProducer)
-        val beskjedEventService = BeskjedInputEventService(
-            metricsCollector,
-            handleDuplicateEvents,
-            beskjedEventDispatcher,
-            beskjedRapidProducer,
-            environment.produceToRapid
-        )
+        val beskjedEventService = BeskjedInputEventService(varselForwarder)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.beskjedInputTopicName, consumerProps, beskjedEventService)
     }
 

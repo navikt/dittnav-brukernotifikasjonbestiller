@@ -1,4 +1,4 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
@@ -7,19 +7,18 @@ import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-class BeskjedRapidProducer(
+class VarselRapidProducer(
     private val kafkaProducer: org.apache.kafka.clients.producer.Producer<String, String>,
     private val topicName: String
 ) {
     val log: Logger = LoggerFactory.getLogger(Producer::class.java)
 
-    fun produce(beskjed: Beskjed) {
-        val objectNode = objectMapper.valueToTree<ObjectNode>(beskjed)
-        objectNode.put("@event_name", "beskjed")
-        val producerRecord = ProducerRecord(topicName, beskjed.eventId, objectNode.toString())
+    fun produce(varsel: Varsel) {
+        val objectNode = objectMapper.valueToTree<ObjectNode>(varsel)
+        objectNode.put("@event_name", varsel.type.eventtype)
+        val producerRecord = ProducerRecord(topicName, varsel.eventId, objectNode.toString())
         kafkaProducer.send(producerRecord)
-        log.info("Produsert beskjed på rapid med eventid ${beskjed.eventId}")
-
+        log.info("Videresendt validert ${varsel.type.eventtype} til intern-topic: ${varsel.eventId}")
     }
 
     fun flushAndClose() {

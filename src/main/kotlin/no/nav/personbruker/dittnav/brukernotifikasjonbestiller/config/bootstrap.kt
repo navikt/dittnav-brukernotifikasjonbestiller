@@ -4,7 +4,6 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopPreparing
 import io.ktor.server.application.install
-
 import io.ktor.server.routing.routing
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.prometheus.client.hotspot.DefaultExports
@@ -39,10 +38,10 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
             appContext.internOppgaveKafkaProducer.flushAndClose()
             appContext.internInnboksKafkaProducer.flushAndClose()
             appContext.internDoneKafkaProducer.flushAndClose()
-            appContext.beskjedRapidProducer.flushAndClose()
             appContext.oppgaveRapidProducer.flushAndClose()
             appContext.innboksRapidProducer.flushAndClose()
             appContext.doneRapidProducer.flushAndClose()
+            appContext.varselRapidProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()
         }
         appContext.database.dataSource.close()

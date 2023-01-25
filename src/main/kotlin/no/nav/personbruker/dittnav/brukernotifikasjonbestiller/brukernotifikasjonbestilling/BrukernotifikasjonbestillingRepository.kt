@@ -1,11 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
 import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.BrukernotifikasjonKey
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.DoneKey
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.Varsel
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -28,6 +28,21 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
             createBrukernotifikasjonbestilling(toBrukernotifikasjonbestilling(entities, eventtype))
         }
     }
+
+    suspend fun persistVarsler(varsler: List<Varsel>) {
+        return database.queryWithExceptionTranslation {
+            createBrukernotifikasjonbestilling(varsler.map { it.toBrukernotifikasjonbestilling() })
+        }
+    }
+
+    private fun Varsel.toBrukernotifikasjonbestilling() =
+        Brukernotifikasjonbestilling(
+            eventId = eventId,
+            systembruker = systembruker,
+            eventtype = Eventtype.BESKJED,
+            prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
+            fodselsnummer = fodselsnummer
+        )
 
     private fun <T> toBrukernotifikasjonbestilling(events: List<Pair<NokkelIntern, T>>, eventtype: Eventtype): List<Brukernotifikasjonbestilling> {
         val result = mutableListOf<Brukernotifikasjonbestilling>()
