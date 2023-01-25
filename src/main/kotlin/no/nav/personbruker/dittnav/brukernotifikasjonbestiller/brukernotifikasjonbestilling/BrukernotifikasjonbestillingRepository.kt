@@ -39,7 +39,7 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         Brukernotifikasjonbestilling(
             eventId = eventId,
             systembruker = systembruker,
-            eventtype = Eventtype.BESKJED,
+            eventtype = type,
             prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
             fodselsnummer = fodselsnummer
         )

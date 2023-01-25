@@ -11,7 +11,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmoth
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.EventMetricsSession
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.junit.jupiter.api.Test
 import java.util.*
@@ -134,7 +134,7 @@ internal class DoneInputEventServiceTest {
     @Test
     fun `skal skrive til feilrespons-topic hvis er plassert event med feil type paa topic`() {
         val externalNokkel = NokkelTestData.createNokkelInputWithEventId(eventId)
-        val externalDone = AvroOppgaveInputObjectMother.createOppgaveInput()
+        val externalDone = OppgaveTestData.oppgaveInput()
 
         val externalMalplacedEvents = ConsumerRecordsObjectMother.createInputConsumerRecords(externalNokkel, externalDone, topic)
 

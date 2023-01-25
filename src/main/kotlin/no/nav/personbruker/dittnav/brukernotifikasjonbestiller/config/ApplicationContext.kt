@@ -28,7 +28,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksIn
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
@@ -59,10 +58,6 @@ class ApplicationContext {
     var internDoneKafkaProducer = initializeInternDoneProducer()
     
     private val rapidKafkaProducer = initializeRapidKafkaProducer()
-    val oppgaveRapidProducer = OppgaveRapidProducer(
-        kafkaProducer = rapidKafkaProducer,
-        topicName = environment.rapidTopic
-    )
     val innboksRapidProducer = InnboksRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
@@ -97,16 +92,7 @@ class ApplicationContext {
 
     private fun initializeOppgaveInputProcessor(): Consumer<NokkelInput, OppgaveInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
-        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
-        val oppgaveEventService = OppgaveInputEventService(
-            metricsCollector,
-            handleDuplicateEvents,
-            oppgaveEventDispatcher,
-            oppgaveRapidProducer,
-            environment.produceToRapid
-        )
+        val oppgaveEventService = OppgaveInputEventService(varselForwarder)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
     }
 
