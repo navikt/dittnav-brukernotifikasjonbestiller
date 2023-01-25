@@ -3,7 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData
 import org.junit.jupiter.api.Test
@@ -44,7 +44,7 @@ class VarselValidationTest {
     fun `innboks med gyldige felter er gyldig`() {
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroInnboksInputObjectMother.createInnboksInput(
+            InnboksTestData.innboksInput(
                 tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
                 epostVarslingstekst = "x".repeat(4000),
@@ -140,7 +140,7 @@ class VarselValidationTest {
 
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroInnboksInputObjectMother.createInnboksInput(
+            InnboksTestData.innboksInput(
                 link = ""
             )
         ) shouldBeInvalidatedBy LinkValidator::class.java

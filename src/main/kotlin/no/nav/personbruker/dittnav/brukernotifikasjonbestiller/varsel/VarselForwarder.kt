@@ -89,7 +89,7 @@ private fun Pair<NokkelInput, GenericRecord>.toVarsel(type: Eventtype): Varsel {
         tekst = second.get("tekst") as String,
         link = second.get("link") as String,
         sikkerhetsnivaa = second.get("sikkerhetsnivaa") as Int,
-        synligFremTil = (second.get("synligFremTil") as Long?)?.toLocalDateTime(),
+        synligFremTil = (if(second.hasField("synligFremTil")) second.get("synligFremTil") as Long? else null)?.toLocalDateTime(),
         aktiv = true,
         eksternVarsling = second.get("eksternVarsling") as Boolean,
         prefererteKanaler = (second.get("prefererteKanaler") as List<*>).map { it as String },
