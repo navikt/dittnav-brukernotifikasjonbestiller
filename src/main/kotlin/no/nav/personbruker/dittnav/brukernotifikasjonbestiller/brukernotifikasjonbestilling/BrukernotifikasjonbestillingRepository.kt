@@ -5,6 +5,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateT
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.Done
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.Varsel
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -35,11 +36,26 @@ class BrukernotifikasjonbestillingRepository(private val database: Database) {
         }
     }
 
+    suspend fun persistDone(doneList: List<Done>) {
+        return database.queryWithExceptionTranslation {
+            createBrukernotifikasjonbestilling(doneList.map { it.toBrukernotifikasjonbestilling() })
+        }
+    }
+
     private fun Varsel.toBrukernotifikasjonbestilling() =
         Brukernotifikasjonbestilling(
             eventId = eventId,
             systembruker = systembruker,
             eventtype = type,
+            prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
+            fodselsnummer = fodselsnummer
+        )
+
+    private fun Done.toBrukernotifikasjonbestilling() =
+        Brukernotifikasjonbestilling(
+            eventId = eventId,
+            systembruker = "N/A",
+            eventtype = Eventtype.DONE,
             prosesserttidspunkt = LocalDateTimeHelper.nowAtUtc(),
             fodselsnummer = fodselsnummer
         )

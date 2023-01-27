@@ -34,7 +34,6 @@ private fun Application.configureShutdownHook(appContext: ApplicationContext) {
     environment.monitor.subscribe(ApplicationStopPreparing) {
         runBlocking {
             KafkaConsumerSetup.stopAllKafkaConsumers(appContext)
-            appContext.internDoneKafkaProducer.flushAndClose()
             appContext.doneRapidProducer.flushAndClose()
             appContext.varselRapidProducer.flushAndClose()
             appContext.periodicConsumerPollingCheck.stop()

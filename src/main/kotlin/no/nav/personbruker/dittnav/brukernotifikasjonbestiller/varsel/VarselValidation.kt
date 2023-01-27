@@ -11,7 +11,8 @@ class VarselValidation(nokkel: NokkelInput?, varsel: GenericRecord) {
     val failedValidators: List<VarselValidator>
 
     init {
-        failedValidators = getFailedVarselValidators(varsel) + getFailedNokkelValidators(nokkel)
+        failedValidators = getFailedNokkelValidators(nokkel) +
+                if(varsel.schema.name != "DoneInput") getFailedVarselValidators(varsel) else emptyList()
     }
 
     fun isValid(): Boolean = failedValidators.isEmpty()
