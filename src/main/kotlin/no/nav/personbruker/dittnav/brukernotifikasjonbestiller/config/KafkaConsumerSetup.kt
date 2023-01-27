@@ -16,7 +16,7 @@ object KafkaConsumerSetup {
         checkInputTopics(appContext)
     }
 
-    fun checkInputTopics(appContext: ApplicationContext) {
+    private fun checkInputTopics(appContext: ApplicationContext) {
         if(shouldPollBeskjedInput()) {
             appContext.beskjedInputConsumer.startPolling()
         } else {

@@ -3,7 +3,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 
 object NokkelTestData {
-    private const val defaultEventId = "12345678-1234-1234-1234-1234567890ab"
     private const val defaultFodselsnr = "12345678910"
     private const val defaultGrupperingsid = "123"
     private const val defaultAppName = "defaultAppName"
@@ -25,16 +24,6 @@ object NokkelTestData {
         )
     }
 
-    fun createNokkelInput(): NokkelInput {
-        return NokkelInput(
-            defaultEventId,
-            defaultGrupperingsid,
-            defaultFodselsnr,
-            defaultNamespace,
-            defaultAppName
-        )
-    }
-
     fun createNokkelInputWithEventId(eventId: String): NokkelInput {
         return NokkelInput(
             eventId,
@@ -50,16 +39,6 @@ object NokkelTestData {
             eventId,
             groupId,
             defaultFodselsnr,
-            defaultNamespace,
-            defaultAppName
-        )
-    }
-
-    fun createNokkelInputWithEventIdAndFnr(eventId: String, fnr: String): NokkelInput {
-        return NokkelInput(
-            eventId,
-            defaultGrupperingsid,
-            fnr,
             defaultNamespace,
             defaultAppName
         )
