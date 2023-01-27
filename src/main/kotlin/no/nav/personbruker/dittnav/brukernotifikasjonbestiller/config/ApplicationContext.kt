@@ -35,7 +35,7 @@ class ApplicationContext {
     val environment = Environment()
     val healthService = HealthService(this)
     val database: Database = PostgresDatabase(environment)
-    val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
+    private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter)
@@ -158,15 +158,6 @@ class ApplicationContext {
             )
 
             InfluxMetricsReporter(sensuConfig)
-        }
-    }
-
-    fun reinitializePeriodicConsumerPollingCheck() {
-        if (periodicConsumerPollingCheck.isCompleted()) {
-            periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
-            log.info("periodicConsumerPollingCheck har blitt reinstansiert.")
-        } else {
-            log.warn("periodicConsumerPollingCheck kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
     }
 }

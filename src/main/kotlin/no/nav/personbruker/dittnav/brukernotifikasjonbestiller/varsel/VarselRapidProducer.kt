@@ -1,7 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.Logger
@@ -11,7 +10,7 @@ class VarselRapidProducer(
     private val kafkaProducer: org.apache.kafka.clients.producer.Producer<String, String>,
     private val topicName: String
 ) {
-    val log: Logger = LoggerFactory.getLogger(Producer::class.java)
+    val log: Logger = LoggerFactory.getLogger(VarselRapidProducer::class.java)
 
     fun produce(varsel: Varsel) {
         val objectNode = objectMapper.valueToTree<ObjectNode>(varsel)

@@ -100,7 +100,7 @@ class Consumer<K, V>(
         }
     }
 
-    fun ConsumerRecords<K, V>.containsEvents() = count() > 0
+    private fun ConsumerRecords<K, V>.containsEvents() = count() > 0
 
     private suspend fun rollbackOffset() {
         withContext(Dispatchers.IO) {
@@ -110,7 +110,7 @@ class Consumer<K, V>(
         }
     }
 
-    fun <K, V> KafkaConsumer<K, V>.rollbackToLastCommitted() {
+    private fun <K, V> KafkaConsumer<K, V>.rollbackToLastCommitted() {
         committed(assignment()).forEach { (partition, metadata) ->
             seek(partition, metadata.offset())
         }
