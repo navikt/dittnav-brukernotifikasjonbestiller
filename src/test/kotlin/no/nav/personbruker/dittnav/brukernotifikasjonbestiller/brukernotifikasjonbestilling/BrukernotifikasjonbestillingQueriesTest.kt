@@ -14,8 +14,8 @@ class brukernotifikasjonbestillingQueriesTest {
 
     private val database = LocalPostgresDatabase.cleanDb()
 
-    private val brukernotifikasjonbestilling1: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
-    private val brukernotifikasjonbestilling2: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val brukernotifikasjonbestilling1: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingTestData.brukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
+    private val brukernotifikasjonbestilling2: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingTestData.brukernotifikasjonbestilling(eventId = "eventId-1", systembruker = "systembruker-1", eventtype = Eventtype.BESKJED, fodselsnummer = "123")
 
     @AfterEach
     fun tearDown() {
@@ -40,7 +40,7 @@ class brukernotifikasjonbestillingQueriesTest {
 
     @Test
     fun `Skal opprette entitet dersom rad med samme eventId og systembruker finnes, men ikke samme eventtype`() {
-        val brukernotifikasjonbestilling_oppgave: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingObjectMother.createBrukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE, fodselsnummer = "123")
+        val brukernotifikasjonbestilling_oppgave: Brukernotifikasjonbestilling = BrukernotifikasjonbestillingTestData.brukernotifikasjonbestilling(eventId = "eventId-0", systembruker = "systembruker-0", eventtype = Eventtype.OPPGAVE, fodselsnummer = "123")
         runBlocking {
             database.createBrukernotifikasjonbestillinger(listOf(brukernotifikasjonbestilling1, brukernotifikasjonbestilling2))
             database.dbQuery {

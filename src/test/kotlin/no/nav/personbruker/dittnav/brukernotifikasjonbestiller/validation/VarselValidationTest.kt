@@ -1,4 +1,4 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe

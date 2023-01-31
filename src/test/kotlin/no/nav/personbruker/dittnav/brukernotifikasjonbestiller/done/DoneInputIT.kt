@@ -12,7 +12,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Cons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestTopics
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.KafkaTestUtil
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.AvroDoneInputObjectMother.createDoneInput
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneTestData.doneInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
 import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
@@ -100,9 +100,9 @@ class DoneInputIT {
         NokkelTestData.createNokkelInputWithEventIdAndGroupId(
             eventId = UUID.randomUUID().toString(),
             groupId = it.toString()
-        ) to createDoneInput()
+        ) to doneInput()
     }
 
     private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> =
-        NokkelTestData.createNokkelInputWithEventId("notUuidOrUlid") to createDoneInput()
+        NokkelTestData.createNokkelInputWithEventId("notUuidOrUlid") to doneInput()
 }

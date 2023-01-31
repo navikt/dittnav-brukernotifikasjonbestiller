@@ -6,7 +6,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselValidation
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation.VarselValidation
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
