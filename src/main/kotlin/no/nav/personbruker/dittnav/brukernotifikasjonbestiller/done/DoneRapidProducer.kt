@@ -17,7 +17,7 @@ class DoneRapidProducer(
         objectNode.put("@event_name", "done")
         val producerRecord = ProducerRecord(topicName, done.eventId, objectNode.toString())
         kafkaProducer.send(producerRecord)
-        log.info("Produsert done på rapid med eventid ${done.eventId}")
+        log.info("Videresendt validert done til intern-topic: ${done.eventId}")
     }
 
     fun flushAndClose() {
