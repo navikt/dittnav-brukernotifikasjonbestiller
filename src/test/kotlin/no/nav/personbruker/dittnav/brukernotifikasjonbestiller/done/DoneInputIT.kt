@@ -56,10 +56,6 @@ class DoneInputIT {
             ))
         }
 
-        //runBlocking {
-           // createMatchingBeskjedEventsInDatabase(goodEvents)
-        //}
-
         runBlocking {
             inputEventConsumer.startPolling()
             KafkaTestUtil.delayUntilCommittedOffset(inputKafkaConsumer, KafkaTestTopics.doneInputTopicName, doneEvents.size.toLong())

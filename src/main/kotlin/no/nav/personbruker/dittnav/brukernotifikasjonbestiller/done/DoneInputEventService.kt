@@ -29,7 +29,7 @@ class DoneInputEventService(
 
             uniqueDoneList.forEach {
                 doneRapidProducer.produce(it)
-                //countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
+                countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
             }
 
             invalidEvents.forEach { (done, validation) ->
