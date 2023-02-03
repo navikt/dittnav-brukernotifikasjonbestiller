@@ -25,12 +25,12 @@ repositories {
 dependencies {
     implementation("com.github.navikt:brukernotifikasjon-schemas:1.2022.04.26-11.25-7155b5142c85")
     implementation("com.github.navikt:brukernotifikasjon-schemas-internal:1.2022.04.27-11.14-a4039fef5785")
-    implementation(DittNAV.Common.influxdb)
-    implementation(DittNAV.Common.utils)
+    implementation(DittNAVCommonLib.influxdb)
+    implementation(DittNAVCommonLib.utils)
     implementation(Flyway.core)
     implementation(Hikari.cp)
-    implementation(Kafka.Apache.clients)
-    implementation(Kafka.Confluent.avroSerializer)
+    implementation(Kafka.clients)
+    implementation(Avro.avroSerializer)
     implementation(Logback.classic)
     implementation(Logstash.logbackEncoder)
     implementation(NAV.tokenValidatorKtor)
@@ -38,12 +38,12 @@ dependencies {
     implementation(Prometheus.hotspot)
     implementation(Prometheus.logback)
     implementation(Postgresql.postgresql)
-    implementation(ULID.sulkyUlid)
+    implementation(SulkyUlid.sulkyUlid)
+    implementation(Ktor2.Serialization.jackson)
     implementation(Ktor2.Server.htmlDsl)
     implementation(Ktor2.Server.netty)
     implementation(Ktor2.Server.defaultHeaders)
-    implementation("io.ktor:ktor-serialization-jackson:2.1.2")
-    implementation(Jackson.dataTypeJsr310)
+    implementation(JacksonDatatype.datatypeJsr310)
     implementation(KotlinLogging.logging)
 
     testImplementation(Junit.api)
@@ -69,24 +69,6 @@ tasks {
             exceptionFormat = TestExceptionFormat.FULL
             events("passed", "skipped", "failed")
         }
-    }
-
-    register("runServer", JavaExec::class) {
-        println("Setting default environment variables for running with DittNAV docker-compose")
-
-        DockerComposeDefaults.environomentVariables.forEach { (name, value) ->
-            println("Setting the environment variable $name")
-            environment(name, value)
-        }
-
-        environment("GROUP_ID", "dittnav_brukernotifikasjonbestiller")
-        environment("DB_HOST", "localhost")
-        environment("DB_PORT", "5434")
-        environment("DB_DATABASE", "brukernotifikasjonbestiller")
-        environment("DB_USERNAME", "dittnav-brukernotifikasjonbestiller-user")
-
-        main = application.mainClassName
-        classpath = sourceSets["main"].runtimeClasspath
     }
 }
 
