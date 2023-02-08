@@ -4,12 +4,18 @@
 2. Koble på topiceene.
 3. Send event!
 
-## Varseltyper
-For brukeropplevelsen er det viktig at du bruker riktig type varsel. Ta gjerne en ekstrasjekk med [innholdsguiden vår](https://tms-dokumentasjon.intern.nav.no/innholdsguide).
+## Huskeliste
+* For brukeropplevelsen er det viktig at du bruker riktig type varsel. Ta gjerne en ekstrasjekk med [innholdsguiden vår](https://tms-dokumentasjon.intern.nav.no/innholdsguide).
+* Deaktiver(send done-event) når en oppgave er utført
 
-###Beskjed
+## Varseltyper
+
+### Beskjed
 [BeskjedInput-schemas](https://github.com/navikt/brukernotifikasjon-schemas/blob/main/src/main/avro/beskjedInput.avsc) på Github. \
-For mer info om meldingsinnholdet, se [Feltbeskrivelser](#Feltbeskrivelser)
+For mer info om meldingsinnholdet, se Feltbeskrivelser lengre ned på siden. \
+Beskjed deaktiveres når bruker har klikket på lenken eller arkivert varslet.
+
+
 #### topics
 | Miljø  | Topic-navn  |
 |---|---|
@@ -18,7 +24,8 @@ For mer info om meldingsinnholdet, se [Feltbeskrivelser](#Feltbeskrivelser)
 
 ### Oppgave
 [Oppgave-schemas](https://github.com/navikt/brukernotifikasjon-schemas/blob/main/src/main/avro/oppgaveInput.avsc) på Github. \
-Mer info om felt og feltverdier, se [Feltbeskrivelser](#Feltbeskrivelser)
+Mer info om felt og feltverdier, se Feltbeskrivelser lengre ned på siden. \
+Det er viktig å huks å sende ett done-event når bruker har fullført oppgaven siden der er eneste måten varslet deaktiveres på.
 
 | Miljø  | Topic-navn  |
 |---|---|
@@ -67,7 +74,7 @@ Min side støtter at en person er innlogget på nivå 3 (via MinId). Hvis hen ha
 Personen ser bare hvilken type event dette er, men ikke noe av innholdet.
 For å se innholdet må hen logge inn med ett høyere innloggingsnivå (via Idportens tjenester som støtter nivå 4, f.eks bankId).
 
-#### synligFremTil 
+##### synligFremTil 
 Tidspunkt for når varselet ikke skal være synlig i varselbjella mer, f.eks beskjeden skal kun være synlig 7 dager.
 Når synligFramTil-tidspunktet har passert deaktiverer min side varselet.
 synligFramTil = null -> synlig med mindre varselet arkiveres av bruker eller produsent sender ett done-event.
