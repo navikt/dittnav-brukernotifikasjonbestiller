@@ -12,9 +12,8 @@ med [innholdsguiden vår](https://tms-dokumentasjon.intern.nav.no/innholdsguide)
 
 | navn  | beskrivelse | Deaktiveres av|
 |---|---|---|
-| Beskjed | For korte påminnelser eller oppdatering av status| bruker, eller av min side hvis synligFramTil dato er satt eller varslet har vært aktivt i mer enn ett år | 
-| Oppgave | For noe som **må bli
-utført** | Produsent når oppgavem er utført (med done event), eller av min side hvis synligFramTil dato er satt eller varslet har vært aktivt i mer enn ett år.  |
+| Beskjed | For korte påminnelser eller oppdatering av status| bruker, eller av min side hvis synligFramTil dato er satt eller varslet har vært aktivt i mer enn ett år. | 
+| Oppgave | For noe som må bli utført | Produsent når oppgavem er utført (med done event), eller av min side hvis synligFramTil dato er satt eller varslet har vært aktivt i mer enn ett år.  |
 | Done | deaktiverer ett varsel| NA |
 
 ### Kafka key (NokkelInput)
