@@ -88,7 +88,7 @@ class EventMetricsSession(val eventtype: Eventtype) {
     }
 
     fun getUniqueProducer(): List<NamespaceAppName> {
-        val producers = countProcessedEventsBySysUser.keys + countFailedEventsBySysUser.keys
+        val producers = countProcessedRapidEventsBySysUser.keys + countFailedEventsBySysUser.keys
         return producers.distinct()
     }
 }
