@@ -49,7 +49,7 @@ class VarselForwarder(
             .distinctBy { it.eventId }
             .filter { it.eventId !in dbDuplicates }
 
-        val duplicateVarsler = this.subtract(uniqueVarsler.toSet()).toList()
+        val duplicateVarsler = this - uniqueVarsler.toSet()
 
         return Pair(uniqueVarsler, duplicateVarsler)
     }

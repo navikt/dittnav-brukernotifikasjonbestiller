@@ -53,7 +53,7 @@ class DoneInputEventService(
             .distinctBy { it.eventId }
             .filter { it.eventId !in dbDuplicates }
 
-        val duplicateDone = this.subtract(uniqueDone.toSet()).toList()
+        val duplicateDone = this - uniqueDone.toSet()
 
         return Pair(uniqueDone, duplicateDone)
     }
