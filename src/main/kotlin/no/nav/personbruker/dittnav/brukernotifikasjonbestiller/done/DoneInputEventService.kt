@@ -25,12 +25,14 @@ class DoneInputEventService(
                 .map { it to VarselValidation(it.key(), it.value()) }
                 .partition { (_, validation) -> validation.isValid() }
 
-            val uniqueDoneList = unique(validEvents.map { it.first.key().toDone() })
+            val (uniqueDoneList, duplicateDoneList) = validEvents.map { it.first.key().toDone() }.partitionUnique()
 
             uniqueDoneList.forEach {
                 doneRapidProducer.produce(it)
                 countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
             }
+
+            countDuplicateDone(duplicateDoneList)
 
             invalidEvents.forEach { (done, validation) ->
                 log.info(
@@ -43,12 +45,16 @@ class DoneInputEventService(
         }
     }
 
-    private suspend fun unique(doneList: List<Done>): List<Done> {
-        val eventIder = doneList.map { it.eventId }
+    private suspend fun List<Done>.partitionUnique(): Pair<List<Done>, List<Done>> {
+        val eventIder = this.map { it.eventId }
         val dbDuplicates = brukernotifikasjonbestillingRepository.fetchExistingEventIdsForDone(eventIder).toSet()
 
-        return doneList
+        val uniqueDone = this
             .distinctBy { it.eventId }
             .filter { it.eventId !in dbDuplicates }
+
+        val duplicateDone = this.subtract(uniqueDone.toSet()).toList()
+
+        return Pair(uniqueDone, duplicateDone)
     }
 }

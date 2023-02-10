@@ -1,14 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.Done
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.Varsel
 
 class EventMetricsSession(val eventtype: Eventtype) {
-
-    private val log: Logger = LoggerFactory.getLogger(EventMetricsSession::class.java)
 
     private val countProcessedEventsBySysUser = HashMap<NamespaceAppName, Int>()
     private val countProcessedRapidEventsBySysUser = HashMap<NamespaceAppName, Int>()
@@ -19,10 +16,6 @@ class EventMetricsSession(val eventtype: Eventtype) {
 
     fun countSuccessfulEventForProducer(producer: NamespaceAppName) {
         countProcessedEventsBySysUser[producer] = countProcessedEventsBySysUser.getOrDefault(producer, 0).inc()
-    }
-
-    fun countSuccessfulRapidEventForProducer(producer: NamespaceAppName) {
-        countProcessedRapidEventsBySysUser[producer] = countProcessedRapidEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
     fun countSuccessfulRapidEventForProducer(namespace: String, appnavn: String) {
@@ -38,15 +31,19 @@ class EventMetricsSession(val eventtype: Eventtype) {
         countFailedEventsBySysUser[producer] = countFailedEventsBySysUser.getOrDefault(producer, 0).inc()
     }
 
-    fun countDuplicateEvents(duplicateEvents: List<Pair<NokkelIntern, *>>) {
-        duplicateEvents.map {
-            it.first
-        }.forEach { duplicateEvent ->
-            countDuplicateEventForProducer(duplicateEvent.getProducerNamespaceAppName())
+    fun countDuplicateVarsler(duplicateVarsler: List<Varsel>) {
+        duplicateVarsler.forEach {
+            countDuplicateEventForProducer(NamespaceAppName(namespace = it.namespace, appName = it.appnavn))
         }
     }
 
-    fun countDuplicateEventForProducer(producer: NamespaceAppName) {
+    fun countDuplicateDone(duplicateDoneList: List<Done>) {
+        duplicateDoneList.forEach {
+            countDuplicateEventForProducer(NamespaceAppName(namespace = it.namespace, appName = it.appnavn))
+        }
+    }
+
+    private fun countDuplicateEventForProducer(producer: NamespaceAppName) {
         countDuplicateKeyBySysUser[producer] = countDuplicateKeyBySysUser.getOrDefault(producer, 0).inc()
     }
 
@@ -93,9 +90,5 @@ class EventMetricsSession(val eventtype: Eventtype) {
     fun getUniqueProducer(): List<NamespaceAppName> {
         val producers = countProcessedEventsBySysUser.keys + countFailedEventsBySysUser.keys
         return producers.distinct()
-    }
-
-    companion object {
-        fun NokkelIntern.getProducerNamespaceAppName() = NamespaceAppName(getNamespace(), getAppnavn())
     }
 }

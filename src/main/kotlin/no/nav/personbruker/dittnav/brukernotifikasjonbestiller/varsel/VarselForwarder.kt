@@ -21,12 +21,14 @@ class VarselForwarder(
                 .map { it to VarselValidation(it.first, it.second) }
                 .partition { (_, validation) -> validation.isValid() }
 
-            val uniqueVarsler = uniqueVarsler(validEvents.map { it.first.toVarsel(eventtype) })
+            val (uniqueVarsler, duplicateVarsler) = validEvents.map { it.first.toVarsel(eventtype) }.partitionUnique()
 
             uniqueVarsler.forEach {
                 varselRapidProducer.produce(it)
                 countSuccessfulRapidEventForProducer(it.namespace, it.appnavn)
             }
+
+            countDuplicateVarsler(duplicateVarsler)
 
             invalidEvents.forEach { (varsel, validation) ->
                 log.info(
@@ -39,12 +41,16 @@ class VarselForwarder(
         }
     }
 
-    private suspend fun uniqueVarsler(varsler: List<Varsel>): List<Varsel> {
-        val eventIder = varsler.map { it.eventId }
+    private suspend fun List<Varsel>.partitionUnique(): Pair<List<Varsel>, List<Varsel>> {
+        val eventIder = this.map { it.eventId }
         val dbDuplicates = brukernotifikasjonbestillingRepository.fetchExistingEventIdsExcludingDone(eventIder).toSet()
 
-        return varsler
+        val uniqueVarsler = this
             .distinctBy { it.eventId }
             .filter { it.eventId !in dbDuplicates }
+
+        val duplicateVarsler = this.subtract(uniqueVarsler.toSet()).toList()
+
+        return Pair(uniqueVarsler, duplicateVarsler)
     }
 }

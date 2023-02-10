@@ -29,7 +29,10 @@ class DoneInputIT {
     private val metricsCollector = MetricsCollector(metricsReporter)
 
     private val goodEvents = createEvents()
-    private val badEvents = listOf(createEventWithInvalidEventId())
+    private val badEvents = listOf(
+        createEventWithInvalidEventId(),
+        createEventWithDuplicateId(goodEvents.first().first.getEventId())
+    )
 
     private val doneEvents = goodEvents + badEvents
 
@@ -101,4 +104,7 @@ class DoneInputIT {
 
     private fun createEventWithInvalidEventId(): Pair<NokkelInput, DoneInput> =
         NokkelTestData.createNokkelInputWithEventId("notUuidOrUlid") to doneInput()
+
+    private fun createEventWithDuplicateId(existingEventId: String) =
+        NokkelTestData.createNokkelInputWithEventId(existingEventId) to doneInput()
 }
