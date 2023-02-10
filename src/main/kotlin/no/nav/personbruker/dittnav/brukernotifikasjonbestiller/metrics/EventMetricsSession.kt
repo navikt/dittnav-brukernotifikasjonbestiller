@@ -72,11 +72,15 @@ class EventMetricsSession(val eventtype: Eventtype) {
     }
 
     fun getEventsSeen(): Int {
-        return getEventsProcessed() + getEventsFailed() + getNokkelWasNull()
+        return getEventsProcessed() + getEventsFailed() + getNokkelWasNull() + getRapidEventsProcessed()
     }
 
     fun getEventsProcessed(): Int {
         return countProcessedEventsBySysUser.values.sum()
+    }
+
+    private fun getRapidEventsProcessed(): Int {
+        return countProcessedRapidEventsBySysUser.values.sum()
     }
 
     fun getEventsFailed(): Int {
