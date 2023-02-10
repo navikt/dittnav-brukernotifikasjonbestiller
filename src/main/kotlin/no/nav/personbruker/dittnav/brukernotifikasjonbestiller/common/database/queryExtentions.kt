@@ -1,6 +1,5 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -27,8 +26,6 @@ fun <T> ResultSet.mapList(result: ResultSet.() -> T): List<T> =
         }
 
 fun ResultSet.getUtcDateTime(columnLabel: String): LocalDateTime = getTimestamp(columnLabel).toLocalDateTime()
-
-fun ResultSet.toEventtype(columnLabel: String): Eventtype = Eventtype.valueOf(columnLabel)
 
 fun <T> IntArray.toBatchPersistResult(paramList: List<T>) = ListPersistActionResult.mapParamListToResultArray(paramList, this)
 

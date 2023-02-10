@@ -2,7 +2,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.MockConsumer
 import org.apache.kafka.clients.consumer.OffsetResetStrategy
 import org.apache.kafka.clients.producer.MockProducer
@@ -19,27 +18,6 @@ object KafkaTestUtil {
         withTimeout(1000) {
             while ((consumer.committed(setOf(partition))[partition]?.offset() ?: 0) < offset) {
                 delay(10)
-            }
-        }
-    }
-
-    fun <K, V> loopbackRecords(producer: MockProducer<K, V>, consumer: MockConsumer<K, V>) {
-        var offset = 0L
-        producer.history().forEach { producerRecord ->
-            if (producerRecord.topic() in consumer.subscription()) {
-                val partition =
-                    TopicPartition(
-                        producerRecord.topic(),
-                        consumer.assignment().first { it.topic() == producerRecord.topic() }.partition()
-                    )
-                val consumerRecord = ConsumerRecord(
-                    producerRecord.topic(),
-                    partition.partition(),
-                    offset++,
-                    producerRecord.key(),
-                    producerRecord.value()
-                )
-                consumer.addRecord(consumerRecord)
             }
         }
     }

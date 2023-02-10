@@ -5,13 +5,12 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.e
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.getUtcDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.mapList
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.toBatchPersistResult
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.toEventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 
-private val createQuery = """INSERT INTO brukernotifikasjonbestilling (eventId, systembruker, eventtype, prosesserttidspunkt, fodselsnummer) VALUES (?, ?, ?, ?, ?)"""
+private const val createQuery = """INSERT INTO brukernotifikasjonbestilling (eventId, systembruker, eventtype, prosesserttidspunkt, fodselsnummer) VALUES (?, ?, ?, ?, ?)"""
 
 fun Connection.createBrukernotifikasjonbestilling(events: List<Brukernotifikasjonbestilling>): ListPersistActionResult<Brukernotifikasjonbestilling> =
         executeBatchPersistQuery(createQuery) {
@@ -37,20 +36,11 @@ fun Connection.getExistingEventIdsForDone(eventIds: List<String>): List<String> 
                     it.executeQuery().mapList { toEventIdString() }
                 }
 
-fun Connection.getEventsByIds(eventId: String, systembruker: String, eventtype: Eventtype): List<Brukernotifikasjonbestilling> =
-        prepareStatement("""SELECT * FROM brukernotifikasjonbestilling WHERE eventId=? AND systembruker=? AND eventtype=? """)
-                .use {
-                    it.setString(1, eventId)
-                    it.setString(2, systembruker)
-                    it.setString(3, eventtype.toString())
-                    it.executeQuery().mapList { toBrukernotifikasjonbestilling() }
-                }
-
 fun ResultSet.toBrukernotifikasjonbestilling(): Brukernotifikasjonbestilling {
     return Brukernotifikasjonbestilling(
             eventId = getString("eventId"),
             systembruker = getString("systembruker"),
-            eventtype = toEventtype(getString("eventtype")),
+            eventtype = Eventtype.valueOf(getString("eventtype")),
             prosesserttidspunkt = getUtcDateTime("prosesserttidspunkt"),
             fodselsnummer = getString("fodselsnummer")
     )

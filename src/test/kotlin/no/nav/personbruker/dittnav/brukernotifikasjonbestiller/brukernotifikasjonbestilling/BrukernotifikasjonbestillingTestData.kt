@@ -4,9 +4,9 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-object BrukernotifikasjonbestillingObjectMother {
+object BrukernotifikasjonbestillingTestData {
 
-    fun createBrukernotifikasjonbestilling(eventId: String, systembruker: String, eventtype: Eventtype, fodselsnummer: String): Brukernotifikasjonbestilling {
+    fun brukernotifikasjonbestilling(eventId: String, systembruker: String, eventtype: Eventtype, fodselsnummer: String): Brukernotifikasjonbestilling {
         return Brukernotifikasjonbestilling(
                 eventId = eventId,
                 systembruker = systembruker,

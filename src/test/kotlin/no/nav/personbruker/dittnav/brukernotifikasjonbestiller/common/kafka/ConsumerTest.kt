@@ -10,11 +10,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.exception.UnvalidatableRecordException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.objectmother.ConsumerRecordsObjectMother
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
+import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.DisconnectException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -33,7 +36,7 @@ class ConsumerTest {
     @Test
     fun `Skal commit-e mot Kafka hvis ingen feil skjer`() {
         val topic = "dummyTopicNoErrors"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns singleBeskjedRecord()
 
         val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
@@ -50,25 +53,8 @@ class ConsumerTest {
     @Test
     fun `Skal ikke kvittere ut eventer som lest, hvis en ukjent feil skjer`() {
         val topic = "dummyTopicUkjentFeil"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns singleBeskjedRecord()
         coEvery { eventBatchProcessorService.processEvents(any()) } throws Exception("Simulert feil i en test")
-
-        val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
-
-        runBlocking {
-            consumer.startPolling()
-            delay(10)
-            consumer.job.join()
-            consumer.status().status shouldBe Status.ERROR
-        }
-        verify(exactly = 0) { kafkaConsumer.commitSync() }
-    }
-
-    @Test
-    fun `Skal ikke kvittere ut eventer som lest, hvis transformering av et eller flere eventer feiler`() {
-        val topic = "dummyTopicUntransformable"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(1, topic)
-        coEvery { eventBatchProcessorService.processEvents(any()) } throws UnvalidatableRecordException("Simulert feil i en test")
 
         val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
@@ -102,7 +88,7 @@ class ConsumerTest {
     @Test
     fun `Skal ikke commit-e mot kafka hvis det IKKE har blitt funnet noen event-er`() {
         val topic = "dummyTopicNoRecordsFound"
-        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecordsObjectMother.giveMeANumberOfBeskjedRecords(0, topic)
+        every { kafkaConsumer.poll(any<Duration>()) } returns ConsumerRecords(mapOf())
 
         val consumer: Consumer<NokkelInput, BeskjedInput> = Consumer(topic, kafkaConsumer, eventBatchProcessorService)
 
@@ -134,15 +120,18 @@ class ConsumerTest {
         delay(10)
     }
 
-    private suspend fun <K, T> Consumer<K, T>.`vent til inaktiv eller avbryt`(maxDelay: Int = 1000): Boolean {
-        for (i in 0..maxDelay step 10) {
-            delay(10)
+    private fun singleBeskjedRecord() =
+        ConsumerRecords(
+            mapOf(TopicPartition("topic", 0) to listOf(
+                ConsumerRecord(
+                    "topic",
+                    0,
+                    0,
+                    NokkelTestData.nokkel(),
+                    BeskjedTestData.beskjedInput()
+                ))
+            )
+        )
 
-            if (!job.isActive) {
-                return false
-            }
-        }
-        return job.isActive
-    }
 
 }

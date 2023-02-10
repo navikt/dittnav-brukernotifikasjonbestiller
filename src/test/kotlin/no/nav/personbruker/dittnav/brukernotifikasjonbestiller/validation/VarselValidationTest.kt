@@ -1,11 +1,11 @@
-package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
+package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation
 
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.AvroInnboksInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.AvroOppgaveInputObjectMother
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -30,7 +30,7 @@ class VarselValidationTest {
     fun `oppgave med gyldige felter er gyldig`() {
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroOppgaveInputObjectMother.createOppgaveInput(
+            OppgaveTestData.oppgaveInput(
                 tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
                 epostVarslingstekst = "x".repeat(4000),
@@ -44,7 +44,7 @@ class VarselValidationTest {
     fun `innboks med gyldige felter er gyldig`() {
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroInnboksInputObjectMother.createInnboksInput(
+            InnboksTestData.innboksInput(
                 tekst = "x".repeat(500),
                 link = "https://" + "x".repeat(192),
                 epostVarslingstekst = "x".repeat(4000),
@@ -133,14 +133,14 @@ class VarselValidationTest {
 
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroOppgaveInputObjectMother.createOppgaveInput(
+            OppgaveTestData.oppgaveInput(
                 link = ""
             )
         ) shouldBeInvalidatedBy LinkValidator::class.java
 
         VarselValidation(
             NokkelTestData.nokkel(),
-            AvroInnboksInputObjectMother.createInnboksInput(
+            InnboksTestData.innboksInput(
                 link = ""
             )
         ) shouldBeInvalidatedBy LinkValidator::class.java

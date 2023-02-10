@@ -5,30 +5,17 @@ import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
-import no.nav.brukernotifikasjon.schemas.internal.BeskjedIntern
-import no.nav.brukernotifikasjon.schemas.internal.DoneIntern
-import no.nav.brukernotifikasjon.schemas.internal.InnboksIntern
-import no.nav.brukernotifikasjon.schemas.internal.NokkelIntern
-import no.nav.brukernotifikasjon.schemas.internal.OppgaveIntern
-import no.nav.brukernotifikasjon.schemas.output.Feilrespons
-import no.nav.brukernotifikasjon.schemas.output.NokkelFeilrespons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventDispatcher
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateDoneEvents
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.HandleDuplicateEvents
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Producer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveRapidProducer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
 import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
@@ -48,25 +35,12 @@ class ApplicationContext {
     val environment = Environment()
     val healthService = HealthService(this)
     val database: Database = PostgresDatabase(environment)
-    val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
+    private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
     private val metricsReporter = resolveMetricsReporter(environment)
     private val metricsCollector = MetricsCollector(metricsReporter)
 
-    var internBeskjedKafkaProducer = initializeInternBeskjedProducer()
-    var internOppgaveKafkaProducer = initializeInternOppgaveProducer()
-    var internInnboksKafkaProducer = initializeInternInnboksProducer()
-    var internDoneKafkaProducer = initializeInternDoneProducer()
-    
     private val rapidKafkaProducer = initializeRapidKafkaProducer()
-    val oppgaveRapidProducer = OppgaveRapidProducer(
-        kafkaProducer = rapidKafkaProducer,
-        topicName = environment.rapidTopic
-    )
-    val innboksRapidProducer = InnboksRapidProducer(
-        kafkaProducer = rapidKafkaProducer,
-        topicName = environment.rapidTopic
-    )
     val doneRapidProducer = DoneRapidProducer(
         kafkaProducer = rapidKafkaProducer,
         topicName = environment.rapidTopic
@@ -97,82 +71,24 @@ class ApplicationContext {
 
     private fun initializeOppgaveInputProcessor(): Consumer<NokkelInput, OppgaveInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.OPPGAVE)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.OPPGAVE)
-        val oppgaveEventDispatcher = EventDispatcher(Eventtype.OPPGAVE, brukernotifikasjonbestillingRepository, internOppgaveKafkaProducer, feilresponsKafkaProducer)
-        val oppgaveEventService = OppgaveInputEventService(
-            metricsCollector,
-            handleDuplicateEvents,
-            oppgaveEventDispatcher,
-            oppgaveRapidProducer,
-            environment.produceToRapid
-        )
+        val oppgaveEventService = OppgaveInputEventService(varselForwarder)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.oppgaveInputTopicName, consumerProps, oppgaveEventService)
     }
 
     private fun initializeInnboksInputProcessor(): Consumer<NokkelInput, InnboksInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.INNBOKS)
-        val handleDuplicateEvents = HandleDuplicateEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.INNBOKS)
-        val innboksEventDispatcher = EventDispatcher(Eventtype.INNBOKS, brukernotifikasjonbestillingRepository, internInnboksKafkaProducer, feilresponsKafkaProducer)
-        val innboksEventService = InnboksInputEventService(
-            metricsCollector,
-            handleDuplicateEvents,
-            innboksEventDispatcher,
-            innboksRapidProducer,
-            environment.produceToRapid
-        )
+        val innboksEventService = InnboksInputEventService(varselForwarder,)
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.innboksInputTopicName, consumerProps, innboksEventService)
     }
 
     private fun initializeDoneInputProcessor(): Consumer<NokkelInput, DoneInput> {
         val consumerProps = Kafka.consumerProps(environment, Eventtype.DONE)
-        val handleDuplicateEvents = HandleDuplicateDoneEvents(brukernotifikasjonbestillingRepository)
-        val feilresponsKafkaProducer = initializeFeilresponsProducer(Eventtype.DONE)
-        val doneEventDispatcher = EventDispatcher(Eventtype.DONE, brukernotifikasjonbestillingRepository, internDoneKafkaProducer, feilresponsKafkaProducer)
         val doneEventService = DoneInputEventService(
             metricsCollector,
-            handleDuplicateEvents,
-            doneEventDispatcher,
             doneRapidProducer,
-            environment.produceToRapid
+            brukernotifikasjonbestillingRepository
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
-    }
-
-    private fun initializeInternBeskjedProducer(): Producer<NokkelIntern, BeskjedIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.BESKJEDINTERN)
-        val kafkaProducer = KafkaProducer<NokkelIntern, BeskjedIntern>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.beskjedInternTopicName, kafkaProducer)
-    }
-
-    private fun initializeInternOppgaveProducer(): Producer<NokkelIntern, OppgaveIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.OPPGAVEINTERN)
-        val kafkaProducer = KafkaProducer<NokkelIntern, OppgaveIntern>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.oppgaveInternTopicName, kafkaProducer)
-    }
-
-    private fun initializeInternInnboksProducer(): Producer<NokkelIntern, InnboksIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.INNBOKSINTERN)
-        val kafkaProducer = KafkaProducer<NokkelIntern, InnboksIntern>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.innboksInternTopicName, kafkaProducer)
-    }
-
-    private fun initializeInternDoneProducer(): Producer<NokkelIntern, DoneIntern> {
-        val producerProps = Kafka.producerProps(environment, Eventtype.DONEINTERN)
-        val kafkaProducer = KafkaProducer<NokkelIntern, DoneIntern>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.doneInternTopicName, kafkaProducer)
-    }
-
-    private fun initializeFeilresponsProducer(eventtype: Eventtype): Producer<NokkelFeilrespons, Feilrespons> {
-        val producerProps = Kafka.producerFeilresponsProps(environment, eventtype)
-        val kafkaProducer = KafkaProducer<NokkelFeilrespons, Feilrespons>(producerProps)
-        kafkaProducer.initTransactions()
-        return Producer(environment.feilresponsTopicName, kafkaProducer)
     }
     
     private fun initializeRapidKafkaProducer() = KafkaProducer<String, String>(
@@ -242,15 +158,6 @@ class ApplicationContext {
             )
 
             InfluxMetricsReporter(sensuConfig)
-        }
-    }
-
-    fun reinitializePeriodicConsumerPollingCheck() {
-        if (periodicConsumerPollingCheck.isCompleted()) {
-            periodicConsumerPollingCheck = initializePeriodicConsumerPollingCheck()
-            log.info("periodicConsumerPollingCheck har blitt reinstansiert.")
-        } else {
-            log.warn("periodicConsumerPollingCheck kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
         }
     }
 }
