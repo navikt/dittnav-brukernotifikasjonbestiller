@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
+import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
@@ -25,12 +26,11 @@ import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxMetricsReporter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
-import org.slf4j.LoggerFactory
 import java.util.Properties
 
 class ApplicationContext {
 
-    private val log = LoggerFactory.getLogger(ApplicationContext::class.java)
+    private val log = KotlinLogging.logger {  }
 
     val environment = Environment()
     val healthService = HealthService(this)
@@ -90,7 +90,7 @@ class ApplicationContext {
         )
         return KafkaConsumerSetup.setUpConsumerForInputTopic(environment.doneInputTopicName, consumerProps, doneEventService)
     }
-    
+
     private fun initializeRapidKafkaProducer() = KafkaProducer<String, String>(
         Properties().apply {
             put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, environment.aivenBrokers)

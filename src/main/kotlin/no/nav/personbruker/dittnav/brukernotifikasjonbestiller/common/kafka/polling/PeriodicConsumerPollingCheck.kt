@@ -1,22 +1,26 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
+import mu.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.ApplicationContext
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.KafkaConsumerSetup
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
 class PeriodicConsumerPollingCheck(
-        private val appContext: ApplicationContext,
-        private val job: Job = Job()) : CoroutineScope {
+    private val appContext: ApplicationContext,
+    private val job: Job = Job()
+) : CoroutineScope {
 
-    private val log: Logger = LoggerFactory.getLogger(PeriodicConsumerPollingCheck::class.java)
+    private val log = KotlinLogging.logger { }
     private val minutesToWait = Duration.ofMinutes(5)
 
     override val coroutineContext: CoroutineContext

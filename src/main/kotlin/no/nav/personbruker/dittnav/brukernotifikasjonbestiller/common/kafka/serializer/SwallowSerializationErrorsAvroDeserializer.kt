@@ -2,9 +2,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.ser
 
 import io.confluent.kafka.schemaregistry.client.SchemaRegistryClient
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
+import mu.KotlinLogging
 import org.apache.kafka.common.errors.SerializationException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * Avro deserialiserer som returnerer `null` hvis den mottar bytes som ikke kan deserialiseres til en Avro-type.
@@ -16,9 +15,12 @@ import org.slf4j.LoggerFactory
 class SwallowSerializationErrorsAvroDeserializer : KafkaAvroDeserializer {
     constructor() : super()
     constructor(schemaRegistryClient: SchemaRegistryClient) : super(schemaRegistryClient)
-    constructor(schemaRegistryClient: SchemaRegistryClient, pros: MutableMap<String, Any>) : super(schemaRegistryClient, pros)
+    constructor(schemaRegistryClient: SchemaRegistryClient, pros: MutableMap<String, Any>) : super(
+        schemaRegistryClient,
+        pros
+    )
 
-    private val log: Logger = LoggerFactory.getLogger(SwallowSerializationErrorsAvroDeserializer::class.java)
+    private val log = KotlinLogging.logger { }
 
     override fun deserialize(bytes: ByteArray): Any? {
         var result: Any? = null
@@ -26,7 +28,8 @@ class SwallowSerializationErrorsAvroDeserializer : KafkaAvroDeserializer {
             result = super.deserialize(bytes)
 
         } catch (e: SerializationException) {
-            val msg = "Eventet kunne ikke deserialiseres, og blir forkastet. Dette skjedde mest sannsynlig fordi eventet ikke var i henold til Avro-skjemaet for denne topic-en."
+            val msg =
+                "Eventet kunne ikke deserialiseres, og blir forkastet. Dette skjedde mest sannsynlig fordi eventet ikke var i henold til Avro-skjemaet for denne topic-en."
             log.error(msg, e)
         }
         return result
