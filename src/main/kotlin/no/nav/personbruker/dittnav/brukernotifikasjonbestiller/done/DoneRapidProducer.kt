@@ -1,16 +1,15 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import mu.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class DoneRapidProducer(
     private val kafkaProducer: org.apache.kafka.clients.producer.Producer<String, String>,
     private val topicName: String
 ) {
-    val log: Logger = LoggerFactory.getLogger(DoneRapidProducer::class.java)
+    val log = KotlinLogging.logger {  }
 
     fun produce(done: Done) {
         val objectNode = objectMapper.valueToTree<ObjectNode>(done)

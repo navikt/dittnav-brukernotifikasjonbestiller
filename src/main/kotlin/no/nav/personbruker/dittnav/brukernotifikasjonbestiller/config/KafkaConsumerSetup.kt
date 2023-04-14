@@ -1,16 +1,15 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
+import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.*
 
 object KafkaConsumerSetup {
 
-    private val log: Logger = LoggerFactory.getLogger(KafkaConsumerSetup::class.java)
+    private val log = KotlinLogging.logger {  }
 
     fun startAllKafkaPollers(appContext: ApplicationContext) {
         checkInputTopics(appContext)

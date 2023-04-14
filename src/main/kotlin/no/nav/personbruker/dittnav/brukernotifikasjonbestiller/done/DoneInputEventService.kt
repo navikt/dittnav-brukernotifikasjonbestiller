@@ -1,5 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
+import mu.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -8,8 +9,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation.VarselValidation
 import org.apache.kafka.clients.consumer.ConsumerRecords
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class DoneInputEventService(
     private val metricsCollector: MetricsCollector,
@@ -17,7 +16,7 @@ class DoneInputEventService(
     private val brukernotifikasjonbestillingRepository: BrukernotifikasjonbestillingRepository,
 ) : EventBatchProcessorService<NokkelInput, DoneInput> {
 
-    private val log: Logger = LoggerFactory.getLogger(DoneInputEventService::class.java)
+    private val log = KotlinLogging.logger { }
 
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, DoneInput>) {
         metricsCollector.recordMetrics(eventType = Eventtype.DONE) {

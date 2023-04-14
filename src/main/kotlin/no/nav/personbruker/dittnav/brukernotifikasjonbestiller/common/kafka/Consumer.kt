@@ -1,6 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.*
+import mu.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.RetriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
@@ -12,8 +13,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.time.temporal.ChronoUnit
 import kotlin.coroutines.CoroutineContext
@@ -25,7 +24,7 @@ class Consumer<K, V>(
         val job: Job = Job()
 ) : CoroutineScope, HealthCheck {
 
-    private val log: Logger = LoggerFactory.getLogger(Consumer::class.java)
+    private val log = KotlinLogging.logger {  }
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + job
