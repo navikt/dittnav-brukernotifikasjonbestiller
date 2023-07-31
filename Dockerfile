@@ -1,12 +1,7 @@
-FROM navikt/java:17-appdynamics
-COPY init.sh /init-scripts/init.sh
-COPY build/libs/dittnav-brukernotifikasjonbestiller-all.jar /app/app.jar
+FROM ghcr.io/navikt/baseimages/temurin:17
+COPY build/libs/dittnav-brukernotifikasjonbestiller-all.jar app.jar
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 \
                -XX:+HeapDumpOnOutOfMemoryError \
                -XX:HeapDumpPath=/oom-dump.hprof"
 ENV PORT=8080
 EXPOSE $PORT
-
-USER root
-RUN apt-get install -y curl
-USER apprunner
