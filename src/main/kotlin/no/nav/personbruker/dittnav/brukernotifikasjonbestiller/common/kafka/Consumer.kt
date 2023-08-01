@@ -15,16 +15,18 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeoutException
 import kotlin.coroutines.CoroutineContext
 
 class Consumer<K, V>(
-        val topic: String,
-        val kafkaConsumer: org.apache.kafka.clients.consumer.Consumer<K, V>,
-        val eventBatchProcessorService: EventBatchProcessorService<K, V>,
-        val job: Job = Job()
+    val topic: String,
+    val kafkaConsumer: org.apache.kafka.clients.consumer.Consumer<K, V>,
+    val eventBatchProcessorService: EventBatchProcessorService<K, V>,
+    val job: Job = Job()
 ) : CoroutineScope, HealthCheck {
 
-    private val log = KotlinLogging.logger {  }
+    private val log = KotlinLogging.logger { }
 
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Default + job
@@ -86,17 +88,25 @@ class Consumer<K, V>(
             log.error("Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic", ude)
             stopPolling()
 
-        }  catch (re: RetriableException) {
+        } catch (re: RetriableException) {
             log.warn("Polling mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
             rollbackOffset()
 
         } catch (ce: CancellationException) {
             log.info("Denne coroutine-en ble stoppet. ${ce.message}", ce)
+        } catch (ie: InterruptedException) {
+            log.warn { "Produsering av event til kafka ble avbrutt" }
+            rollbackOffset()
 
+        } catch (te: TimeoutException) {
+            log.warn { "Produsering av event til kafka timet ut" }
+            rollbackOffset()
         } catch (e: Exception) {
             log.error("Noe uventet feilet, stopper polling. Topic: $topic", e)
             stopPolling()
         }
+
+
     }
 
     private fun ConsumerRecords<K, V>.containsEvents() = count() > 0
