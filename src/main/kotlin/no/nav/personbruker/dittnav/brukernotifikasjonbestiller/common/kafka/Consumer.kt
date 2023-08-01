@@ -15,7 +15,6 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 import kotlin.coroutines.CoroutineContext
 
