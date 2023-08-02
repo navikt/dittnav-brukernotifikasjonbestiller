@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import mu.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
+import java.util.concurrent.TimeUnit
 
 class VarselRapidProducer(
     private val kafkaProducer: org.apache.kafka.clients.producer.Producer<String, String>,
@@ -15,8 +16,17 @@ class VarselRapidProducer(
         val objectNode = objectMapper.valueToTree<ObjectNode>(varsel)
         objectNode.put("@event_name", varsel.type.eventtype)
         val producerRecord = ProducerRecord(topicName, varsel.eventId, objectNode.toString())
-        kafkaProducer.send(producerRecord)
-        log.info("Videresendt validert ${varsel.type.eventtype} til intern-topic: ${varsel.eventId}")
+        kafkaProducer.send(producerRecord).also {
+            try {
+                it.get(5, TimeUnit.SECONDS)
+                log.info("Videresendt validert ${varsel.type.eventtype} til intern-topic: ${varsel.eventId}")
+
+            } catch (e: Exception) {
+                log.warn { "Feil i produsering av ${varsel.type.eventtype} med eventid ${varsel.eventId}: ${e.message}" }
+                throw e
+            }
+
+        }
     }
 
     fun flushAndClose() {

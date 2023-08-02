@@ -15,7 +15,7 @@ object KafkaTestUtil {
         offset: Long
     ) {
         val partition = TopicPartition(topicName, 0)
-        withTimeout(1000) {
+        withTimeout(10000) {
             while ((consumer.committed(setOf(partition))[partition]?.offset() ?: 0) < offset) {
                 delay(10)
             }
@@ -33,7 +33,7 @@ object KafkaTestUtil {
 
     fun <K, V> createMockProducer(): MockProducer<K, V> {
         return MockProducer(
-            false,
+            true,
             { _: String, _: K -> ByteArray(0) }, //Dummy serializers
             { _: String, _: V -> ByteArray(0) }
         )
