@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 import java.util.concurrent.TimeUnit
@@ -19,7 +19,7 @@ class VarselRapidProducer(
         kafkaProducer.send(producerRecord).also {
             try {
                 it.get(5, TimeUnit.SECONDS)
-                log.info("Videresendt validert ${varsel.type.eventtype} til intern-topic: ${varsel.eventId}")
+                log.info { "Videresendt validert ${varsel.type.eventtype} til intern-topic: ${varsel.eventId}" }
 
             } catch (e: Exception) {
                 log.warn { "Feil i produsering av ${varsel.type.eventtype} med eventid ${varsel.eventId}: ${e.message}" }
@@ -33,9 +33,9 @@ class VarselRapidProducer(
         try {
             kafkaProducer.flush()
             kafkaProducer.close()
-            log.info("Produsent for kafka-eventer er flushet og lukket.")
+            log.info { "Produsent for kafka-eventer er flushet og lukket." }
         } catch (e: Exception) {
-            log.warn("Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert.")
+            log.warn { "Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert." }
         }
     }
 }

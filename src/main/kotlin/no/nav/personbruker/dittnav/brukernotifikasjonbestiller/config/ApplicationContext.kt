@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.InnboksInput
@@ -13,7 +13,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Cons
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.polling.PeriodicConsumerPollingCheck
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done.DoneRapidProducer
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks.InnboksInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
@@ -33,7 +32,6 @@ class ApplicationContext {
     private val log = KotlinLogging.logger {  }
 
     val environment = Environment()
-    val healthService = HealthService(this)
     val database: Database = PostgresDatabase(environment)
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
@@ -114,30 +112,30 @@ class ApplicationContext {
     fun reinitializeConsumers() {
         if (beskjedInputConsumer.isCompleted()) {
             beskjedInputConsumer = initializeBeskjedInputProcessor()
-            log.info("beskjedInputConsumer har blitt reinstansiert.")
+            log.info { "beskjedInputConsumer har blitt reinstansiert." }
         } else {
-            log.warn("beskjedInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn { "beskjedInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv." }
         }
 
         if (oppgaveInputConsumer.isCompleted()) {
             oppgaveInputConsumer = initializeOppgaveInputProcessor()
-            log.info("oppgaveInputConsumer har blitt reinstansiert.")
+            log.info { "oppgaveInputConsumer har blitt reinstansiert." }
         } else {
-            log.warn("oppgaveInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn { "oppgaveInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv." }
         }
 
         if (innboksInputConsumer.isCompleted()) {
             innboksInputConsumer = initializeInnboksInputProcessor()
-            log.info("innboksInputConsumer har blitt reinstansiert.")
+            log.info { "innboksInputConsumer har blitt reinstansiert." }
         } else {
-            log.warn("innboksInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn { "innboksInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv." }
         }
 
         if (doneInputConsumer.isCompleted()) {
             doneInputConsumer = initializeDoneInputProcessor()
-            log.info("doneInputConsumer har blitt reinstansiert.")
+            log.info { "doneInputConsumer har blitt reinstansiert." }
         } else {
-            log.warn("doneInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv.")
+            log.warn { "doneInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv." }
         }
     }
 

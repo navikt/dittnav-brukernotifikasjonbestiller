@@ -4,12 +4,9 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database
 import com.zaxxer.hikari.HikariDataSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.RetriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthCheck
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.postgresql.util.PSQLException
 import java.sql.Connection
 import java.sql.SQLException
@@ -18,7 +15,7 @@ import java.sql.SQLTransientException
 
 val dbLog = KotlinLogging.logger {  }
 
-interface Database: HealthCheck {
+interface Database {
 
     val dataSource: HikariDataSource
 
@@ -46,18 +43,6 @@ interface Database: HealthCheck {
                 operationToExecute()
             }
         }
-    }
-
-    override suspend fun status(): HealthStatus {
-        val serviceName = "Database"
-        return withContext(Dispatchers.IO) {
-            try {
-                dbQuery { prepareStatement("""SELECT 1""").execute() }
-                HealthStatus(serviceName, Status.OK, "200 OK")
-            } catch (e: Exception) {
-                dbLog.error("Selftest mot databasen feilet", e)
-                HealthStatus(serviceName, Status.ERROR, "Feil mot DB")
-            }}
     }
 }
 

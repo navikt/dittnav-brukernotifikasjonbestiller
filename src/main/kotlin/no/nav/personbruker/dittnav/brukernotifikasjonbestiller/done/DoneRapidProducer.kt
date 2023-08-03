@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import com.fasterxml.jackson.databind.node.ObjectNode
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.objectMapper
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -16,16 +16,16 @@ class DoneRapidProducer(
         objectNode.put("@event_name", "done")
         val producerRecord = ProducerRecord(topicName, done.eventId, objectNode.toString())
         kafkaProducer.send(producerRecord)
-        log.info("Videresendt validert done til intern-topic: ${done.eventId}")
+        log.info { "Videresendt validert done til intern-topic: ${done.eventId}" }
     }
 
     fun flushAndClose() {
         try {
             kafkaProducer.flush()
             kafkaProducer.close()
-            log.info("Produsent for kafka-eventer er flushet og lukket.")
+            log.info { "Produsent for kafka-eventer er flushet og lukket." }
         } catch (e: Exception) {
-            log.warn("Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert.")
+            log.warn { "Klarte ikke å flushe og lukke produsent. Det kan være eventer som ikke ble produsert." }
         }
     }
 }

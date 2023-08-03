@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
@@ -19,30 +19,30 @@ object KafkaConsumerSetup {
         if(shouldPollBeskjedInput()) {
             appContext.beskjedInputConsumer.startPolling()
         } else {
-            log.info("Unnlater å starte polling av beskjed-input")
+            log.info { "Unnlater å starte polling av beskjed-input" }
         }
 
         if(shouldPollOppgaveInput()) {
             appContext.oppgaveInputConsumer.startPolling()
         } else {
-            log.info("Unnlater å starte polling av oppgave-input")
+            log.info { "Unnlater å starte polling av oppgave-input" }
         }
 
         if(shouldPollInnboksInput()) {
             appContext.innboksInputConsumer.startPolling()
         } else {
-            log.info("Unnlater å starte polling av innboks-input")
+            log.info { "Unnlater å starte polling av innboks-input" }
         }
 
         if(shouldPollDoneInput()) {
             appContext.doneInputConsumer.startPolling()
         } else {
-            log.info("Unnlater å starte polling av done-input")
+            log.info { "Unnlater å starte polling av done-input" }
         }
     }
 
     suspend fun stopAllKafkaConsumers(appContext: ApplicationContext) {
-        log.info("Begynner å stoppe kafka-pollerne...")
+        log.info { "Begynner å stoppe kafka-pollerne..." }
 
         stopPollingIfNotCompleted(
             appContext.beskjedInputConsumer,
@@ -51,7 +51,7 @@ object KafkaConsumerSetup {
             appContext.doneInputConsumer
         )
 
-        log.info("...ferdig med å stoppe kafka-pollerne.")
+        log.info { "...ferdig med å stoppe kafka-pollerne." }
     }
 
     private suspend fun stopPollingIfNotCompleted(vararg consumers: Consumer<*, *>) {
