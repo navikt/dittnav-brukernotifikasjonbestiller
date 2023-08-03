@@ -9,7 +9,6 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 
 fun Routing.healthApi(
-    healthService: HealthService,
     collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry,
     appExpiryChecker: AppExpiryChecker = AppExpiryChecker()
 ) {
@@ -41,9 +40,5 @@ fun Routing.healthApi(
         call.respondTextWriter(ContentType.parse(TextFormat.CONTENT_TYPE_004), HttpStatusCode.OK) {
             TextFormat.write004(this, collectorRegistry.filteredMetricFamilySamples(names))
         }
-    }
-
-    get("/internal/selftest") {
-        call.buildSelftestPage(healthService)
     }
 }

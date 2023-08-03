@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
@@ -31,10 +31,10 @@ class VarselForwarder(
             countDuplicateVarsler(duplicateVarsler)
 
             invalidEvents.forEach { (varsel, validation) ->
-                log.info(
+                log.info {
                     "Ignorerer varsel på ugyldig format: ${varsel.first.getEventId()}. " +
-                            "Grunn: ${validation.failedValidators.map { it.description }} "
-                )
+                        "Grunn: ${validation.failedValidators.map { it.description }} "
+                }
             }
 
             brukernotifikasjonbestillingRepository.persistVarsler(uniqueVarsler)

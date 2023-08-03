@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
@@ -34,10 +34,10 @@ class DoneInputEventService(
             countDuplicateDone(duplicateDoneList)
 
             invalidEvents.forEach { (done, validation) ->
-                log.info(
+                log.info {
                     "Ignorerer done på ugyldig format: ${done.key().getEventId()}. " +
-                            "Grunn: ${validation.failedValidators.map { it.description }} "
-                )
+                        "Grunn: ${validation.failedValidators.map { it.description }} "
+                }
             }
 
             brukernotifikasjonbestillingRepository.persistDone(uniqueDoneList)

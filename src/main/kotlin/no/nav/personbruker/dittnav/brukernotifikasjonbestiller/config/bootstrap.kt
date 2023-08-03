@@ -16,7 +16,7 @@ fun Application.mainModule(appContext: ApplicationContext = ApplicationContext()
     install(DefaultHeaders)
 
     routing {
-        healthApi(appContext.healthService)
+        healthApi()
     }
     configureStartupHook(appContext)
     configureShutdownHook(appContext)

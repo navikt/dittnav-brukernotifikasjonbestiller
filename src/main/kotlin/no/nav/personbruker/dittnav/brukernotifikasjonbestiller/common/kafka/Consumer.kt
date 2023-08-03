@@ -1,15 +1,12 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka
 
 import kotlinx.coroutines.*
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.RetriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.exception.UnretriableDatabaseException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.RetriableKafkaException
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.exception.UnretriableKafkaException
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthCheck
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
@@ -23,7 +20,7 @@ class Consumer<K, V>(
     val kafkaConsumer: org.apache.kafka.clients.consumer.Consumer<K, V>,
     val eventBatchProcessorService: EventBatchProcessorService<K, V>,
     val job: Job = Job()
-) : CoroutineScope, HealthCheck {
+) : CoroutineScope {
 
     private val log = KotlinLogging.logger { }
 
@@ -40,16 +37,6 @@ class Consumer<K, V>(
 
     fun isStopped(): Boolean {
         return !job.isActive
-    }
-
-    override suspend fun status(): HealthStatus {
-        val serviceName = topic + "consumer"
-        return if (job.isActive) {
-            HealthStatus(serviceName, Status.OK, "Consumer is running", includeInReadiness = false)
-        } else {
-            log.error("Selftest mot Kafka-consumere , consumer kjører ikke.")
-            HealthStatus(serviceName, Status.ERROR, "Consumer is not running", includeInReadiness = false)
-        }
     }
 
     fun startPolling() {
@@ -72,27 +59,27 @@ class Consumer<K, V>(
                 kafkaConsumer.commitSync()
             }
         } catch (re: RetriableKafkaException) {
-            log.warn("Post mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
+            log.warn(re) { "Post mot Kafka feilet, prøver igjen senere. Topic: $topic" }
             rollbackOffset()
 
         } catch (ure: UnretriableKafkaException) {
-            log.warn("Alvorlig feil ved post mot kafka. Stopper polling. Topic: $topic", ure)
+            log.warn(ure) { "Alvorlig feil ved post mot kafka. Stopper polling. Topic: $topic" }
             stopPolling()
 
         } catch (rde: RetriableDatabaseException) {
-            log.warn("Klarte ikke å skrive til databasen, prøver igjen senrere. Topic: $topic", rde)
+            log.warn(rde) { "Klarte ikke å skrive til databasen, prøver igjen senrere. Topic: $topic" }
             rollbackOffset()
 
         } catch (ude: UnretriableDatabaseException) {
-            log.error("Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic", ude)
+            log.error(ude) { "Det skjedde en alvorlig feil mot databasen, stopper videre polling. Topic: $topic" }
             stopPolling()
 
         } catch (re: RetriableException) {
-            log.warn("Polling mot Kafka feilet, prøver igjen senere. Topic: $topic", re)
+            log.warn(re) { "Polling mot Kafka feilet, prøver igjen senere. Topic: $topic" }
             rollbackOffset()
 
         } catch (ce: CancellationException) {
-            log.info("Denne coroutine-en ble stoppet. ${ce.message}", ce)
+            log.info(ce) { "Denne coroutine-en ble stoppet. ${ce.message}" }
         } catch (ie: InterruptedException) {
             log.warn { "Produsering av event til kafka ble avbrutt" }
             rollbackOffset()
@@ -101,7 +88,7 @@ class Consumer<K, V>(
             log.warn { "Produsering av event til kafka timet ut" }
             rollbackOffset()
         } catch (e: Exception) {
-            log.error("Noe uventet feilet, stopper polling. Topic: $topic", e)
+            log.error(e) { "Noe uventet feilet, stopper polling. Topic: $topic" }
             stopPolling()
         }
 

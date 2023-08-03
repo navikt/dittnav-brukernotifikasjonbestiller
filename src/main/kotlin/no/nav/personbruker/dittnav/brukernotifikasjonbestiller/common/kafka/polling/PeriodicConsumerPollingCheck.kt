@@ -6,12 +6,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.time.delay
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.ApplicationContext
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.KafkaConsumerSetup
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.HealthStatus
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.Status
 import java.time.Duration
 import kotlin.coroutines.CoroutineContext
 
@@ -27,7 +25,7 @@ class PeriodicConsumerPollingCheck(
         get() = Dispatchers.Default + job
 
     fun start() {
-        log.info("Periodisk sjekking av at konsumerne kjører har blitt aktivert, første sjekk skjer om $minutesToWait minutter.")
+        log.info { "Periodisk sjekking av at konsumerne kjører har blitt aktivert, første sjekk skjer om $minutesToWait minutter." }
         launch {
             while (job.isActive) {
                 delay(minutesToWait)
@@ -63,25 +61,18 @@ class PeriodicConsumerPollingCheck(
     }
 
     suspend fun restartPolling(stoppedConsumers: MutableList<Eventtype>) {
-        log.warn("Følgende konsumere hadde stoppet ${stoppedConsumers}, de(n) vil bli restartet.")
+        log.warn { "Følgende konsumere hadde stoppet ${stoppedConsumers}, de(n) vil bli restartet." }
         KafkaConsumerSetup.restartPolling(appContext)
-        log.info("$stoppedConsumers konsumern(e) har blitt restartet.")
+        log.info { "$stoppedConsumers konsumern(e) har blitt restartet." }
     }
 
     suspend fun stop() {
-        log.info("Stopper periodisk sjekking av at konsumerne kjører.")
+        log.info { "Stopper periodisk sjekking av at konsumerne kjører." }
         job.cancelAndJoin()
     }
 
     fun isCompleted(): Boolean {
         return job.isCompleted
-    }
-
-    fun status(): HealthStatus {
-        return when (job.isActive) {
-            true -> HealthStatus("PeriodicConsumerPollingCheck", Status.OK, "Checker is running", false)
-            false -> HealthStatus("PeriodicConsumerPollingCheck", Status.ERROR, "Checker is not running", false)
-        }
     }
 
 }
