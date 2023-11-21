@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
-import no.nav.tms.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.brukernotifikasjon.schemas.input.DoneInput
 import java.time.Instant
 
 object DoneTestData {

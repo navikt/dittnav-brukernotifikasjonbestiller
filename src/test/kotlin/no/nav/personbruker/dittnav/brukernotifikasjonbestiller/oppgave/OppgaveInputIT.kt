@@ -17,8 +17,8 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTest
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData.oppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test

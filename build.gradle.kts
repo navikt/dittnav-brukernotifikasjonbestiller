@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    implementation("no.nav.tms:brukernotifikasjon-schemas:3.0.0")
+    implementation("no.nav.tms:brukernotifikasjon-schemas:2.6.0")
     implementation(Flyway.core)
     implementation(Hikari.cp)
     implementation(Kafka.clients)

@@ -2,7 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import java.time.LocalDateTime
 
 data class Done(

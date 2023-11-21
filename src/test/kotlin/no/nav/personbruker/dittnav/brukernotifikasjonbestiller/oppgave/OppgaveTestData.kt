@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 
-import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
 import java.time.Instant
 
 object OppgaveTestData {

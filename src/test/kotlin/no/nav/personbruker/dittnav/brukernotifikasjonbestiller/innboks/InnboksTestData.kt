@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
-import no.nav.tms.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.brukernotifikasjon.schemas.input.InnboksInput
 import java.time.Instant
 
 object InnboksTestData {

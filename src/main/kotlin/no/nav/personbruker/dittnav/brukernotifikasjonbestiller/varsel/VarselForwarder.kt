@@ -5,7 +5,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation.VarselValidation
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.avro.generic.GenericRecord
 
 class VarselForwarder(

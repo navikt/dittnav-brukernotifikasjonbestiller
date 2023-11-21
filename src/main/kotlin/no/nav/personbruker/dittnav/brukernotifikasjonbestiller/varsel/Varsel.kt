@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.toLocalDateTime
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.avro.generic.GenericRecord
 import java.time.LocalDateTime
 

@@ -13,7 +13,7 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
-import no.nav.tms.brukernotifikasjon.schemas.input.*
+import no.nav.brukernotifikasjon.schemas.input.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer

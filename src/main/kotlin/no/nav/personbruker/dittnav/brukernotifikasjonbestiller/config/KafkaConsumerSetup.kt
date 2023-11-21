@@ -3,7 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.Consumer
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.util.*
 

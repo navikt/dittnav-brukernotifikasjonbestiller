@@ -10,8 +10,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedTestData
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTestData
-import no.nav.tms.brukernotifikasjon.schemas.input.BeskjedInput
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
+import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
