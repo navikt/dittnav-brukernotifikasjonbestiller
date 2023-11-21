@@ -5,7 +5,7 @@ import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.avro.generic.GenericRecord
 import java.net.MalformedURLException
 import java.net.URL
-import java.util.UUID
+import java.util.*
 
 class VarselValidation(nokkel: NokkelInput?, varsel: GenericRecord) {
     val failedValidators: List<VarselValidator>

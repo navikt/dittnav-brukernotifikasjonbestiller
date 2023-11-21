@@ -1,13 +1,13 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.done
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.tms.brukernotifikasjon.schemas.input.DoneInput
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCollector
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.validation.VarselValidation
+import no.nav.tms.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
 import org.apache.kafka.clients.consumer.ConsumerRecords
 
 class DoneInputEventService(

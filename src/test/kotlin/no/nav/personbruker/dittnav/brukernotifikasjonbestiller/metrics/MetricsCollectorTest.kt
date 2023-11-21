@@ -1,6 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics
 
-import io.mockk.*
+import io.mockk.clearAllMocks
+import io.mockk.confirmVerified
+import io.mockk.mockkObject
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype

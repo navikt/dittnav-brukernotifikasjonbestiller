@@ -1,11 +1,8 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import io.ktor.server.application.Application
-import io.ktor.server.application.ApplicationStarted
-import io.ktor.server.application.ApplicationStopPreparing
-import io.ktor.server.application.install
-import io.ktor.server.routing.routing
-import io.ktor.server.plugins.defaultheaders.DefaultHeaders
+import io.ktor.server.application.*
+import io.ktor.server.plugins.defaultheaders.*
+import io.ktor.server.routing.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health.healthApi

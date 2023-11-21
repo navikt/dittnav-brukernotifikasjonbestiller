@@ -1,10 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling
 
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.ListPersistActionResult
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.executeBatchPersistQuery
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.getUtcDateTime
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.mapList
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.toBatchPersistResult
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.*
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import java.sql.Connection
 import java.sql.PreparedStatement

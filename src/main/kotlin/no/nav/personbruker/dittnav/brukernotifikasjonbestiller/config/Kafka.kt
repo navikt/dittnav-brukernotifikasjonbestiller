@@ -9,7 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.config.SaslConfigs
 import org.apache.kafka.common.config.SslConfigs
 import java.net.InetSocketAddress
-import java.util.Properties
+import java.util.*
 
 object Kafka {
 

@@ -1,7 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.health
 
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.LocalDateTimeHelper
-import java.time.*
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalTime
 
 class AppExpiryChecker (
     private val expiryHourUTC: Int = 2,

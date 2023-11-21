@@ -2,12 +2,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.kafka.pol
 
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.confirmVerified
-import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkAll
+import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.ApplicationContext
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.KafkaConsumerSetup

@@ -1,11 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.tms.brukernotifikasjon.schemas.input.BeskjedInput
-import no.nav.tms.brukernotifikasjon.schemas.input.DoneInput
-import no.nav.tms.brukernotifikasjon.schemas.input.InnboksInput
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
@@ -18,10 +13,11 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
+import no.nav.tms.brukernotifikasjon.schemas.input.*
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
-import java.util.Properties
+import java.util.*
 
 class ApplicationContext {
 

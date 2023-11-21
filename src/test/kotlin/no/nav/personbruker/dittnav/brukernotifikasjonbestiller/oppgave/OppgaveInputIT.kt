@@ -3,8 +3,6 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.getAllBrukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.asTimestamp
@@ -19,11 +17,13 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTest
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData.oppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import java.util.*
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OppgaveInputIT {
