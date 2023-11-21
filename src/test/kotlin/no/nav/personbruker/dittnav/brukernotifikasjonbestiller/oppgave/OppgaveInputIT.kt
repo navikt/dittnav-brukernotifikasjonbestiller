@@ -3,8 +3,8 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import no.nav.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.getAllBrukernotifikasjonbestilling
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.asTimestamp
@@ -19,7 +19,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel.NokkelTest
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveTestData.oppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
-import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -30,8 +29,7 @@ import java.util.UUID
 class OppgaveInputIT {
     private val database = LocalPostgresDatabase.cleanDb()
 
-    private val metricsReporter = StubMetricsReporter()
-    private val metricsCollector = MetricsCollector(metricsReporter)
+    private val metricsCollector = MetricsCollector()
 
     private val goodEvents = createEvents() + createOppgaveWithNullFields()
     private val badEvents = listOf(

@@ -1,7 +1,7 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.innboks
 
-import no.nav.brukernotifikasjon.schemas.input.InnboksInput
-import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.tms.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.EventBatchProcessorService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder

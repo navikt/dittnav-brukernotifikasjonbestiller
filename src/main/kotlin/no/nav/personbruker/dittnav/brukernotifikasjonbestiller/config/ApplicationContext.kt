@@ -1,11 +1,11 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
-import no.nav.brukernotifikasjon.schemas.input.DoneInput
-import no.nav.brukernotifikasjon.schemas.input.InnboksInput
-import no.nav.brukernotifikasjon.schemas.input.NokkelInput
-import no.nav.brukernotifikasjon.schemas.input.OppgaveInput
+import no.nav.tms.brukernotifikasjon.schemas.input.BeskjedInput
+import no.nav.tms.brukernotifikasjon.schemas.input.DoneInput
+import no.nav.tms.brukernotifikasjon.schemas.input.InnboksInput
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.tms.brukernotifikasjon.schemas.input.OppgaveInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed.BeskjedInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.brukernotifikasjonbestilling.BrukernotifikasjonbestillingRepository
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.database.Database
@@ -18,10 +18,6 @@ import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.metrics.MetricsCo
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.oppgave.OppgaveInputEventService
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselRapidProducer
-import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
-import no.nav.personbruker.dittnav.common.metrics.StubMetricsReporter
-import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxConfig
-import no.nav.personbruker.dittnav.common.metrics.influxdb.InfluxMetricsReporter
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringSerializer
@@ -35,8 +31,7 @@ class ApplicationContext {
     val database: Database = PostgresDatabase(environment)
     private val brukernotifikasjonbestillingRepository = BrukernotifikasjonbestillingRepository(database)
 
-    private val metricsReporter = resolveMetricsReporter(environment)
-    private val metricsCollector = MetricsCollector(metricsReporter)
+    private val metricsCollector = MetricsCollector()
 
     private val rapidKafkaProducer = initializeRapidKafkaProducer()
     val doneRapidProducer = DoneRapidProducer(
@@ -136,26 +131,6 @@ class ApplicationContext {
             log.info { "doneInputConsumer har blitt reinstansiert." }
         } else {
             log.warn { "doneInputConsumer kunne ikke bli reinstansiert fordi den fortsatt er aktiv." }
-        }
-    }
-
-    private fun resolveMetricsReporter(environment: Environment): MetricsReporter {
-        return if (environment.influxdbHost == "" || environment.influxdbHost == "stub") {
-            StubMetricsReporter()
-        } else {
-            val sensuConfig = InfluxConfig(
-                    applicationName = environment.applicationName,
-                    hostName = environment.influxdbHost,
-                    hostPort = environment.influxdbPort,
-                    databaseName = environment.influxdbName,
-                    retentionPolicyName = environment.influxdbRetentionPolicy,
-                    clusterName = environment.clusterName,
-                    namespace = environment.namespace,
-                    userName = environment.influxdbUser,
-                    password = environment.influxdbPassword
-            )
-
-            InfluxMetricsReporter(sensuConfig)
         }
     }
 }

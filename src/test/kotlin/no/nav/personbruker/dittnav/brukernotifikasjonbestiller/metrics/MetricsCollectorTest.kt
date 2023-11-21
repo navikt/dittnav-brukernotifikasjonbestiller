@@ -4,14 +4,12 @@ import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.common.NamespaceAppName
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Eventtype
-import no.nav.personbruker.dittnav.common.metrics.MetricsReporter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class MetricsCollectorTest {
 
-    private val metricsReporter = mockk<MetricsReporter>(relaxed = true)
-    private val metricsCollector = MetricsCollector(metricsReporter)
+    private val metricsCollector = MetricsCollector()
 
     @BeforeEach
     fun cleanup() {

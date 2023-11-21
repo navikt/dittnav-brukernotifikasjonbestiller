@@ -18,14 +18,17 @@ tasks.withType<KotlinCompile> {
 repositories {
     mavenCentral()
     maven("https://packages.confluent.io/maven")
-    maven("https://jitpack.io")
+    maven("https://maven.pkg.github.com/navikt/*") {
+        credentials {
+            username = System.getenv("GITHUB_ACTOR")?: "x-access-token"
+            password = System.getenv("GITHUB_TOKEN")?: project.findProperty("githubPassword") as String
+        }
+    }
     mavenLocal()
 }
 
 dependencies {
-    implementation("com.github.navikt:brukernotifikasjon-schemas:1.2022.04.26-11.25-7155b5142c85")
-    implementation(DittNAVCommonLib.influxdb)
-    implementation(DittNAVCommonLib.utils)
+    implementation("no.nav.tms:brukernotifikasjon-schemas:3.0.0")
     implementation(Flyway.core)
     implementation(Hikari.cp)
     implementation(Kafka.clients)
@@ -41,6 +44,8 @@ dependencies {
     implementation(JacksonDatatype.datatypeJsr310)
     implementation(KotlinLogging.logging)
     implementation(SulkyUlid.sulkyUlid)
+    implementation(TmsCommonLib.utils)
+
 
     testImplementation(Junit.api)
     testImplementation(Junit.params)
