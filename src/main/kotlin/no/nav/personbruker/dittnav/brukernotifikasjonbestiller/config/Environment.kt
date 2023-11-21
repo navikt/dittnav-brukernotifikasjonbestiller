@@ -1,9 +1,9 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 
-import no.nav.personbruker.dittnav.common.util.config.IntEnvVar
-import no.nav.personbruker.dittnav.common.util.config.StringEnvVar
-import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVar
-import no.nav.personbruker.dittnav.common.util.config.StringEnvVar.getEnvVarAsList
+import no.nav.tms.common.util.config.IntEnvVar
+import no.nav.tms.common.util.config.StringEnvVar
+import no.nav.tms.common.util.config.StringEnvVar.getEnvVar
+import no.nav.tms.common.util.config.StringEnvVar.getEnvVarAsList
 
 data class Environment(
         val groupId: String = getEnvVar("GROUP_ID"),

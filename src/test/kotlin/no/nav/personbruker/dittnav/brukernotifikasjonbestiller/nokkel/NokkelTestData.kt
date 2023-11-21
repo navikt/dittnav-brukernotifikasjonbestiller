@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.nokkel
 
-import no.nav.brukernotifikasjon.schemas.input.NokkelInput
+import no.nav.tms.brukernotifikasjon.schemas.input.NokkelInput
 
 object NokkelTestData {
     private const val defaultFodselsnr = "12345678910"

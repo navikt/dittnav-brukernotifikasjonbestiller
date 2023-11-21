@@ -1,6 +1,6 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.beskjed
 
-import no.nav.brukernotifikasjon.schemas.input.BeskjedInput
+import no.nav.tms.brukernotifikasjon.schemas.input.BeskjedInput
 import java.time.Instant
 
 object BeskjedTestData {
