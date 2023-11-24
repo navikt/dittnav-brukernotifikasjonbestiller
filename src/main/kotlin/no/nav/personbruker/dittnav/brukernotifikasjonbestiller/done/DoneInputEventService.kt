@@ -21,6 +21,7 @@ class DoneInputEventService(
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, DoneInput>) {
         metricsCollector.recordMetrics(eventType = Eventtype.DONE) {
             val (validEvents, invalidEvents) = events
+                .filter { it.value() != null }
                 .map { it to VarselValidation(it.key(), it.value()) }
                 .partition { (_, validation) -> validation.isValid() }
 

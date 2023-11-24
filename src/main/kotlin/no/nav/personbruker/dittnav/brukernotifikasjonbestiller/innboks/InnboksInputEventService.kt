@@ -11,6 +11,8 @@ class InnboksInputEventService(
     private val varselForwarder: VarselForwarder,
 ) : EventBatchProcessorService<NokkelInput, InnboksInput> {
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, InnboksInput>) {
-        varselForwarder.processVarsler(events.map { it.key() to it.value() }, Eventtype.INNBOKS)
+        events.map { it.key() to it.value() }
+            .filter { it.second != null }
+            .let { varselForwarder.processVarsler(it, Eventtype.INNBOKS) }
     }
 }

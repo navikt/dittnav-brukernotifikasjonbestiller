@@ -11,6 +11,8 @@ class BeskjedInputEventService(
     private val varselForwarder: VarselForwarder
 ) : EventBatchProcessorService<NokkelInput, BeskjedInput> {
     override suspend fun processEvents(events: ConsumerRecords<NokkelInput, BeskjedInput>) {
-            varselForwarder.processVarsler(events.map { it.key() to it.value() }, Eventtype.BESKJED)
+        events.map { it.key() to it.value() }
+            .filter { it.second != null }
+            .let { varselForwarder.processVarsler(it, Eventtype.BESKJED) }
     }
 }
