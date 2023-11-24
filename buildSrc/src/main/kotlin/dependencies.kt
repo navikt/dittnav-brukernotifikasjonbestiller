@@ -14,3 +14,10 @@ object SulkyUlid: DependencyGroup {
 
     val sulkyUlid get() = dependency("de.huxhorn.sulky.ulid")
 }
+
+object Varsel: DependencyGroup {
+    override val version get() = "1.0.0"
+    override val groupId get() = "no.nav.tms.varsel"
+
+    val kotlinBuilder get() = dependency("kotlin-builder")
+}
