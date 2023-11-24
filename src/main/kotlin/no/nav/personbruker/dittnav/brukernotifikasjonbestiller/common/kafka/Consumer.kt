@@ -55,7 +55,8 @@ class Consumer<K, V>(
         try {
             val records = kafkaConsumer.poll(Duration.of(100, ChronoUnit.MILLIS))
             if (records.containsEvents()) {
-                eventBatchProcessorService.processEvents(records)
+                records.filter { it.value() != null }
+                    .let { eventBatchProcessorService.processEvents(records) }
                 kafkaConsumer.commitSync()
             }
         } catch (re: RetriableKafkaException) {
