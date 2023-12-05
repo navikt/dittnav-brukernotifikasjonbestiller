@@ -5,8 +5,7 @@ import kotlinx.coroutines.*
 import no.nav.brukernotifikasjon.schemas.input.NokkelInput
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselActionForwarder
 import org.apache.avro.generic.GenericRecord
-import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.RetriableException
 import java.time.Duration
@@ -16,7 +15,7 @@ import kotlin.coroutines.CoroutineContext
 
 class InputTopicConsumer(
     private val topics: List<String>,
-    private val kafkaConsumer: org.apache.kafka.clients.consumer.Consumer<NokkelInput, GenericRecord>,
+    private val kafkaConsumer: Consumer<NokkelInput, GenericRecord>,
     private val varselActionForwarder: VarselActionForwarder,
     private val job: Job = Job()
 ) : CoroutineScope {
@@ -49,11 +48,12 @@ class InputTopicConsumer(
 
     private suspend fun pollForAndRelayEvents() = withContext(Dispatchers.IO) {
         try {
-            val records = kafkaConsumer.poll(Duration.of(100, ChronoUnit.MILLIS))
-            records.forEach {
-                varselActionForwarder.forwardVarsel(it.key(), it.value())
-                kafkaConsumer.commitSync()
-            }
+            kafkaConsumer.poll(Duration.of(100, ChronoUnit.MILLIS))
+                .takeIf { it.count() > 0 }
+                ?.filter { it.value() != null }
+                ?.forEach { varselActionForwarder.forwardVarsel(it.key(), it.value()) }
+                ?.let { kafkaConsumer.commitSync() }
+
         } catch (re: RetriableKafkaException) {
             log.warn { "Post mot Kafka feilet, prøver igjen senere." }
             secureLog.warn(re) { "Post mot Kafka feilet, prøver igjen senere." }
