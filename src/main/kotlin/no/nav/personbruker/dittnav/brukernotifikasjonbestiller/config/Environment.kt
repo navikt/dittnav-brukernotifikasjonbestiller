@@ -12,9 +12,8 @@ data class Environment(
     val oppgaveInputTopicName: String = "min-side.aapen-brukernotifikasjon-oppgave-v1",
     val innboksInputTopicName: String = "min-side.aapen-brukernotifikasjon-innboks-v1",
     val doneInputTopicName: String = "min-side.aapen-brukernotifikasjon-done-v1",
-    val feilresponsTopicName: String = "min-side.aapen-brukernotifikasjon-feilrespons-v1",
 
-    val rapidTopic: String = "min-side.brukervarsel-v1",
+    val varselTopic: String = "min-side.aapen-brukervarsel-v1",
 ) {
     val inputTopics get() = listOf(
         beskjedInputTopicName,

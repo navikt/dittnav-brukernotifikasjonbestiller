@@ -23,7 +23,7 @@ fun main() {
 
     val varselRapidProducer = VarselActionProducer(
         kafkaProducer = kafkaProducer,
-        topicName = environment.rapidTopic
+        topicName = environment.varselTopic
     )
 
     val inputConsumer = InputTopicConsumer(
