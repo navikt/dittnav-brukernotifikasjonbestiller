@@ -9,12 +9,12 @@ import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.exporter.common.TextFormat
 
 fun Routing.healthApi(
-    appExpiryChecker: AppHealthChecker,
+    appHealthChecker: AppHealthChecker,
     collectorRegistry: CollectorRegistry = CollectorRegistry.defaultRegistry
 ) {
 
     get("/internal/isAlive") {
-        if (appExpiryChecker.isUnhealthy()) {
+        if (appHealthChecker.isUnhealthy()) {
             call.respondText(
                 text = "EXPIRED",
                 status = HttpStatusCode.ServiceUnavailable,

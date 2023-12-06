@@ -2,13 +2,13 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller
 
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.AppHealthChecker
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.Environment
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.InputTopicConsumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.Kafka
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.Kafka.createProducer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.InputTopicConsumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselActionForwarder
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselActionProducer
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.AppHealthChecker
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.Kafka.createProducer
 
 fun main() {
 

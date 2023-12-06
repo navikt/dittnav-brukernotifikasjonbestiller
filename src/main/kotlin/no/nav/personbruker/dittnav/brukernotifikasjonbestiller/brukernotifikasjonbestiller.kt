@@ -5,9 +5,9 @@ import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.routing.*
 import io.prometheus.client.hotspot.DefaultExports
 import kotlinx.coroutines.runBlocking
+import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.InputTopicConsumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.AppHealthChecker
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.healthApi
-import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.kafka.InputTopicConsumer
 import no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel.VarselActionProducer
 
 fun Application.brukernotifikasjonBestiller(
