@@ -36,4 +36,5 @@ spec:
       external:
         - host: kafka-schema-registry.nais.adeo.no
   env:
-    - GROUP_ID: dittnav-brukernotifikasjonbestiller-prod-01
+    - name: GROUP_ID
+      value: dittnav-brukernotifikasjonbestiller-prod-01
