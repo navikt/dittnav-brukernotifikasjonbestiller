@@ -61,7 +61,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config.AppKt"
+    mainClassName = "no.nav.personbruker.dittnav.brukernotifikasjonbestiller.ApplicationKt"
 }
 
 tasks {
