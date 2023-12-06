@@ -4,7 +4,7 @@ import io.prometheus.client.Counter
 
 object VarselForwardingMetrics {
 
-    private const val NAMESPACE = "dittnav_brukernotifikasjonbestiller_consumer"
+    private const val NAMESPACE = "dittnav_brukernotifikasjonbestiller"
 
     private const val EVENTS_PROCESSED_NAME = "kafka_events_processed"
     private const val EVENTS_FORWARDED_NAME = "kafka_events_forwarded"
