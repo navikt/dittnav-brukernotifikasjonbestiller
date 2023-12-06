@@ -183,13 +183,13 @@ class VarselActionForwarder(
     }
 
     private fun eventProcessed(nokkel: NokkelInput, record: GenericRecord) {
-        VarselForwardingMetrics.registerEventProcessed(nokkel.producer, record.type)
+        VarselForwardingMetrics.registerEventProcessed(record.type, nokkel.producer)
     }
     private fun eventForwarded(nokkel: NokkelInput, record: GenericRecord) {
-        VarselForwardingMetrics.registerEventForwarded(nokkel.producer, record.type)
+        VarselForwardingMetrics.registerEventForwarded(record.type, nokkel.producer)
     }
     private fun eventScrapped(nokkel: NokkelInput, record: GenericRecord) {
-        VarselForwardingMetrics.registerEventScrapped(nokkel.producer, record.type)
+        VarselForwardingMetrics.registerEventScrapped(record.type, nokkel.producer)
     }
 
     private val NokkelInput.producer get() = "${namespace}:${appnavn}"
