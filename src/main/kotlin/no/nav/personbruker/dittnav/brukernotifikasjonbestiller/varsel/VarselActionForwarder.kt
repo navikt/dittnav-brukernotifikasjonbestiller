@@ -68,7 +68,7 @@ class VarselActionForwarder(
                 tekst = beskjedInput.tekst,
                 default = true
             )
-            link = beskjedInput.link
+            link = beskjedInput.link.ifBlank { null }
             aktivFremTil = beskjedInput.synligFremTil?.toUtcZ()
             eksternVarsling = if (beskjedInput.eksternVarsling) {
                 EksternVarslingBestilling(

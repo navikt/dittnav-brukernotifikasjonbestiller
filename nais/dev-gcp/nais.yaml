@@ -37,5 +37,5 @@ spec:
         - host: kafka-schema-registry.nais-q.adeo.no
   env:
     - name: GROUP_ID
-      value: dittnav-brukernotifikasjonbestiller-dev-03
+      value: dittnav-brukernotifikasjonbestiller-dev-04
 
