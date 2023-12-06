@@ -3,7 +3,7 @@ package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.config
 import no.nav.tms.common.util.config.StringEnvVar.getEnvVar
 
 data class Environment(
-    val groupId: String = "dittnav-brukernotifikasjonbestiller-dev-01",
+    val groupId: String = getEnvVar("GROUP_ID"),
     val aivenBrokers: String = getEnvVar("KAFKA_BROKERS"),
     val aivenSchemaRegistry: String = getEnvVar("KAFKA_SCHEMA_REGISTRY"),
     val securityConfig: SecurityConfig = SecurityConfig(),
