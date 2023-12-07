@@ -1,1 +1,0 @@
-ALTER TABLE brukernotifikasjonbestilling ADD COLUMN fodselsnummer character varying(50);

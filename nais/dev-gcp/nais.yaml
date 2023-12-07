@@ -6,9 +6,6 @@ metadata:
   labels:
     team: min-side
 spec:
-  envFrom:
-    - secret: dittnav-brukernotifikasjonbestiller-secrets
-    - secret: influxdb-credentials
   image: {{version}}
   port: 8080
   liveness:
@@ -25,7 +22,6 @@ spec:
   replicas:
     min: 1
     max: 1
-  webproxy: true
   resources:
     limits:
       cpu: "3"
@@ -33,27 +29,13 @@ spec:
     requests:
       cpu: "100m"
       memory: 400Mi
-  gcp:
-    sqlInstances:
-      - name: brukernotifikasjonbestiller
-        type: POSTGRES_11
-        tier: db-f1-micro
-        diskType: SSD
-        diskSize: 10
-        diskAutoresize: false
-        autoBackupTime: "03:00"
-        databases:
-          - name: brukernotifikasjonbestiller
-            envVarPrefix: DB
-        maintenanceWindow:
-          day: 1
-          hour: 4
-        cascadingDelete: false
   kafka:
     pool: nav-dev
   accessPolicy:
     outbound:
       external:
         - host: kafka-schema-registry.nais-q.adeo.no
-        - host: dittnav-event-handler.dev.nav.no
+  env:
+    - name: GROUP_ID
+      value: dittnav-brukernotifikasjonbestiller-dev-04
 

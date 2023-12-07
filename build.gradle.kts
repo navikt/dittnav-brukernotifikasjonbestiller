@@ -45,6 +45,8 @@ dependencies {
     implementation(KotlinLogging.logging)
     implementation(SulkyUlid.sulkyUlid)
     implementation(TmsCommonLib.utils)
+    implementation(TmsCommonLib.observability)
+    implementation(Varsel.kotlinBuilder)
 
 
     testImplementation(Junit.api)
@@ -59,7 +61,7 @@ dependencies {
 }
 
 application {
-    mainClassName = "io.ktor.server.netty.EngineMain"
+    mainClassName = "no.nav.personbruker.dittnav.brukernotifikasjonbestiller.ApplicationKt"
 }
 
 tasks {
