@@ -30,7 +30,7 @@ object Kafka {
             put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 40000)
             put(ProducerConfig.ACKS_CONFIG, "all")
             put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true")
-            putAll(credentialProps(environment.securityConfig.variables!!))
+            putAll(credentialProps(environment.securityVars))
         }
     )
 
@@ -45,9 +45,7 @@ object Kafka {
             put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
             put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SwallowSerializationErrorsAvroDeserializer::class.java)
             put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true)
-            if (env.securityConfig.enabled) {
-                putAll(credentialProps(env.securityConfig.variables!!))
-            }
+            putAll(credentialProps(env.securityVars))
         }
     )
 

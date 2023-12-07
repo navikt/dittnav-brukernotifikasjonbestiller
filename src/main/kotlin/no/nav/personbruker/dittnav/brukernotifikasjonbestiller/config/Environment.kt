@@ -6,7 +6,7 @@ data class Environment(
     val groupId: String = getEnvVar("GROUP_ID"),
     val aivenBrokers: String = getEnvVar("KAFKA_BROKERS"),
     val aivenSchemaRegistry: String = getEnvVar("KAFKA_SCHEMA_REGISTRY"),
-    val securityConfig: SecurityConfig = SecurityConfig(),
+    val securityVars: SecurityVars = SecurityVars(),
     val beskjedInputTopicName: String = "min-side.aapen-brukernotifikasjon-beskjed-v1",
     val oppgaveInputTopicName: String = "min-side.aapen-brukernotifikasjon-oppgave-v1",
     val innboksInputTopicName: String = "min-side.aapen-brukernotifikasjon-innboks-v1",
@@ -22,16 +22,6 @@ data class Environment(
     )
 }
 
-data class SecurityConfig(
-    val enabled: Boolean = isCurrentlyRunningOnNais(),
-
-    val variables: SecurityVars? = if (enabled) {
-        SecurityVars()
-    } else {
-        null
-    }
-)
-
 data class SecurityVars(
     val aivenTruststorePath: String = getEnvVar("KAFKA_TRUSTSTORE_PATH"),
     val aivenKeystorePath: String = getEnvVar("KAFKA_KEYSTORE_PATH"),
@@ -39,7 +29,3 @@ data class SecurityVars(
     val aivenSchemaRegistryUser: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_USER"),
     val aivenSchemaRegistryPassword: String = getEnvVar("KAFKA_SCHEMA_REGISTRY_PASSWORD")
 )
-
-fun isCurrentlyRunningOnNais(): Boolean {
-    return System.getenv("NAIS_APP_NAME") != null
-}
