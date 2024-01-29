@@ -24,11 +24,11 @@ spec:
     max: 1
   resources:
     limits:
-      cpu: "3"
+      cpu: "1"
       memory: 768Mi
     requests:
-      cpu: "100m"
-      memory: 400Mi
+      cpu: "50m"
+      memory: 128Mi
   kafka:
     pool: nav-prod
   accessPolicy:
