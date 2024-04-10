@@ -1,10 +1,10 @@
 package no.nav.personbruker.dittnav.brukernotifikasjonbestiller.varsel
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import nav.no.tms.common.observability.traceVarsel
 import no.nav.brukernotifikasjon.schemas.input.*
 import no.nav.tms.varsel.action.*
 import no.nav.tms.varsel.builder.VarselActionBuilder
-import observability.traceVarsel
 import org.apache.avro.generic.GenericRecord
 import org.slf4j.MDC
 import java.time.Instant
