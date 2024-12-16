@@ -32,14 +32,14 @@ fun main() {
 
     embeddedServer(
         factory = Netty,
-        environment = applicationEngineEnvironment {
-            module {
-                brukernotifikasjonBestiller(
-                    inputConsumer,
-                    varselRapidProducer,
-                    appHealthChecker
-                )
-            }
+        module = {
+            brukernotifikasjonBestiller(
+                inputConsumer,
+                varselRapidProducer,
+                appHealthChecker
+            )
+        },
+        configure = {
             connector {
                 port = 8080
             }
