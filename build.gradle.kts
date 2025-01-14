@@ -38,14 +38,13 @@ dependencies {
     implementation(TmsCommonLib.observability)
     implementation(Varsel.kotlinBuilder)
 
+    testImplementation(JunitPlatform.launcher)
     testImplementation(JacksonDatatype.datatypeJsr310)
-    testImplementation(Junit.api)
-    testImplementation(Junit.params)
+    testImplementation(JunitJupiter.api)
+    testImplementation(JunitJupiter.params)
     testImplementation(Mockk.mockk)
     testImplementation(Kotest.runnerJunit5)
     testImplementation(Kotest.assertionsCore)
-
-    testRuntimeOnly(Junit.engine)
 }
 
 application {
